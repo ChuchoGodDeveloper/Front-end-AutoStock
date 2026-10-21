@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { InstallPrompt } from './components/InstallPrompt'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { CatalogoPage } from './pages/CatalogoPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -64,6 +65,8 @@ export default function App() {
         />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+
+      <InstallPrompt />
     </BrowserRouter>
   )
 }
