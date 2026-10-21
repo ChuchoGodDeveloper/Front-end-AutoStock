@@ -12,53 +12,80 @@ interface EstadoCatalogo {
   hayMas: boolean
   cargando: boolean
   error: string | null
+  terminoBusqueda: string
   cargarMasVehiculos: (resetear?: boolean) => Promise<void>
+  setTerminoBusqueda: (busqueda: string) => Promise<void>
 }
 
-export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => ({
-  vehiculos: [],
-  totalUnidades: 0,
-  paginaActual: 0,
-  hayMas: true,
-  cargando: false,
-  error: null,
+export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
+  let solicitudActual = 0
 
-  cargarMasVehiculos: async (resetear = false) => {
-    const { cargando, hayMas, paginaActual, vehiculos } = get()
+  return {
+    vehiculos: [],
+    totalUnidades: 0,
+    paginaActual: 0,
+    hayMas: true,
+    cargando: false,
+    error: null,
+    terminoBusqueda: '',
 
-    if (cargando) return
-    if (!resetear && !hayMas) return
+    cargarMasVehiculos: async (resetear = false) => {
+      const { cargando, hayMas, paginaActual, vehiculos, terminoBusqueda } = get()
 
-    set({ cargando: true, error: null })
+      if (!resetear && (cargando || !hayMas)) return
 
-    try {
-      const paginaSolicitada = resetear ? 1 : paginaActual + 1
-      const respuesta = await vehiculosService.obtenerCatalogo(
-        paginaSolicitada,
-        TAMANO_PAGINA_CATALOGO,
-      )
+      solicitudActual += 1
+      const solicitud = solicitudActual
 
-      const base = resetear ? [] : vehiculos
-      const idsConocidos = new Set(base.map((vehiculo) => vehiculo.id))
-      const anexados = (respuesta.items ?? []).filter(
-        (vehiculo) => !idsConocidos.has(vehiculo.id),
-      )
-      const acumulados = [...base, ...anexados]
-      const totalUnidades = respuesta.totalCount ?? acumulados.length
-      const paginaResultante = respuesta.page ?? paginaSolicitada
+      if (resetear) {
+        set({ vehiculos: [], paginaActual: 0, hayMas: true })
+      }
 
-      set({
-        vehiculos: acumulados,
-        totalUnidades,
-        paginaActual: paginaResultante,
-        hayMas: acumulados.length < totalUnidades,
-        cargando: false,
-      })
-    } catch {
-      set({
-        cargando: false,
-        error: MENSAJES.errorCatalogo,
-      })
-    }
-  },
-}))
+      set({ cargando: true, error: null })
+
+      try {
+        const paginaSolicitada = resetear ? 1 : paginaActual + 1
+        const respuesta = await vehiculosService.obtenerCatalogo(
+          paginaSolicitada,
+          TAMANO_PAGINA_CATALOGO,
+          terminoBusqueda || undefined,
+        )
+
+        if (solicitud !== solicitudActual) return
+
+        const base = resetear ? [] : vehiculos
+        const idsConocidos = new Set(base.map((vehiculo) => vehiculo.id))
+        const anexados = (respuesta.items ?? []).filter(
+          (vehiculo) => !idsConocidos.has(vehiculo.id),
+        )
+        const acumulados = [...base, ...anexados]
+        const totalUnidades = respuesta.totalCount ?? acumulados.length
+        const paginaResultante = respuesta.page ?? paginaSolicitada
+
+        set({
+          vehiculos: acumulados,
+          totalUnidades,
+          paginaActual: paginaResultante,
+          hayMas: acumulados.length < totalUnidades,
+          cargando: false,
+        })
+      } catch {
+        if (solicitud !== solicitudActual) return
+
+        set({
+          cargando: false,
+          error: MENSAJES.errorCatalogo,
+        })
+      }
+    },
+
+    setTerminoBusqueda: async (busqueda) => {
+      const terminoLimpio = busqueda.trim()
+
+      if (terminoLimpio === get().terminoBusqueda) return
+
+      set({ terminoBusqueda: terminoLimpio })
+      await get().cargarMasVehiculos(true)
+    },
+  }
+})

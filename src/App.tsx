@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { CatalogoPage } from './pages/CatalogoPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
+import { RegistroVehiculoPage } from './pages/RegistroVehiculoPage'
 import { VehiculoDetallePage } from './pages/VehiculoDetallePage'
 import { useAuthStore } from './stores/authStore'
 
@@ -42,6 +43,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <VehiculoDetallePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/registrar-vehiculo"
+          element={
+            <ProtectedRoute>
+              <RegistroVehiculoPage />
             </ProtectedRoute>
           }
         />
