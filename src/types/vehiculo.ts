@@ -28,3 +28,22 @@ export interface PaginaCatalogo {
   page: number
   pageSize: number
 }
+
+export interface ImagenVehiculo {
+  url: string
+  esPrincipal: boolean
+  orden: number
+}
+
+export interface VehiculoDetalle extends Vehiculo {
+  vin: string
+  numeroStock: string
+  motor: string | null
+  potencia: string | null
+  transmision: string | null
+  colorExterior: string | null
+  colorInterior: string | null
+  equipamiento: string | null
+  notasInspeccion: string | null
+  imagenes: ImagenVehiculo[]
+}

@@ -12,4 +12,7 @@ export const MENSAJES = {
   moduloProximamente: 'Disponible en los siguientes sprints',
   errorCatalogo: 'No se pudo cargar el catálogo. Intenta de nuevo',
   sinUnidades: 'No hay unidades registradas',
+  errorDetalle: 'No se pudo cargar la ficha técnica. Intenta de nuevo',
+  vehiculoNoEncontrado: 'Vehículo no encontrado',
+  sinRegistro: 'No registrado',
 } as const
