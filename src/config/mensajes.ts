@@ -10,4 +10,6 @@ export const MENSAJES = {
   accesoRestringido: 'Inicia sesión para continuar',
   sinActividad: 'Sin actividad reciente',
   moduloProximamente: 'Disponible en los siguientes sprints',
+  errorCatalogo: 'No se pudo cargar el catálogo. Intenta de nuevo',
+  sinUnidades: 'No hay unidades registradas',
 } as const

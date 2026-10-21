@@ -163,7 +163,7 @@ export function DashboardPage() {
           <div className="mt-3 grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => setAvisoAccion('Buscar Inventario: ' + MENSAJES.moduloProximamente)}
+              onClick={() => navigate('/catalogo')}
               className="flex flex-col items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-3 py-4 text-sm font-bold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
             >
               <Search className="h-6 w-6" aria-hidden="true" />

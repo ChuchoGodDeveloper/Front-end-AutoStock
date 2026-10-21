@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { CatalogoPage } from './pages/CatalogoPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
+import { VehiculoDetallePage } from './pages/VehiculoDetallePage'
 import { useAuthStore } from './stores/authStore'
 
 export default function App() {
@@ -24,6 +26,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/catalogo"
+          element={
+            <ProtectedRoute>
+              <CatalogoPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vehiculo/:id"
+          element={
+            <ProtectedRoute>
+              <VehiculoDetallePage />
             </ProtectedRoute>
           }
         />
