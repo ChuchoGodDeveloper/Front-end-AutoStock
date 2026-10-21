@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Car, PlusCircle, RefreshCw, SearchX } from 'lucide-react'
+import { ArrowLeft, Car, Filter, PlusCircle, RefreshCw, SearchX, SlidersHorizontal } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { FilterPanel } from '../components/FilterPanel'
+import { FiltrosRapidos } from '../components/FiltrosRapidos'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { SearchBar } from '../components/SearchBar'
 import { VehiculoCard } from '../components/VehiculoCard'
 import { MENSAJES } from '../config/mensajes'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { useAuthStore } from '../stores/authStore'
-import { useCatalogoStore } from '../stores/catalogoStore'
+import { FILTROS_VACIOS, hayFiltrosActivos, useCatalogoStore } from '../stores/catalogoStore'
 
 const ROLES_PUEDE_REGISTRAR = ['Encargado de Lote y Recepción', 'Administrador']
 
@@ -21,19 +23,27 @@ export function CatalogoPage() {
   const cargando = useCatalogoStore((estado) => estado.cargando)
   const error = useCatalogoStore((estado) => estado.error)
   const terminoBusqueda = useCatalogoStore((estado) => estado.terminoBusqueda)
+  const filtros = useCatalogoStore((estado) => estado.filtros)
   const cargarMasVehiculos = useCatalogoStore((estado) => estado.cargarMasVehiculos)
   const setTerminoBusqueda = useCatalogoStore((estado) => estado.setTerminoBusqueda)
+  const setFiltros = useCatalogoStore((estado) => estado.setFiltros)
 
   const rol = useAuthStore((estado) => estado.usuario?.rol ?? '')
 
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const [versionBusqueda, setVersionBusqueda] = useState(0)
+  const [panelFiltrosAbierto, setPanelFiltrosAbierto] = useState(false)
+  const filtrosActivos = hayFiltrosActivos(filtros)
   const primeraCarga = vehiculos.length === 0 && !cargando && !error && !terminoBusqueda
   const busquedaSinResultados =
     !cargando && !error && terminoBusqueda !== '' && totalUnidades === 0 && vehiculos.length === 0
+  const filtrosSinResultados =
+    !cargando && !error && terminoBusqueda === '' && filtrosActivos && totalUnidades === 0 && vehiculos.length === 0
 
   useEffect(() => {
     const { vehiculos: cargados, cargando: enCarga } = useCatalogoStore.getState()
+
+    void useCatalogoStore.getState().cargarConteosRapidos()
 
     if (cargados.length === 0 && !enCarga) {
       void useCatalogoStore.getState().cargarMasVehiculos(true)
@@ -61,6 +71,10 @@ export function CatalogoPage() {
   const limpiarBusqueda = () => {
     void setTerminoBusqueda('')
     setVersionBusqueda((actual) => actual + 1)
+  }
+
+  const limpiarFiltros = () => {
+    void setFiltros(FILTROS_VACIOS)
   }
 
   return (
@@ -92,8 +106,26 @@ export function CatalogoPage() {
             </button>
           </div>
 
-          <div className="mt-4">
-            <SearchBar key={versionBusqueda} />
+          <div className="mt-4 flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <SearchBar key={versionBusqueda} />
+            </div>
+            <button
+              type="button"
+              onClick={() => setPanelFiltrosAbierto(true)}
+              aria-label="Abrir filtros"
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                filtrosActivos
+                  ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'
+                  : 'border-slate-300 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700'
+              }`}
+            >
+              <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="mt-3">
+            <FiltrosRapidos />
           </div>
         </header>
 
@@ -116,6 +148,32 @@ export function CatalogoPage() {
               className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
             >
               Limpiar búsqueda
+            </button>
+
+            {ROLES_PUEDE_REGISTRAR.includes(rol) && (
+              <Link
+                to="/registrar-vehiculo"
+                className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              >
+                <PlusCircle className="h-4 w-4" aria-hidden="true" />
+                Registrar unidad
+              </Link>
+            )}
+          </section>
+        )}
+
+        {filtrosSinResultados && (
+          <section className="flex flex-col items-center gap-3 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <Filter className="h-10 w-10 text-slate-400" aria-hidden="true" />
+            <p className="text-center text-sm font-semibold text-slate-700">
+              No hay unidades con estos filtros
+            </p>
+            <button
+              type="button"
+              onClick={limpiarFiltros}
+              className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            >
+              Limpiar filtros
             </button>
 
             {ROLES_PUEDE_REGISTRAR.includes(rol) && (
@@ -183,6 +241,8 @@ export function CatalogoPage() {
           </Link>
         </footer>
       </div>
+
+      <FilterPanel abierto={panelFiltrosAbierto} onCerrar={() => setPanelFiltrosAbierto(false)} />
     </main>
   )
 }

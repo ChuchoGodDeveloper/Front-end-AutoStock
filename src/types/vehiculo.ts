@@ -7,6 +7,11 @@ export enum EstadoOperativo {
   Vendido = 'Vendido',
 }
 
+export enum TipoVehiculo {
+  Nuevo = 1,
+  Seminuevo = 2,
+}
+
 export interface Vehiculo {
   id: string
   marca: string
@@ -19,7 +24,22 @@ export interface Vehiculo {
   cajonLote: string
   fotoPrincipalUrl: string | null
   estado: EstadoOperativo
+  tipo: TipoVehiculo
   fechaRegistro: string
+}
+
+export interface FiltrosCatalogo {
+  estados: EstadoOperativo[]
+  tipo: TipoVehiculo | null
+  precioMin: number | null
+  precioMax: number | null
+}
+
+export interface ConteosRapidos {
+  todos: number
+  disponibles: number
+  seminuevos: number
+  nuevos: number
 }
 
 export interface PaginaCatalogo {
