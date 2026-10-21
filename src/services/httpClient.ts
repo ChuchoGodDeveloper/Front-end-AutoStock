@@ -34,10 +34,15 @@ export function construirUrlApi(ruta: string): string {
 }
 
 function extraerMensaje(body: unknown): string {
-  if (body && typeof body === 'object' && 'message' in body) {
-    const mensaje = (body as { message: unknown }).message
-    if (typeof mensaje === 'string' && mensaje.trim()) return mensaje
+  if (!body || typeof body !== 'object') return 'Error en la solicitud'
+
+  const candidatos = body as Record<string, unknown>
+
+  for (const llave of ['mensaje', 'message', 'title'] as const) {
+    const valor = candidatos[llave]
+    if (typeof valor === 'string' && valor.trim()) return valor
   }
+
   return 'Error en la solicitud'
 }
 

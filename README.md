@@ -37,6 +37,18 @@ de `ENV.API_BASE_URL` (`src/config/env.ts`), que normaliza el valor de
 En Azure Static Web Apps la variable se configura como `VITE_API_URL`
 (Settings → Configuration). Ver `.env.example`.
 
+## Contrato API HU-01 (alineado con `BackEnd-AutoStock`)
+
+| Método y ruta                      | Petición                          | Respuesta                                                                     |
+| ---------------------------------- | --------------------------------- | ----------------------------------------------------------------------------- |
+| `POST /api/auth/login`             | `{ identificador, password }`     | `{ token, expiraEn, usuario: { id, empleadoId, nombreCompleto, correo, rol } }` |
+| `POST /api/auth/logout`            | (Bearer token)                    | `{ mensaje: "Sesión cerrada correctamente" }`                                 |
+| `GET /api/auth/perfil`             | (Bearer token)                    | `{ id, empleadoId, nombreCompleto, correo, rol, activo, fechaCreacion }`       |
+
+Los errores HTTP (400, 401, 403, 423 y 500) devuelven `{ mensaje: string }`;
+`src/services/httpClient.ts` lee exactamente esa propiedad y `LoginPage`
+muestra los textos de los Criterios de Aceptación.
+
 ## Historia HU-01 — Iniciar sesión
 
 - `/login`: inicio de sesión con ID de empleado o correo + contraseña, con
