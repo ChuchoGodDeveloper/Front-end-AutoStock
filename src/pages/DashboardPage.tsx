@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { MENSAJES } from '../config/mensajes'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
+import { authService } from '../services/authService'
 import { apiFetch } from '../services/httpClient'
-import { useAuthStore } from '../stores/authStore'
+import { useAuthStore, usuarioDesdePerfil } from '../stores/authStore'
 
 interface ResumenMetricas {
   disponibles: number
@@ -45,10 +46,35 @@ export function DashboardPage() {
   const navigate = useNavigate()
   const usuario = useAuthStore((estado) => estado.usuario)
   const cerrarSesion = useAuthStore((estado) => estado.cerrarSesion)
+  const actualizarUsuario = useAuthStore((estado) => estado.actualizarUsuario)
   const enLinea = useOnlineStatus()
 
   const [resumen, setResumen] = useState<ResumenMetricas>(RESUMEN_VACIO)
   const [avisoAccion, setAvisoAccion] = useState('')
+
+  useEffect(() => {
+    if (!enLinea) return
+
+    let vigente = true
+
+    const refrescarPerfil = async () => {
+      try {
+        const perfil = await authService.obtenerPerfil()
+
+        if (vigente && perfil?.id) {
+          await actualizarUsuario(usuarioDesdePerfil(perfil))
+        }
+      } catch {
+        // Sin conexión o con el token vencido se conserva la sesión local.
+      }
+    }
+
+    void refrescarPerfil()
+
+    return () => {
+      vigente = false
+    }
+  }, [enLinea, actualizarUsuario])
 
   useEffect(() => {
     let vigente = true

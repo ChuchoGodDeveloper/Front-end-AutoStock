@@ -1,24 +1,39 @@
 import { apiFetch } from './httpClient'
 
+export interface UsuarioLoginBackend {
+  id: number | string
+  empleadoId: string
+  nombreCompleto: string
+  correo: string
+  rol: string
+}
+
 export interface RespuestaLoginBackend {
   token: string
-  nombreCompleto?: string
-  rol?: string
-  correo?: string
-  id?: string | number
-  empleadoId?: string
-  requiereCambioPassword?: boolean
+  expiraEn: string
+  usuario: UsuarioLoginBackend
+}
+
+export interface PerfilBackend extends UsuarioLoginBackend {
+  activo: boolean
+  fechaCreacion: string
+}
+
+export interface RespuestaLogoutBackend {
+  mensaje: string
 }
 
 export const authService = {
-  iniciarSesion: (credencial: string, password: string) =>
+  iniciarSesion: (identificador: string, password: string) =>
     apiFetch<RespuestaLoginBackend>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ credencial, password }),
+      body: JSON.stringify({ identificador, password }),
     }),
 
   cerrarSesion: () =>
-    apiFetch<void>('/auth/logout', {
+    apiFetch<RespuestaLogoutBackend>('/auth/logout', {
       method: 'POST',
     }),
+
+  obtenerPerfil: () => apiFetch<PerfilBackend>('/auth/perfil'),
 }

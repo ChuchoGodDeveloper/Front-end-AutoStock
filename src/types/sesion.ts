@@ -1,5 +1,5 @@
 export interface UsuarioSesion {
-  id: string
+  id: number | string
   empleadoId: string
   nombreCompleto: string
   correo: string

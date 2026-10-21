@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { MENSAJES } from '../config/mensajes'
-import { authService, type RespuestaLoginBackend } from '../services/authService'
+import { authService, type PerfilBackend, type RespuestaLoginBackend } from '../services/authService'
 import { HttpError, setAccessToken } from '../services/httpClient'
 import {
   borrarSesion,
@@ -21,7 +21,8 @@ interface EstadoAuth {
   sesionCargada: boolean
   iniciandoSesion: boolean
   hidratarSesion: () => Promise<boolean>
-  iniciarSesion: (credencial: string, password: string) => Promise<UsuarioSesion>
+  iniciarSesion: (identificador: string, password: string) => Promise<UsuarioSesion>
+  actualizarUsuario: (usuario: UsuarioSesion) => Promise<void>
   cerrarSesion: () => Promise<void>
 }
 
@@ -52,56 +53,66 @@ function decodificarPayloadJwt(token: string): Record<string, unknown> {
   }
 }
 
+function expiracionLocalDeRespuesta(valor: unknown): string {
+  const fecha = new Date(typeof valor === 'string' || typeof valor === 'number' ? valor : '')
+  const tiempo = fecha.getTime()
+
+  if (Number.isFinite(tiempo) && tiempo > Date.now()) {
+    return fecha.toISOString()
+  }
+
+  return new Date(Date.now() + DURACION_SESION_HORAS * MILISEGUNDOS_POR_HORA).toISOString()
+}
+
 function construirUsuarioDesdeLogin(
   respuesta: RespuestaLoginBackend,
-  credencial: string,
+  identificador: string,
   claims: Record<string, unknown>,
 ): UsuarioSesion {
-  const esCorreo = credencial.includes('@')
-  const nombreSugerido = esCorreo ? (credencial.split('@')[0] ?? credencial) : credencial
+  const usuario = respuesta.usuario
+  const esCorreo = identificador.includes('@')
+  const nombreSugerido = esCorreo ? (identificador.split('@')[0] ?? identificador) : identificador
 
   return {
-    id: comoTexto(respuesta.id) || comoTexto(claims.sub) || comoTexto(claims.id) || credencial,
+    id: usuario?.id ?? comoTexto(claims.sub) ?? identificador,
     empleadoId:
-      comoTexto(respuesta.empleadoId) ||
-      comoTexto(claims.empleadoId) ||
-      (esCorreo ? '' : credencial),
-    nombreCompleto:
-      comoTexto(respuesta.nombreCompleto) ||
-      comoTexto(claims.nombreCompleto) ||
-      nombreSugerido,
-    correo:
-      comoTexto(respuesta.correo) || comoTexto(claims.correo) || (esCorreo ? credencial : ''),
-    rol: comoTexto(respuesta.rol) || comoTexto(claims.rol) || 'Usuario',
+      usuario?.empleadoId || comoTexto(claims.empleadoId) || (esCorreo ? '' : identificador),
+    nombreCompleto: usuario?.nombreCompleto || comoTexto(claims.nombre) || nombreSugerido,
+    correo: usuario?.correo || comoTexto(claims.email) || (esCorreo ? identificador : ''),
+    rol: usuario?.rol || comoTexto(claims.role) || 'Usuario',
   }
 }
 
 function construirSesionDesdeLogin(
   respuesta: RespuestaLoginBackend,
-  credencial: string,
+  identificador: string,
 ): SesionActiva {
   const ahora = Date.now()
   const claims = decodificarPayloadJwt(respuesta.token)
 
   return {
     token: respuesta.token,
-    expiraEn: new Date(ahora + DURACION_SESION_HORAS * MILISEGUNDOS_POR_HORA).toISOString(),
-    usuario: construirUsuarioDesdeLogin(respuesta, credencial, claims),
+    expiraEn: expiracionLocalDeRespuesta(respuesta.expiraEn),
+    usuario: construirUsuarioDesdeLogin(respuesta, identificador, claims),
     guardadoEn: new Date(ahora).toISOString(),
   }
 }
 
 function traducirErrorSesion(error: unknown): Error {
   if (error instanceof HttpError) {
+    const mensajeServidor = error.message.trim()
+
     switch (error.status) {
+      case 400:
+        return new Error(mensajeServidor || MENSAJES.errorInesperado)
       case 401:
-        return new Error(MENSAJES.credencialesIncorrectas)
+        return new Error(mensajeServidor || MENSAJES.credencialesIncorrectas)
       case 403:
-        return new Error(MENSAJES.cuentaDesactivada)
+        return new Error(mensajeServidor || MENSAJES.cuentaDesactivada)
       case 423:
-        return new Error(MENSAJES.cuentaBloqueada)
+        return new Error(mensajeServidor || MENSAJES.cuentaBloqueada)
       default:
-        return new Error(error.message || MENSAJES.errorInesperado)
+        return new Error(mensajeServidor || MENSAJES.errorInesperado)
     }
   }
 
@@ -158,7 +169,7 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
     return false
   },
 
-  iniciarSesion: async (credencial, password) => {
+  iniciarSesion: async (identificador, password) => {
     if (!hayConexion()) {
       throw new Error(MENSAJES.sinConexionLogin)
     }
@@ -166,8 +177,8 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
     set({ iniciandoSesion: true })
 
     try {
-      const respuesta = await authService.iniciarSesion(credencial, password)
-      const sesion = construirSesionDesdeLogin(respuesta, credencial)
+      const respuesta = await authService.iniciarSesion(identificador, password)
+      const sesion = construirSesionDesdeLogin(respuesta, identificador)
 
       setAccessToken(sesion.token)
       await guardarSesion(sesion)
@@ -186,6 +197,20 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
     } finally {
       set({ iniciandoSesion: false })
     }
+  },
+
+  actualizarUsuario: async (usuario) => {
+    const { token, expiraEn } = get()
+
+    if (!token) return
+
+    set({ usuario })
+    await guardarSesion({
+      token,
+      expiraEn: expiraEn ?? expiracionLocalDeRespuesta(null),
+      usuario,
+      guardadoEn: new Date().toISOString(),
+    })
   },
 
   cerrarSesion: async () => {
@@ -210,3 +235,13 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
     })
   },
 }))
+
+export function usuarioDesdePerfil(perfil: PerfilBackend): UsuarioSesion {
+  return {
+    id: perfil.id,
+    empleadoId: perfil.empleadoId,
+    nombreCompleto: perfil.nombreCompleto,
+    correo: perfil.correo,
+    rol: perfil.rol,
+  }
+}
