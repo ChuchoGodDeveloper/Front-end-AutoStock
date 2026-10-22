@@ -2,6 +2,7 @@ import { apiFetch } from './httpClient'
 import type {
   ConteosRapidos,
   FiltrosCatalogo,
+  GuardarFotografiaDto,
   PaginaCatalogo,
   RegistrarVehiculoDto,
   VehiculoDetalle,
@@ -45,5 +46,16 @@ export const vehiculosService = {
     apiFetch<VehiculoDetalle>('/vehiculos', {
       method: 'POST',
       body: JSON.stringify(datos),
+    }),
+
+  guardarFotografia: (vehiculoId: string, datos: GuardarFotografiaDto) =>
+    apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/fotografias`, {
+      method: 'POST',
+      body: JSON.stringify(datos),
+    }),
+
+  eliminarFotografia: (vehiculoId: string, imagenId: string) =>
+    apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/fotografias/${imagenId}`, {
+      method: 'DELETE',
     }),
 }
