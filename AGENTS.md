@@ -16,7 +16,7 @@ Este documento maestro concentra el estado actual del proyecto **AutoStock**, la
   * **.NET 10** con **Clean Architecture** en 5 proyectos independientes (`Domain`, `Application`, `Infrastructure`, `API`, `UnitTests`).
   * **SQL Server (Azure SQL)** con **Entity Framework Core** (Migraciones versionadas y Data Seeder en `DbInitializer.cs`).
   * Autenticación **JWT** (vigencia de 8 horas) y hash de contraseñas con **BCrypt**.
-  * Pruebas unitarias con **xUnit** y **Moq** (48/48 pruebas en verde hasta HU-09).
+  * Pruebas unitarias con **xUnit** y **Moq** (55/55 pruebas en verde hasta HU-10).
   * Análisis estático con **Roslynator** (`.editorconfig` y `Directory.Build.props`) y GitHub Actions (`.github/workflows/ci-quality-tests.yml`).
 * **Frontend (Repositorio: `Front-end-AutoStock`):**
   * **React 18**, **TypeScript**, **Vite**, **Tailwind CSS** y **React Router DOM v6**.
@@ -149,7 +149,7 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 
 ---
 
-## 6. Historias de Usuario Completadas (HU-01 a HU-09)
+## 6. Historias de Usuario Completadas (HU-01 a HU-10)
 
 1. **HU-01 (Iniciar sesión — José de Jesús):** JWT de 8h, persistencia en IndexedDB (`autostock-pwa-db`), soporte offline, bloqueo por 5 intentos fallidos durante 15 minutos, mensajes exactos de error (`401`, `403`, `423`).
 2. **HU-02 (Consultar catálogo — Delia Leslie):** Infinite scroll paginado, tarjetas con formato MXN, insignias de estado por color, manejo de unidades sin foto, ocultamiento de vendidos por defecto.
@@ -166,6 +166,9 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 9. **HU-09 (Capturar evidencia fotográfica — José de Jesús):**
    * **Backend:** Migración `UpdateImagenesVehiculo_AddEvidenciaFotografica_HU09` (`TipoToma`, `FechaCaptura`, `CapturadaPor`, columnas de imagen sin límite fijo para Data URLs), endpoints `POST /api/vehiculos/{id}/fotografias` y `DELETE /api/vehiculos/{id}/fotografias/{imagenId}` protegidos para `"Encargado de Lote y Recepción"` y `"Administrador"`, cálculo automático de `TomasObligatoriasCompletadas` (`0/4` a `4/4`), `PorcentajeEvidencia` (`0%` a `100%`) e `InspeccionCompleta`, uso de la toma `Frontal` como `FotoPrincipalUrl` para el catálogo, límite de `"Máximo 6 fotografías por unidad"` y pruebas unitarias en xUnit.
    * **Frontend:** Pantalla `/vehiculo/:id/evidencia` (`EvidenciaVehiculoPage.tsx`) con las 4 tomas obligatorias (`Frontal`, `Lateral derecha`, `Trasera`, `Tablero / odómetro`) + hasta 2 fotos adicionales, cámara en vivo WebRTC (`getUserMedia`) con respaldo de captura/archivo y guía de permisos de cámara, compresión en Canvas a máximo `1600 px` (JPEG), confirmación antes de eliminar una foto, aviso `Inspección incompleta` cuando faltan tomas obligatorias, y botón **Agregar fotos** en `VehiculoDetallePage.tsx` visible solo para `Encargado de Lote y Recepción` y `Administrador`.
+10. **HU-10 (Cambiar estado operativo de una unidad — Delia Leslie):**
+    * **Backend:** Entidad inmutable `HistorialEstadoVehiculo` y migración `UpdateVehiculos_AddHistorialYCambioEstado_HU10` (`FechaCambioEstado`, `EstadoActualizadoPor`, `EstadoActualizadoPorUsuarioId`, `ResponsableTestDrive`, `ReservadoPorUsuarioId`, `ReservadoPorNombre`), endpoints `PATCH /api/vehiculos/{id}/estado` y `GET /api/metricas/resumen`, validación que impide asignar `Vendido` desde este flujo, asignación automática del responsable de `TestDrive` y dueño de `Reservado`, restricción para que unidades reservadas por otro usuario solo puedan ser liberadas por quien la reservó, el `Gerente de Ventas` o el `Administrador`, y pruebas unitarias en xUnit.
+    * **Frontend:** Modal de cambio de estado operativo en `VehiculoDetallePage.tsx` con las 5 opciones (`Disponible para venta`, `Asignado a prueba de manejo (Test Drive)`, `En taller / mantenimiento`, `En zona de lavado / preparación`, `Reservado / apartado`), botón **Confirmar cambio** deshabilitado si se elige el estado actual, enlace a reubicación de cajón/zona (HU-13), visualización en ficha de quién actualizó el estado y cuándo, responsable de `Test Drive` y quién reservó la unidad, ocultamiento del botón en unidades `Vendido` o reservadas por otro usuario (para Asesor/Encargado), y actualización en tiempo real de ficha, catálogo y contadores sin recargar la app.
 
 ---
 
@@ -182,7 +185,7 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 | **HU-07** | Crear usuarios (5 pts) | José de Jesús López Islas | Alta | Sprint 2 | **Completada** | Rol Administrador; password temporal y cambio en 1er acceso. |
 | **HU-08** | Registrar un vehículo (alta) (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 2 | **Completada** | Las fotografías se completan después con HU-09. |
 | **HU-09** | Capturar evidencia fotográfica (5 pts) | José de Jesús López Islas | Alta | Sprint 2 | **Completada** | 4 tomas obligatorias + 2 adicionales; máx. 6 fotos (1600px). |
-| **HU-10** | Cambiar estado operativo (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 2 | Pendiente | No incluye el estado Vendido; ese cambio se hace solo desde HU-19. |
+| **HU-10** | Cambiar estado operativo (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 2 | **Completada** | 5 estados operativos, bitácora inmutable, Test Drive y Reservas. |
 | **HU-11** | Configurar permisos por rol (5 pts) | José de Jesús López Islas | Alta | Sprint 3 | Pendiente | Da origen a la matriz de permisos que aplica HU-12. |
 | **HU-12** | Restringir funciones según mi rol (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | Pendiente | Depende de HU-11. Debe verificarse en cada historia nueva. |
 | **HU-13** | Asignar o reubicar cajón en el lote (3 pts) | José de Jesús López Islas | Alta | Sprint 3 | Pendiente | Lista de zonas y cajones del lote. |

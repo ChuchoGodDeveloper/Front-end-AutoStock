@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
+  AlertCircle,
   AlertTriangle,
   ArrowLeft,
   Camera,
@@ -8,9 +9,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Clock,
   Gauge,
   Hash,
   Info,
+  Loader2,
+  Lock,
   MapPin,
   Pencil,
   RefreshCw,
@@ -18,6 +22,7 @@ import {
   Ticket,
   ToggleLeft,
   UserCheck,
+  X,
 } from 'lucide-react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ESTILOS_ESTADO } from '../config/estadosOperativos'
@@ -25,7 +30,12 @@ import { MENSAJES } from '../config/mensajes'
 import { HttpError } from '../services/httpClient'
 import { vehiculosService } from '../services/vehiculosService'
 import { useAuthStore } from '../stores/authStore'
-import { obtenerEtiquetaToma, type VehiculoDetalle } from '../types/vehiculo'
+import { useCatalogoStore } from '../stores/catalogoStore'
+import {
+  EstadoOperativo,
+  obtenerEtiquetaToma,
+  type VehiculoDetalle,
+} from '../types/vehiculo'
 
 const formateadorMoneda = new Intl.NumberFormat('es-MX', {
   style: 'currency',
@@ -35,16 +45,60 @@ const formateadorMoneda = new Intl.NumberFormat('es-MX', {
 
 const formateadorKilometraje = new Intl.NumberFormat('es-MX')
 
-const ROL_ASESOR = 'Asesor de Ventas'
 const ROLES_CON_EDICION = [
   'Encargado de Lote y Recepción',
   'Gerente de Ventas',
   'Administrador',
 ]
 const ROLES_CON_EVIDENCIA = ['Encargado de Lote y Recepción', 'Administrador']
+const ROLES_SUPERIORES_RESERVA = ['Gerente de Ventas', 'Administrador']
+
+interface OpcionEstadoModal {
+  valor: EstadoOperativo
+  titulo: string
+  descripcion: string
+}
+
+const OPCIONES_CAMBIO_ESTADO: OpcionEstadoModal[] = [
+  {
+    valor: EstadoOperativo.Disponible,
+    titulo: 'Disponible para venta',
+    descripcion: 'Unidad lista en piso de exhibición para atención inmediata a clientes.',
+  },
+  {
+    valor: EstadoOperativo.TestDrive,
+    titulo: 'Asignado a prueba de manejo (Test Drive)',
+    descripcion: 'Quedarás registrado como responsable de la prueba de manejo.',
+  },
+  {
+    valor: EstadoOperativo.EnTaller,
+    titulo: 'En taller / mantenimiento',
+    descripcion: 'En diagnóstico mecánico, servicio preventivo o reparación.',
+  },
+  {
+    valor: EstadoOperativo.EnLavado,
+    titulo: 'En zona de lavado / preparación',
+    descripcion: 'En proceso de detallado estético o limpieza para exhibición.',
+  },
+  {
+    valor: EstadoOperativo.Reservado,
+    titulo: 'Reservado / apartado',
+    descripcion: 'Apartado para un cliente en proceso de negociación.',
+  },
+]
 
 function mostrarDato(valor: string | null | undefined): string {
   return valor && valor.trim() ? valor.trim() : MENSAJES.sinRegistro
+}
+
+function formatearFechaHora(fechaIso?: string | null): string {
+  if (!fechaIso) return ''
+  const fecha = new Date(fechaIso)
+  if (Number.isNaN(fecha.getTime())) return ''
+  return new Intl.DateTimeFormat('es-MX', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(fecha)
 }
 
 interface EstadoNavegacionDetalle {
@@ -56,7 +110,11 @@ export function VehiculoDetallePage() {
   const navigate = useNavigate()
   const location = useLocation()
   const estadoNavegacion = (location.state as EstadoNavegacionDetalle | null) ?? null
-  const rol = useAuthStore((estado) => estado.usuario?.rol ?? '')
+  const usuario = useAuthStore((estado) => estado.usuario)
+  const rol = usuario?.rol ?? ''
+  const actualizarVehiculoEnCatalogo = useCatalogoStore(
+    (estado) => estado.actualizarVehiculoEnCatalogo,
+  )
 
   const [vehiculo, setVehiculo] = useState<VehiculoDetalle | null>(null)
   const [cargando, setCargando] = useState(true)
@@ -64,6 +122,15 @@ export function VehiculoDetallePage() {
   const [noEncontrado, setNoEncontrado] = useState(false)
   const [indiceImagen, setIndiceImagen] = useState(0)
   const [fotoFallida, setFotoFallida] = useState(false)
+
+  // Estado del Modal de Cambio de Estado Operativo (HU-10)
+  const [modalEstadoAbierto, setModalEstadoAbierto] = useState(false)
+  const [estadoSeleccionado, setEstadoSeleccionado] = useState<EstadoOperativo>(
+    EstadoOperativo.Disponible,
+  )
+  const [guardandoEstado, setGuardandoEstado] = useState(false)
+  const [errorCambioEstado, setErrorCambioEstado] = useState<string | null>(null)
+  const [avisoReubicacion, setAvisoReubicacion] = useState<string | null>(null)
 
   const cargarVehiculo = useCallback(async () => {
     if (!id) {
@@ -81,6 +148,7 @@ export function VehiculoDetallePage() {
     try {
       const detalle = await vehiculosService.obtenerVehiculoPorId(id)
       setVehiculo(detalle)
+      setEstadoSeleccionado(detalle.estado)
     } catch (err) {
       if (err instanceof HttpError && err.status === 404) {
         setNoEncontrado(true)
@@ -107,17 +175,80 @@ export function VehiculoDetallePage() {
     setFotoFallida(false)
   }
 
+  const abrirModalCambioEstado = () => {
+    if (!vehiculo) return
+    setEstadoSeleccionado(vehiculo.estado)
+    setErrorCambioEstado(null)
+    setAvisoReubicacion(null)
+    setModalEstadoAbierto(true)
+  }
+
+  const cerrarModalCambioEstado = () => {
+    if (guardandoEstado) return
+    setModalEstadoAbierto(false)
+    setErrorCambioEstado(null)
+    setAvisoReubicacion(null)
+  }
+
+  const confirmarCambioEstado = async () => {
+    if (!vehiculo || estadoSeleccionado === vehiculo.estado) return
+
+    setGuardandoEstado(true)
+    setErrorCambioEstado(null)
+
+    try {
+      const actualizado = await vehiculosService.cambiarEstadoOperativo(vehiculo.id, {
+        nuevoEstado: estadoSeleccionado,
+      })
+      setVehiculo(actualizado)
+      actualizarVehiculoEnCatalogo(actualizado)
+      setModalEstadoAbierto(false)
+    } catch (err) {
+      if (err instanceof HttpError) {
+        setErrorCambioEstado(err.message)
+      } else {
+        setErrorCambioEstado('No fue posible actualizar el estado operativo. Intenta de nuevo.')
+      }
+    } finally {
+      setGuardandoEstado(false)
+    }
+  }
+
   const estiloEstado = vehiculo ? ESTILOS_ESTADO[vehiculo.estado] : undefined
   const totalImagenes = vehiculo?.imagenes.length ?? 0
   const imagenActual = vehiculo?.imagenes[indiceImagen]
   const urlImagen =
     totalImagenes > 0 && imagenActual && !fotoFallida ? imagenActual.url : null
 
-  const puedeEditar =
-    rol === ROL_ASESOR || ROLES_CON_EDICION.includes(rol)
   const puedeGestionarFotos = ROLES_CON_EVIDENCIA.includes(rol)
   const inspeccionCompleta =
     vehiculo?.inspeccionCompleta ?? (vehiculo?.tomasObligatoriasCompletadas ?? 0) >= 4
+
+  // Reglas de negocio HU-10 (CA 7 y CA 8)
+  const estaVendido = vehiculo?.estado === EstadoOperativo.Vendido
+  const estaReservado = vehiculo?.estado === EstadoOperativo.Reservado
+  const esGerenteOAdmin = ROLES_SUPERIORES_RESERVA.includes(rol)
+
+  const tieneDuenoReserva = Boolean(
+    vehiculo?.reservadoPorUsuarioId != null || vehiculo?.reservadoPorNombre?.trim(),
+  )
+  const esMismoUsuarioReserva = Boolean(
+    (vehiculo?.reservadoPorUsuarioId != null &&
+      usuario?.id != null &&
+      vehiculo.reservadoPorUsuarioId === usuario.id) ||
+      (!vehiculo?.reservadoPorUsuarioId &&
+        vehiculo?.reservadoPorNombre &&
+        usuario?.nombreCompleto &&
+        vehiculo.reservadoPorNombre.trim().toLowerCase() ===
+          usuario.nombreCompleto.trim().toLowerCase()),
+  )
+
+  const bloqueadoPorReservaDeOtro =
+    estaReservado && tieneDuenoReserva && !esMismoUsuarioReserva && !esGerenteOAdmin
+
+  const mostrarBotonCambioEstado = Boolean(
+    vehiculo && !estaVendido && !bloqueadoPorReservaDeOtro,
+  )
 
   return (
     <main className="min-h-screen bg-slate-100 pb-10">
@@ -302,6 +433,32 @@ export function VehiculoDetallePage() {
                   {formateadorMoneda.format(vehiculo.precio)}
                 </p>
 
+                {/* Información de Test Drive o Reserva activa (CA 4, CA 7) */}
+                {vehiculo.estado === EstadoOperativo.TestDrive &&
+                  vehiculo.responsableTestDrive && (
+                    <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">
+                      <UserCheck className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+                      <span>{`Prueba de manejo a cargo de: ${vehiculo.responsableTestDrive}`}</span>
+                    </div>
+                  )}
+
+                {vehiculo.estado === EstadoOperativo.Reservado && vehiculo.reservadoPorNombre && (
+                  <div className="flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-bold text-purple-900">
+                    <Lock className="h-4 w-4 shrink-0 text-purple-600" aria-hidden="true" />
+                    <span>{`Unidad reservada por: ${vehiculo.reservadoPorNombre}`}</span>
+                  </div>
+                )}
+
+                {/* Quién hizo el último cambio de estado y cuándo (CA 3) */}
+                {vehiculo.estadoActualizadoPor && vehiculo.fechaCambioEstado && (
+                  <div className="flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
+                    <Clock className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                    <span>
+                      {`Estado actualizado por ${vehiculo.estadoActualizadoPor} el ${formatearFechaHora(vehiculo.fechaCambioEstado)}`}
+                    </span>
+                  </div>
+                )}
+
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm text-slate-600">
                   <div className="flex items-center gap-2">
                     <Hash className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
@@ -324,17 +481,51 @@ export function VehiculoDetallePage() {
               </div>
             </section>
 
-            {/* Botón Agregar fotos exclusivo para Encargado de Lote y Administrador (CA 1, CA 9) */}
-            {puedeGestionarFotos && (
-              <button
-                type="button"
-                onClick={() => navigate(`/vehiculo/${vehiculo.id}/evidencia`)}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3.5 text-sm font-black text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-              >
-                <Camera className="h-5 w-5" aria-hidden="true" />
-                Agregar fotos ({vehiculo.tomasObligatoriasCompletadas ?? 0}/4 obligatorias)
-              </button>
-            )}
+            {/* Acciones operativas principales */}
+            <section className="space-y-3">
+              {mostrarBotonCambioEstado && (
+                <button
+                  type="button"
+                  onClick={abrirModalCambioEstado}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-300 bg-blue-50 px-4 py-3.5 text-sm font-black text-blue-900 shadow-sm transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                >
+                  <ToggleLeft className="h-5 w-5 text-blue-700" aria-hidden="true" />
+                  Cambiar Estado Operativo
+                </button>
+              )}
+
+              {bloqueadoPorReservaDeOtro && (
+                <div className="flex items-start gap-2.5 rounded-2xl border border-purple-200 bg-purple-50/70 p-3.5 text-xs font-semibold text-purple-900">
+                  <Lock className="mt-0.5 h-4 w-4 shrink-0 text-purple-600" aria-hidden="true" />
+                  <span>
+                    {`Esta unidad fue reservada por ${vehiculo.reservadoPorNombre}. Solo quien la reservó, el Gerente de Ventas o el Administrador pueden cambiar su estado.`}
+                  </span>
+                </div>
+              )}
+
+              {puedeGestionarFotos && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/vehiculo/${vehiculo.id}/evidencia`)}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3.5 text-sm font-black text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                >
+                  <Camera className="h-5 w-5" aria-hidden="true" />
+                  Agregar fotos ({vehiculo.tomasObligatoriasCompletadas ?? 0}/4 obligatorias)
+                </button>
+              )}
+
+              {ROLES_CON_EDICION.includes(rol) && (
+                <button
+                  type="button"
+                  disabled
+                  title={MENSAJES.moduloProximamente}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                >
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                  Editar Kilometraje / Datos
+                </button>
+              )}
+            </section>
 
             <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
@@ -442,32 +633,6 @@ export function VehiculoDetallePage() {
               </section>
             )}
 
-            {puedeEditar && (
-              <section className="space-y-3">
-                <button
-                  type="button"
-                  disabled
-                  title={MENSAJES.moduloProximamente}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-800 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-                >
-                  <ToggleLeft className="h-4 w-4" aria-hidden="true" />
-                  Cambiar Estado Operativo
-                </button>
-
-                {ROLES_CON_EDICION.includes(rol) && (
-                  <button
-                    type="button"
-                    disabled
-                    title={MENSAJES.moduloProximamente}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-                  >
-                    <Pencil className="h-4 w-4" aria-hidden="true" />
-                    Editar Kilometraje / Datos
-                  </button>
-                )}
-              </section>
-            )}
-
             <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
               <MapPin className="h-4 w-4" aria-hidden="true" />
               <span>{`${vehiculo.zonaLote} - Cajón ${vehiculo.cajonLote}`}</span>
@@ -475,6 +640,143 @@ export function VehiculoDetallePage() {
           </>
         )}
       </div>
+
+      {/* Modal de Cambio de Estado Operativo (HU-10) */}
+      {modalEstadoAbierto && vehiculo && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="titulo-modal-estado"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4"
+        >
+          <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                  Estado en tiempo real
+                </p>
+                <h2 id="titulo-modal-estado" className="text-lg font-black text-slate-900">
+                  Cambiar Estado Operativo
+                </h2>
+                <p className="text-xs font-semibold text-slate-500">
+                  {`${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio} · ${vehiculo.numeroStock}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={cerrarModalCambioEstado}
+                disabled={guardandoEstado}
+                aria-label="Cerrar ventana"
+                className="rounded-xl p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+
+            {errorCambioEstado && (
+              <div
+                role="alert"
+                className="mt-3 flex items-start gap-2 rounded-2xl border border-red-300 bg-red-50 p-3 text-xs font-bold text-red-900"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
+                <span>{errorCambioEstado}</span>
+              </div>
+            )}
+
+            <div className="mt-4 space-y-2.5">
+              {OPCIONES_CAMBIO_ESTADO.map((opcion) => {
+                const esActual = vehiculo.estado === opcion.valor
+                const estaMarcado = estadoSeleccionado === opcion.valor
+                const estilo = ESTILOS_ESTADO[opcion.valor]
+
+                return (
+                  <button
+                    key={opcion.valor}
+                    type="button"
+                    onClick={() => setEstadoSeleccionado(opcion.valor)}
+                    className={`flex w-full flex-col gap-1 rounded-2xl border p-3.5 text-left transition ${
+                      estaMarcado
+                        ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-black text-slate-900">{opcion.titulo}</span>
+                      <div className="flex items-center gap-1.5">
+                        {esActual && (
+                          <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">
+                            Actual
+                          </span>
+                        )}
+                        {estilo && (
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${estilo.clases}`}
+                          >
+                            {estilo.etiqueta}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-600">{opcion.descripcion}</p>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Acceso a la reubicación de la unidad en el lote desde la misma ventana (Alcance HU-10 -> HU-13) */}
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                  <MapPin className="h-4 w-4 text-blue-600" aria-hidden="true" />
+                  <span>{`Ubicación actual: ${vehiculo.zonaLote} · Cajón ${vehiculo.cajonLote}`}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setAvisoReubicacion(
+                      `Reubicar cajón y zona (${MENSAJES.moduloProximamente} — HU-13)`,
+                    )
+                  }
+                  className="text-xs font-black text-blue-700 underline hover:text-blue-900"
+                >
+                  Reubicar en lote
+                </button>
+              </div>
+              {avisoReubicacion && (
+                <p className="mt-1.5 text-[11px] font-semibold text-slate-600">
+                  {avisoReubicacion}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                disabled={guardandoEstado}
+                onClick={cerrarModalCambioEstado}
+                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-slate-800 transition hover:bg-slate-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={estadoSeleccionado === vehiculo.estado || guardandoEstado}
+                onClick={() => void confirmarCambioEstado()}
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-3 text-xs font-black text-white shadow-md transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {guardandoEstado ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    Guardando...
+                  </>
+                ) : (
+                  'Confirmar cambio'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

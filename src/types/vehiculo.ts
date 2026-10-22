@@ -67,6 +67,15 @@ export interface ImagenVehiculo {
   capturadaPor?: string | null
 }
 
+export interface HistorialEstadoVehiculo {
+  id: string
+  estadoAnterior: EstadoOperativo
+  estadoNuevo: EstadoOperativo
+  usuarioId: number | null
+  cambiadoPor: string
+  fechaCambio: string
+}
+
 export interface VehiculoDetalle extends Vehiculo {
   vin: string
   numeroStock: string
@@ -79,10 +88,17 @@ export interface VehiculoDetalle extends Vehiculo {
   equipamiento: string | null
   notasInspeccion: string | null
   registradoPor: string | null
+  fechaCambioEstado?: string | null
+  estadoActualizadoPor?: string | null
+  estadoActualizadoPorUsuarioId?: number | null
+  responsableTestDrive?: string | null
+  reservadoPorUsuarioId?: number | null
+  reservadoPorNombre?: string | null
   tomasObligatoriasCompletadas: number
   porcentajeEvidencia: number
   inspeccionCompleta: boolean
   imagenes: ImagenVehiculo[]
+  historialEstados?: HistorialEstadoVehiculo[]
 }
 
 export interface RegistrarVehiculoDto {
@@ -110,6 +126,10 @@ export interface RegistrarVehiculoDto {
 export interface GuardarFotografiaDto {
   tipoToma: string
   imagenBase64: string
+}
+
+export interface CambiarEstadoOperativoDto {
+  nuevoEstado: EstadoOperativo
 }
 
 export function obtenerEtiquetaToma(tipoToma?: string | null): string {
