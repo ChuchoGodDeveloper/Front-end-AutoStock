@@ -13,6 +13,7 @@ export function LoginPage() {
   const navigate = useNavigate()
   const estaAutenticado = useAuthStore((estado) => estado.estaAutenticado)
   const sesionCargada = useAuthStore((estado) => estado.sesionCargada)
+  const usuario = useAuthStore((estado) => estado.usuario)
   const iniciarSesion = useAuthStore((estado) => estado.iniciarSesion)
   const iniciandoSesion = useAuthStore((estado) => estado.iniciandoSesion)
 
@@ -23,7 +24,12 @@ export function LoginPage() {
   const [mensajeError, setMensajeError] = useState('')
 
   if (sesionCargada && estaAutenticado) {
-    return <Navigate to="/dashboard" replace />
+    return (
+      <Navigate
+        to={usuario?.requiereCambioPassword ? '/cambiar-password' : '/dashboard'}
+        replace
+      />
+    )
   }
 
   const manejarEnvio = async (evento: FormEvent<HTMLFormElement>) => {
@@ -49,8 +55,11 @@ export function LoginPage() {
     setMensajeError('')
 
     try {
-      await iniciarSesion(credencial.trim(), password)
-      navigate('/dashboard', { replace: true })
+      const usuarioAutenticado = await iniciarSesion(credencial.trim(), password)
+      navigate(
+        usuarioAutenticado.requiereCambioPassword ? '/cambiar-password' : '/dashboard',
+        { replace: true },
+      )
     } catch (error) {
       setMensajeError(error instanceof Error ? error.message : MENSAJES.errorInesperado)
     }

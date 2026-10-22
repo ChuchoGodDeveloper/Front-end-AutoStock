@@ -6,11 +6,13 @@ export interface UsuarioLoginBackend {
   nombreCompleto: string
   correo: string
   rol: string
+  requiereCambioPassword?: boolean
 }
 
 export interface RespuestaLoginBackend {
   token: string
   expiraEn: string
+  requiereCambioPassword: boolean
   usuario: UsuarioLoginBackend
 }
 
@@ -20,6 +22,10 @@ export interface PerfilBackend extends UsuarioLoginBackend {
 }
 
 export interface RespuestaLogoutBackend {
+  mensaje: string
+}
+
+export interface RespuestaCambioPasswordBackend {
   mensaje: string
 }
 
@@ -36,4 +42,10 @@ export const authService = {
     }),
 
   obtenerPerfil: () => apiFetch<PerfilBackend>('/auth/perfil'),
+
+  cambiarPassword: (passwordActual: string, passwordNueva: string) =>
+    apiFetch<RespuestaCambioPasswordBackend>('/auth/cambiar-password', {
+      method: 'POST',
+      body: JSON.stringify({ passwordActual, passwordNueva }),
+    }),
 }

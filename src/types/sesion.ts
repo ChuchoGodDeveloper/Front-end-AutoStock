@@ -4,6 +4,16 @@ export interface UsuarioSesion {
   nombreCompleto: string
   correo: string
   rol: string
+  requiereCambioPassword: boolean
+}
+
+export type Usuario = UsuarioSesion
+
+export interface LoginResponse {
+  token: string
+  expiraEn: string
+  requiereCambioPassword: boolean
+  usuario: UsuarioSesion
 }
 
 export interface SesionActiva {

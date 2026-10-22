@@ -20,9 +20,11 @@ interface EstadoAuth {
   estaAutenticado: boolean
   sesionCargada: boolean
   iniciandoSesion: boolean
+  passwordTemporalEnMemoria: string | null
   hidratarSesion: () => Promise<boolean>
   iniciarSesion: (identificador: string, password: string) => Promise<UsuarioSesion>
   actualizarUsuario: (usuario: UsuarioSesion) => Promise<void>
+  cambiarPasswordPrimerAcceso: (passwordNueva: string, passwordActual?: string) => Promise<void>
   cerrarSesion: () => Promise<void>
 }
 
@@ -80,6 +82,9 @@ function construirUsuarioDesdeLogin(
     nombreCompleto: usuario?.nombreCompleto || comoTexto(claims.nombre) || nombreSugerido,
     correo: usuario?.correo || comoTexto(claims.email) || (esCorreo ? identificador : ''),
     rol: usuario?.rol || comoTexto(claims.role) || 'Usuario',
+    requiereCambioPassword: Boolean(
+      respuesta.requiereCambioPassword ?? usuario?.requiereCambioPassword ?? false,
+    ),
   }
 }
 
@@ -138,15 +143,20 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
   estaAutenticado: false,
   sesionCargada: false,
   iniciandoSesion: false,
+  passwordTemporalEnMemoria: null,
 
   hidratarSesion: async () => {
     const sesionGuardada = await leerSesion()
 
     if (esSesionVigente(sesionGuardada)) {
+      const usuarioHidratado: UsuarioSesion = {
+        ...sesionGuardada.usuario,
+        requiereCambioPassword: Boolean(sesionGuardada.usuario.requiereCambioPassword),
+      }
       setAccessToken(sesionGuardada.token)
       set({
         token: sesionGuardada.token,
-        usuario: sesionGuardada.usuario,
+        usuario: usuarioHidratado,
         expiraEn: sesionGuardada.expiraEn,
         estaAutenticado: true,
         sesionCargada: true,
@@ -165,6 +175,7 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
       expiraEn: null,
       estaAutenticado: false,
       sesionCargada: true,
+      passwordTemporalEnMemoria: null,
     })
     return false
   },
@@ -189,6 +200,7 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
         expiraEn: sesion.expiraEn,
         estaAutenticado: true,
         sesionCargada: true,
+        passwordTemporalEnMemoria: sesion.usuario.requiereCambioPassword ? password : null,
       })
 
       return sesion.usuario
@@ -200,15 +212,49 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
   },
 
   actualizarUsuario: async (usuario) => {
-    const { token, expiraEn } = get()
+    const { token, expiraEn, usuario: actual } = get()
 
     if (!token) return
 
-    set({ usuario })
+    const usuarioConservado: UsuarioSesion = {
+      ...usuario,
+      requiereCambioPassword: Boolean(
+        usuario.requiereCambioPassword ?? actual?.requiereCambioPassword ?? false,
+      ),
+    }
+
+    set({ usuario: usuarioConservado })
     await guardarSesion({
       token,
       expiraEn: expiraEn ?? expiracionLocalDeRespuesta(null),
-      usuario,
+      usuario: usuarioConservado,
+      guardadoEn: new Date().toISOString(),
+    })
+  },
+
+  cambiarPasswordPrimerAcceso: async (passwordNueva, passwordActual) => {
+    const { token, expiraEn, usuario, passwordTemporalEnMemoria } = get()
+
+    if (!token || !usuario) {
+      throw new Error(MENSAJES.accesoRestringido)
+    }
+
+    const actual = (passwordActual ?? passwordTemporalEnMemoria ?? '').trim()
+    await authService.cambiarPassword(actual, passwordNueva)
+
+    const usuarioActualizado: UsuarioSesion = {
+      ...usuario,
+      requiereCambioPassword: false,
+    }
+
+    set({
+      usuario: usuarioActualizado,
+      passwordTemporalEnMemoria: null,
+    })
+    await guardarSesion({
+      token,
+      expiraEn: expiraEn ?? expiracionLocalDeRespuesta(null),
+      usuario: usuarioActualizado,
       guardadoEn: new Date().toISOString(),
     })
   },
@@ -232,16 +278,23 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
       expiraEn: null,
       estaAutenticado: false,
       sesionCargada: true,
+      passwordTemporalEnMemoria: null,
     })
   },
 }))
 
-export function usuarioDesdePerfil(perfil: PerfilBackend): UsuarioSesion {
+export function usuarioDesdePerfil(
+  perfil: PerfilBackend,
+  requiereCambioPasswordActual = false,
+): UsuarioSesion {
   return {
     id: perfil.id,
     empleadoId: perfil.empleadoId,
     nombreCompleto: perfil.nombreCompleto,
     correo: perfil.correo,
     rol: perfil.rol,
+    requiereCambioPassword: Boolean(
+      perfil.requiereCambioPassword ?? requiereCambioPasswordActual,
+    ),
   }
 }

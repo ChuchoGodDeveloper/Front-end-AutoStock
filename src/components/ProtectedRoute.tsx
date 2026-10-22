@@ -7,6 +7,9 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const estaAutenticado = useAuthStore((estado) => estado.estaAutenticado)
   const sesionCargada = useAuthStore((estado) => estado.sesionCargada)
   const expiraEn = useAuthStore((estado) => estado.expiraEn)
+  const requiereCambioPassword = useAuthStore(
+    (estado) => estado.usuario?.requiereCambioPassword ?? false,
+  )
   const hidratarSesion = useAuthStore((estado) => estado.hidratarSesion)
   const cerrarSesion = useAuthStore((estado) => estado.cerrarSesion)
   const ubicacion = useLocation()
@@ -42,6 +45,10 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!estaAutenticado) {
     return <Navigate to="/login" replace state={{ desde: ubicacion.pathname }} />
+  }
+
+  if (requiereCambioPassword && ubicacion.pathname !== '/cambiar-password') {
+    return <Navigate to="/cambiar-password" replace />
   }
 
   return <>{children}</>

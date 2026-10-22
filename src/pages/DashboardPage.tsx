@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Car, History, LogOut, PlusCircle, Search, Wrench } from 'lucide-react'
+import { Car, History, LogOut, PlusCircle, Search, Users, Wrench } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { MENSAJES } from '../config/mensajes'
@@ -19,6 +19,8 @@ const RESUMEN_VACIO: ResumenMetricas = {
   pruebaDeManejo: 0,
   enTaller: 0,
 }
+
+const ROL_ADMINISTRADOR = 'Administrador'
 
 function obtenerSaludo(): string {
   const hora = new Date().getHours()
@@ -113,6 +115,7 @@ export function DashboardPage() {
 
   const nombreCompleto = usuario?.nombreCompleto ?? 'Usuario'
   const rol = usuario?.rol ?? 'Usuario'
+  const esAdministrador = rol === ROL_ADMINISTRADOR
 
   return (
     <main className="min-h-screen bg-slate-100 pb-10">
@@ -179,6 +182,16 @@ export function DashboardPage() {
               <PlusCircle className="h-6 w-6" aria-hidden="true" />
               Registrar Vehículo
             </button>
+            {esAdministrador && (
+              <button
+                type="button"
+                onClick={() => navigate('/usuarios')}
+                className="col-span-2 flex items-center justify-center gap-2.5 rounded-2xl border border-slate-300 bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              >
+                <Users className="h-5 w-5" aria-hidden="true" />
+                Administración de usuarios
+              </button>
+            )}
           </div>
           {avisoAccion && (
             <p role="status" className="mt-3 text-center text-sm text-slate-600">
