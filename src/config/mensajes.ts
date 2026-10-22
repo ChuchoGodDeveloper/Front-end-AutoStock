@@ -1,0 +1,27 @@
+export const MENSAJES = {
+  campoObligatorio: 'Este campo es obligatorio',
+  correoInvalido: 'Ingresa un correo electrónico válido',
+  credencialesIncorrectas: 'ID de empleado o contraseña incorrectos',
+  cuentaDesactivada: 'Tu cuenta está desactivada. Contacta al administrador',
+  cuentaBloqueada:
+    'Tu cuenta está bloqueada tras 5 intentos fallidos. Intenta de nuevo en 15 minutos',
+  sinConexionLogin: 'Se requiere conexión para iniciar sesión por primera vez',
+  errorInesperado: 'No se pudo iniciar sesión. Intenta de nuevo',
+  bannerOffline: 'Modo sin conexión — Los datos mostrados son locales',
+  accesoRestringido: 'Inicia sesión para continuar',
+  sinActividad: 'Sin actividad reciente',
+  moduloProximamente: 'Disponible en los siguientes sprints',
+  errorCatalogo: 'No se pudo cargar el catálogo. Intenta de nuevo',
+  sinUnidades: 'No hay unidades registradas',
+  errorDetalle: 'No se pudo cargar la ficha técnica. Intenta de nuevo',
+  vehiculoNoEncontrado: 'Vehículo no encontrado',
+  sinRegistro: 'No registrado',
+  errorUsuarios: 'No se pudo cargar la lista de usuarios. Intenta de nuevo',
+  errorCrearUsuario: 'No se pudo registrar el usuario. Intenta de nuevo',
+  usuarioDuplicado: 'Ya existe un usuario con ese ID de empleado o correo',
+  formatoPasswordNueva:
+    'La nueva contraseña debe tener al menos 8 caracteres, con letras y números',
+  passwordIgualTemporal: 'La nueva contraseña debe ser distinta a la actual',
+  passwordsNoCoinciden: 'La confirmación no coincide con la nueva contraseña',
+  errorCambiarPassword: 'No se pudo actualizar la contraseña. Intenta de nuevo',
+} as const
