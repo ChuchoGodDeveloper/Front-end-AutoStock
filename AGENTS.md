@@ -57,7 +57,8 @@ El desarrollo del proyecto se divide entre dos desarrolladores. Cada Historia de
   2. Crear una rama `feature/HU-XX-nombre-historia` a partir de la rama principal del sprint (`Sprint1` o `sprint1`).
   3. Desarrollar y verificar calidad/pruebas ahí.
   4. Hacer `git commit` (formato `feat(HU-XX): ...`) y `git push origin feature/HU-XX-nombre-historia`.
-  5. Cambiar a la rama principal del sprint (`Sprint1` o `sprint1`), hacer `git merge feature/HU-XX-nombre-historia`, y finalmente hacer `git push` de la rama principal.
+  5. Cambiar a la rama principal del sprint (`Sprint1` o `sprint1`), hacer `git merge feature/HU-XX-nombre-historia`, y hacer `git push` de la rama del sprint.
+  6. **Arquitectura de Promoción de Ramas hasta Producción (`main`):** Todo cambio integrado en la rama del sprint debe promoverse secuencialmente por la jerarquía de ramas del repositorio (`Sprint1`/`sprint1` $\rightarrow$ `develop` $\rightarrow$ `release` $\rightarrow$ `main`), haciendo `merge` y `push` en cada etapa hasta llegar a `main` para disparar el despliegue continuo en Azure.
 
 ### 2.3 Reglas Arquitectónicas Inquebrantables
 * **Backend (.NET 10):** Clean Architecture estricta en 5 proyectos (`Domain`, `Application`, `Infrastructure`, `API`, `UnitTests`). Está prohibido usar un proyecto monolítico separado solo por carpetas. Todas las reglas de negocio llevan pruebas unitarias en **xUnit**.
