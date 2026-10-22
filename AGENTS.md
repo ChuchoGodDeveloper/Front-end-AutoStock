@@ -139,11 +139,14 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 
 ## 5. Configuración de Despliegue Automático (CI/CD en Azure)
 
-* **Enlaces del Proyecto:**
+* **Enlaces y Recursos del Proyecto en Azure:**
   * **Repositorio Backend:** `https://github.com/ChuchoGodDeveloper/BackEnd-AutoStock`
   * **Repositorio Frontend:** `https://github.com/ChuchoGodDeveloper/Front-end-AutoStock`
   * **URL del Backend Publicado (Azure App Service):** `https://autostock-backend-cyfwg9f4fbcgewfq.centralus-01.azurewebsites.net`
   * **URL del Frontend Publicado (Azure Static Web Apps):** `https://icy-pebble-0a56fdd00.6.azurestaticapps.net`
+  * **Servidor Azure SQL:** `autostock-sql-srv-2026.database.windows.net` (Grupo: `rg-autostock`, Región: `centralus`)
+  * **Base de Datos Azure SQL:** `AutoStockDb` (General Purpose Serverless Gen5 1 vCore, 32 GB, Plan Gratuito con AutoPause sin cargos)
+  * **Cadena de Conexión en App Service:** Inyectada en Connection Strings del App Service como `DefaultConnection` (tipo `SQLAzure`)
 * **Detalles de Canalización CI/CD:**
   * **Backend (.NET 10):** Publicado en Azure App Service mediante GitHub Actions. Las cadenas de conexión y políticas CORS se administran en la configuración de Azure App Service fuera del código fuente.
   * **Frontend (React + Vite):** Vinculado a Azure Static Web Apps (`.github/workflows/azure-static-web-apps-icy-pebble-0a56fdd00.yml`) con `app_location: "/"` y `output_location: "dist"`. La variable `VITE_API_URL` con protocolo `https://` está configurada en *Environment variables* de Azure Static Web Apps.
