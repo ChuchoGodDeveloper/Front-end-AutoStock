@@ -1,5 +1,6 @@
 import { apiFetch } from './httpClient'
 import type {
+  CambiarEstadoOperativoDto,
   ConteosRapidos,
   FiltrosCatalogo,
   GuardarFotografiaDto,
@@ -57,5 +58,11 @@ export const vehiculosService = {
   eliminarFotografia: (vehiculoId: string, imagenId: string) =>
     apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/fotografias/${imagenId}`, {
       method: 'DELETE',
+    }),
+
+  cambiarEstadoOperativo: (vehiculoId: string, datos: CambiarEstadoOperativoDto) =>
+    apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/estado`, {
+      method: 'PATCH',
+      body: JSON.stringify(datos),
     }),
 }

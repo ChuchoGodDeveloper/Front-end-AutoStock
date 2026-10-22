@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { MENSAJES } from '../config/mensajes'
 import { vehiculosService } from '../services/vehiculosService'
-import type { ConteosRapidos, FiltrosCatalogo, Vehiculo } from '../types/vehiculo'
+import type { ConteosRapidos, FiltrosCatalogo, Vehiculo, VehiculoDetalle } from '../types/vehiculo'
 
 export const TAMANO_PAGINA_CATALOGO = 20
 
@@ -46,6 +46,7 @@ interface EstadoCatalogo {
   setFiltros: (nuevosFiltros: FiltrosCatalogo) => Promise<void>
   cargarConteosRapidos: () => Promise<void>
   invalidarCatalogo: () => void
+  actualizarVehiculoEnCatalogo: (actualizado: VehiculoDetalle) => void
 }
 
 export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
@@ -141,6 +142,35 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
     invalidarCatalogo: () => {
       solicitudActual += 1
       set({ vehiculos: [], paginaActual: 0, hayMas: true, cargando: false })
+    },
+
+    actualizarVehiculoEnCatalogo: (actualizado) => {
+      const { vehiculos, filtros } = get()
+      const cumpleFiltroEstados =
+        filtros.estados.length === 0 || filtros.estados.includes(actualizado.estado)
+
+      if (!cumpleFiltroEstados) {
+        set({
+          vehiculos: vehiculos.filter((item) => item.id !== actualizado.id),
+        })
+      } else {
+        set({
+          vehiculos: vehiculos.map((item) =>
+            item.id === actualizado.id
+              ? {
+                  ...item,
+                  estado: actualizado.estado,
+                  fotoPrincipalUrl: actualizado.fotoPrincipalUrl,
+                  zonaLote: actualizado.zonaLote,
+                  cajonLote: actualizado.cajonLote,
+                  kilometraje: actualizado.kilometraje,
+                }
+              : item,
+          ),
+        })
+      }
+
+      void get().cargarConteosRapidos()
     },
   }
 })
