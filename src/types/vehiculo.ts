@@ -12,6 +12,14 @@ export enum TipoVehiculo {
   Seminuevo = 2,
 }
 
+export type TipoTomaFotografica =
+  | 'Frontal'
+  | 'LateralDerecha'
+  | 'Trasera'
+  | 'TableroOdometro'
+  | 'Adicional1'
+  | 'Adicional2'
+
 export interface Vehiculo {
   id: string
   marca: string
@@ -50,9 +58,13 @@ export interface PaginaCatalogo {
 }
 
 export interface ImagenVehiculo {
+  id: string
   url: string
   esPrincipal: boolean
   orden: number
+  tipoToma: string
+  fechaCaptura?: string
+  capturadaPor?: string | null
 }
 
 export interface VehiculoDetalle extends Vehiculo {
@@ -67,6 +79,9 @@ export interface VehiculoDetalle extends Vehiculo {
   equipamiento: string | null
   notasInspeccion: string | null
   registradoPor: string | null
+  tomasObligatoriasCompletadas: number
+  porcentajeEvidencia: number
+  inspeccionCompleta: boolean
   imagenes: ImagenVehiculo[]
 }
 
@@ -90,4 +105,28 @@ export interface RegistrarVehiculoDto {
   cajonLote: string
   equipamiento?: string | null
   notasInspeccion?: string | null
+}
+
+export interface GuardarFotografiaDto {
+  tipoToma: string
+  imagenBase64: string
+}
+
+export function obtenerEtiquetaToma(tipoToma?: string | null): string {
+  switch (tipoToma) {
+    case 'Frontal':
+      return 'Frontal'
+    case 'LateralDerecha':
+      return 'Lateral derecha'
+    case 'Trasera':
+      return 'Trasera'
+    case 'TableroOdometro':
+      return 'Tablero / odómetro'
+    case 'Adicional1':
+      return 'Adicional 1'
+    case 'Adicional2':
+      return 'Adicional 2'
+    default:
+      return tipoToma || 'Fotografía'
+  }
 }

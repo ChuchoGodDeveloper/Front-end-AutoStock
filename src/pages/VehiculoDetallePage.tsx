@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
+  AlertTriangle,
   ArrowLeft,
+  Camera,
   Car,
   CheckCircle2,
   ChevronLeft,
@@ -23,7 +25,7 @@ import { MENSAJES } from '../config/mensajes'
 import { HttpError } from '../services/httpClient'
 import { vehiculosService } from '../services/vehiculosService'
 import { useAuthStore } from '../stores/authStore'
-import type { VehiculoDetalle } from '../types/vehiculo'
+import { obtenerEtiquetaToma, type VehiculoDetalle } from '../types/vehiculo'
 
 const formateadorMoneda = new Intl.NumberFormat('es-MX', {
   style: 'currency',
@@ -39,6 +41,7 @@ const ROLES_CON_EDICION = [
   'Gerente de Ventas',
   'Administrador',
 ]
+const ROLES_CON_EVIDENCIA = ['Encargado de Lote y Recepción', 'Administrador']
 
 function mostrarDato(valor: string | null | undefined): string {
   return valor && valor.trim() ? valor.trim() : MENSAJES.sinRegistro
@@ -112,6 +115,9 @@ export function VehiculoDetallePage() {
 
   const puedeEditar =
     rol === ROL_ASESOR || ROLES_CON_EDICION.includes(rol)
+  const puedeGestionarFotos = ROLES_CON_EVIDENCIA.includes(rol)
+  const inspeccionCompleta =
+    vehiculo?.inspeccionCompleta ?? (vehiculo?.tomasObligatoriasCompletadas ?? 0) >= 4
 
   return (
     <main className="min-h-screen bg-slate-100 pb-10">
@@ -154,6 +160,35 @@ export function VehiculoDetallePage() {
                 {`Número de stock asignado: ${vehiculo.numeroStock}`}
               </p>
             </div>
+          </div>
+        )}
+
+        {vehiculo && !cargando && !inspeccionCompleta && (
+          <div
+            role="status"
+            className="flex items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-xs font-semibold text-amber-900 shadow-sm"
+          >
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle
+                className="mt-0.5 h-5 w-5 shrink-0 text-amber-600"
+                aria-hidden="true"
+              />
+              <div>
+                <p className="text-sm font-black text-amber-900">Inspección incompleta</p>
+                <p className="text-amber-800">
+                  {`Evidencia obligatoria: ${vehiculo.tomasObligatoriasCompletadas ?? 0}/4 tomas (${vehiculo.porcentajeEvidencia ?? 0}%)`}
+                </p>
+              </div>
+            </div>
+            {puedeGestionarFotos && (
+              <button
+                type="button"
+                onClick={() => navigate(`/vehiculo/${vehiculo.id}/evidencia`)}
+                className="shrink-0 rounded-xl bg-amber-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-amber-800"
+              >
+                Completar
+              </button>
+            )}
           </div>
         )}
 
@@ -208,6 +243,18 @@ export function VehiculoDetallePage() {
                   </div>
                 )}
 
+                {imagenActual?.tipoToma && (
+                  <span className="absolute bottom-2 left-2 rounded-full bg-slate-900/75 px-2.5 py-0.5 text-xs font-bold text-white">
+                    {obtenerEtiquetaToma(imagenActual.tipoToma)}
+                  </span>
+                )}
+
+                {totalImagenes > 0 && (
+                  <span className="absolute bottom-2 right-2 rounded-full bg-slate-900/75 px-2.5 py-0.5 text-xs font-bold text-white">
+                    {`${indiceImagen + 1}/${totalImagenes}`}
+                  </span>
+                )}
+
                 {totalImagenes > 1 && (
                   <>
                     <button
@@ -228,9 +275,6 @@ export function VehiculoDetallePage() {
                     >
                       <ChevronRight className="h-5 w-5" aria-hidden="true" />
                     </button>
-                    <span className="absolute bottom-2 right-2 rounded-full bg-slate-900/70 px-2.5 py-0.5 text-xs font-bold text-white">
-                      {`${indiceImagen + 1} / ${totalImagenes}`}
-                    </span>
                   </>
                 )}
               </div>
@@ -279,6 +323,18 @@ export function VehiculoDetallePage() {
                 </dl>
               </div>
             </section>
+
+            {/* Botón Agregar fotos exclusivo para Encargado de Lote y Administrador (CA 1, CA 9) */}
+            {puedeGestionarFotos && (
+              <button
+                type="button"
+                onClick={() => navigate(`/vehiculo/${vehiculo.id}/evidencia`)}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3.5 text-sm font-black text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              >
+                <Camera className="h-5 w-5" aria-hidden="true" />
+                Agregar fotos ({vehiculo.tomasObligatoriasCompletadas ?? 0}/4 obligatorias)
+              </button>
+            )}
 
             <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">

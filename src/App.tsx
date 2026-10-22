@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { CambiarPasswordPage } from './pages/CambiarPasswordPage'
 import { CatalogoPage } from './pages/CatalogoPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { EvidenciaVehiculoPage } from './pages/EvidenciaVehiculoPage'
 import { LoginPage } from './pages/LoginPage'
 import { NuevoUsuarioPage } from './pages/NuevoUsuarioPage'
 import { RegistroVehiculoPage } from './pages/RegistroVehiculoPage'
@@ -56,6 +57,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <VehiculoDetallePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vehiculo/:id/evidencia"
+          element={
+            <ProtectedRoute>
+              <EvidenciaVehiculoPage />
             </ProtectedRoute>
           }
         />
