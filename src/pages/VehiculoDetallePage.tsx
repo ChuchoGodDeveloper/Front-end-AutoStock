@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   ArrowLeft,
   Car,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -14,8 +15,9 @@ import {
   Settings,
   Ticket,
   ToggleLeft,
+  UserCheck,
 } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ESTILOS_ESTADO } from '../config/estadosOperativos'
 import { MENSAJES } from '../config/mensajes'
 import { HttpError } from '../services/httpClient'
@@ -42,9 +44,15 @@ function mostrarDato(valor: string | null | undefined): string {
   return valor && valor.trim() ? valor.trim() : MENSAJES.sinRegistro
 }
 
+interface EstadoNavegacionDetalle {
+  recienRegistrado?: boolean
+}
+
 export function VehiculoDetallePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const estadoNavegacion = (location.state as EstadoNavegacionDetalle | null) ?? null
   const rol = useAuthStore((estado) => estado.usuario?.rol ?? '')
 
   const [vehiculo, setVehiculo] = useState<VehiculoDetalle | null>(null)
@@ -117,7 +125,8 @@ export function VehiculoDetallePage() {
               <h1 className="text-2xl font-black text-slate-900">Ficha Técnica</h1>
               {vehiculo && (
                 <p className="mt-1 text-sm font-semibold text-slate-500">
-                  {vehiculo.marca} {vehiculo.modelo} {vehiculo.anio}
+                  {vehiculo.marca} {vehiculo.modelo}
+                  {vehiculo.version ? ` ${vehiculo.version}` : ''} {vehiculo.anio}
                 </p>
               )}
             </div>
@@ -132,6 +141,21 @@ export function VehiculoDetallePage() {
             </button>
           </div>
         </header>
+
+        {estadoNavegacion?.recienRegistrado && vehiculo && (
+          <div
+            role="status"
+            className="flex items-start gap-2.5 rounded-2xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800 shadow-sm"
+          >
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" aria-hidden="true" />
+            <div>
+              <p className="font-bold">Unidad registrada exitosamente</p>
+              <p className="text-xs text-green-700">
+                {`Número de stock asignado: ${vehiculo.numeroStock}`}
+              </p>
+            </div>
+          </div>
+        )}
 
         {cargando && (
           <section className="flex flex-col items-center gap-3 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -216,6 +240,7 @@ export function VehiculoDetallePage() {
                   <div className="min-w-0">
                     <h2 className="text-lg font-black text-slate-900">
                       {vehiculo.marca} {vehiculo.modelo}
+                      {vehiculo.version ? ` ${vehiculo.version}` : ''}
                     </h2>
                     <p className="text-sm font-semibold text-slate-500">{vehiculo.anio}</p>
                   </div>
@@ -282,6 +307,15 @@ export function VehiculoDetallePage() {
                 Especificaciones
               </h3>
               <dl className="mt-3 space-y-2 text-sm text-slate-600">
+                {vehiculo.version && (
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="flex items-center gap-2 font-semibold">
+                      <Car className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                      Versión
+                    </dt>
+                    <dd className="text-right">{mostrarDato(vehiculo.version)}</dd>
+                  </div>
+                )}
                 <div className="flex items-start justify-between gap-3">
                   <dt className="flex items-center gap-2 font-semibold">
                     <Settings className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
@@ -339,6 +373,18 @@ export function VehiculoDetallePage() {
                 {mostrarDato(vehiculo.notasInspeccion)}
               </p>
             </section>
+
+            {vehiculo.registradoPor && (
+              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                  Auditoría de recepción
+                </h3>
+                <p className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+                  <UserCheck className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                  <span>{`Registrado por: ${vehiculo.registradoPor}`}</span>
+                </p>
+              </section>
+            )}
 
             {puedeEditar && (
               <section className="space-y-3">

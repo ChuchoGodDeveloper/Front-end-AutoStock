@@ -58,6 +58,7 @@ export interface ImagenVehiculo {
 export interface VehiculoDetalle extends Vehiculo {
   vin: string
   numeroStock: string
+  version: string | null
   motor: string | null
   potencia: string | null
   transmision: string | null
@@ -65,5 +66,28 @@ export interface VehiculoDetalle extends Vehiculo {
   colorInterior: string | null
   equipamiento: string | null
   notasInspeccion: string | null
+  registradoPor: string | null
   imagenes: ImagenVehiculo[]
+}
+
+export interface RegistrarVehiculoDto {
+  tipo: TipoVehiculo
+  vin: string
+  marca: string
+  modelo: string
+  version?: string | null
+  anio: number
+  placa?: string | null
+  kilometraje: number
+  transmision: string
+  motor: string
+  potencia?: string | null
+  colorExterior: string
+  colorInterior: string
+  precio: number
+  estado: EstadoOperativo
+  zonaLote: string
+  cajonLote: string
+  equipamiento?: string | null
+  notasInspeccion?: string | null
 }

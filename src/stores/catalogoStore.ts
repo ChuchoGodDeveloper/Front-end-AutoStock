@@ -45,6 +45,7 @@ interface EstadoCatalogo {
   setTerminoBusqueda: (busqueda: string) => Promise<void>
   setFiltros: (nuevosFiltros: FiltrosCatalogo) => Promise<void>
   cargarConteosRapidos: () => Promise<void>
+  invalidarCatalogo: () => void
 }
 
 export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
@@ -135,6 +136,11 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
       } catch {
         set({ conteos: { todos: 0, disponibles: 0, seminuevos: 0, nuevos: 0 } })
       }
+    },
+
+    invalidarCatalogo: () => {
+      solicitudActual += 1
+      set({ vehiculos: [], paginaActual: 0, hayMas: true, cargando: false })
     },
   }
 })

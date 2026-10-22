@@ -1,5 +1,11 @@
 import { apiFetch } from './httpClient'
-import type { ConteosRapidos, FiltrosCatalogo, PaginaCatalogo, VehiculoDetalle } from '../types/vehiculo'
+import type {
+  ConteosRapidos,
+  FiltrosCatalogo,
+  PaginaCatalogo,
+  RegistrarVehiculoDto,
+  VehiculoDetalle,
+} from '../types/vehiculo'
 
 export const vehiculosService = {
   obtenerCatalogo: (
@@ -34,4 +40,10 @@ export const vehiculosService = {
   obtenerConteosRapidos: () => apiFetch<ConteosRapidos>('/vehiculos/conteos-rapidos'),
 
   obtenerVehiculoPorId: (id: string) => apiFetch<VehiculoDetalle>(`/vehiculos/${id}`),
+
+  registrarVehiculo: (datos: RegistrarVehiculoDto) =>
+    apiFetch<VehiculoDetalle>('/vehiculos', {
+      method: 'POST',
+      body: JSON.stringify(datos),
+    }),
 }

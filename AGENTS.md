@@ -7,7 +7,7 @@ Este documento maestro concentra el estado actual del proyecto **AutoStock**, la
 ## 1. Información General y Stack Tecnológico
 
 * **Proyecto:** AutoStock — Aplicación Web Progresiva (PWA) Full-Stack de Inventario para Concesionarias.
-* **Equipo:** José de Jesús López Islas (`ChuchoGodDeveloper`) y Delia Leslie Jimenez Neri (`Leslie1305` / `Leslie-Neri`).
+* **Equipo:** José de Jesús López Islas (`ChuchoGodDeveloper`) y Delia Leslie Jimenez Neri (`Leslie-Neri`).
 * **Ubicación Local del Proyecto:** `C:\Users\lesli\OneDrive\Documentos\CUATRIMESTRE 10\AutoStock`
   * **Backend:** `C:\Users\lesli\OneDrive\Documentos\CUATRIMESTRE 10\AutoStock\BackEnd-AutoStock`
   * **Frontend:** `C:\Users\lesli\OneDrive\Documentos\CUATRIMESTRE 10\AutoStock\Front-end-AutoStock`
@@ -45,8 +45,8 @@ El desarrollo del proyecto se divide entre dos desarrolladores. Cada Historia de
 * **Asignada a:** Historias pares (`HU-02`, `HU-04`, `HU-06`, `HU-08`, `HU-10`, `HU-12`, `HU-14`, `HU-16`, `HU-18`, `HU-20`, `HU-22`, `HU-24`).
 * **Comando obligatorio antes de iniciar su HU:**
   ```bash
-  git config user.name "Leslie1305"
-  git config user.email "deliales130505@gmail.com"
+  git config user.name "Leslie-Neri"
+  git config user.email "23300765@uttt.edu.mx"
   ```
 
 ### 2.2 Flujo de Ramas (GitFlow)
@@ -149,7 +149,7 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 
 ---
 
-## 6. Historias de Usuario Completadas (HU-01 a HU-07)
+## 6. Historias de Usuario Completadas (HU-01 a HU-08)
 
 1. **HU-01 (Iniciar sesión — José de Jesús):** JWT de 8h, persistencia en IndexedDB (`autostock-pwa-db`), soporte offline, bloqueo por 5 intentos fallidos durante 15 minutos, mensajes exactos de error (`401`, `403`, `423`).
 2. **HU-02 (Consultar catálogo — Delia Leslie):** Infinite scroll paginado, tarjetas con formato MXN, insignias de estado por color, manejo de unidades sin foto, ocultamiento de vendidos por defecto.
@@ -160,6 +160,9 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 7. **HU-07 (Crear usuarios — José de Jesús):**
    * **Backend:** Migración `RequiereCambioPassword`, `UsuariosController` protegido para rol `"Administrador"`, generación de contraseña temporal alfanumérica de 12 caracteres devuelta una sola vez, validación `400` para duplicados (`"Ya existe un usuario con ese ID de empleado o correo"`), y endpoint `POST /api/auth/cambiar-password`.
    * **Frontend:** Redirección forzada a `/cambiar-password` en primer acceso (`requiereCambioPassword: true`), `CambiarPasswordPage.tsx` (validación alfanumérica $\ge 8$ caracteres y confirmación), `AdminRoute.tsx`, `UsuariosPage.tsx` y `NuevoUsuarioPage.tsx` con **Modal bloqueante** que muestra la contraseña temporal devuelta por el API.
+8. **HU-08 (Registrar un vehículo [alta] — Delia Leslie):**
+   * **Backend:** Migración `UpdateVehiculos_AddVersionYRegistradoPor_HU08` (`Version`, `RegistradoPor`), endpoint `POST /api/vehiculos` protegido para `"Encargado de Lote y Recepción"` y `"Administrador"`, validación de VIN (17 caracteres alfanuméricos sin `I`, `O`, `Q`), detección de VIN duplicado devolviendo `"Ya existe una unidad con ese VIN"` y el `vehiculoId` existente, reglas por tipo (`Nuevo` fija `Kilometraje = 0` y `Placa = null`; `Seminuevo` exige `Placa` única y `Kilometraje >= 0`), asignación automática de `NumeroStock` consecutivo (`STK-0026`, etc.) y pruebas unitarias en xUnit.
+   * **Frontend:** Restricción del botón **Registrar Vehículo** en `DashboardPage.tsx` y de la ruta `/registrar-vehiculo` para `Encargado de Lote y Recepción` y `Administrador`, formulario completo en `RegistroVehiculoPage.tsx` con selector de tipo (`Seminuevo` / `Nuevo de planta`), alerta de VIN duplicado con acceso directo a la ficha técnica existente, actualización inmediata de `catalogoStore.ts` sin recargar la aplicación y apertura automática de la ficha técnica al guardar.
 
 ---
 
@@ -174,7 +177,7 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 | **HU-05** | Filtrar inventario por estado, tipo y precio (3 pts) | José de Jesús López Islas | Alta | Sprint 1 | **Completada** | Incluye filtro Vendidos y conteos rápidos. |
 | **HU-06** | Instalar la app en la pantalla de inicio (2 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 1 | **Completada** | PWA standalone con recordatorio a los 7 días tras rechazo. |
 | **HU-07** | Crear usuarios (5 pts) | José de Jesús López Islas | Alta | Sprint 2 | **Completada** | Rol Administrador; password temporal y cambio en 1er acceso. |
-| **HU-08** | Registrar un vehículo (alta) (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 2 | Pendiente | Las fotografías se completan después con HU-09. |
+| **HU-08** | Registrar un vehículo (alta) (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 2 | **Completada** | Las fotografías se completan después con HU-09. |
 | **HU-09** | Capturar evidencia fotográfica (5 pts) | José de Jesús López Islas | Alta | Sprint 2 | Pendiente | Definir fotos obligatorias para marcar Disponible. |
 | **HU-10** | Cambiar estado operativo (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 2 | Pendiente | No incluye el estado Vendido; ese cambio se hace solo desde HU-19. |
 | **HU-11** | Configurar permisos por rol (5 pts) | José de Jesús López Islas | Alta | Sprint 3 | Pendiente | Da origen a la matriz de permisos que aplica HU-12. |

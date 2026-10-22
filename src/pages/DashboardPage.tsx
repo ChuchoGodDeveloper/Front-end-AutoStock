@@ -21,6 +21,7 @@ const RESUMEN_VACIO: ResumenMetricas = {
 }
 
 const ROL_ADMINISTRADOR = 'Administrador'
+const ROLES_CON_ALTA_VEHICULO = ['Encargado de Lote y Recepción', 'Administrador']
 
 function obtenerSaludo(): string {
   const hora = new Date().getHours()
@@ -52,7 +53,6 @@ export function DashboardPage() {
   const enLinea = useOnlineStatus()
 
   const [resumen, setResumen] = useState<ResumenMetricas>(RESUMEN_VACIO)
-  const [avisoAccion, setAvisoAccion] = useState('')
 
   useEffect(() => {
     if (!enLinea) return
@@ -116,6 +116,7 @@ export function DashboardPage() {
   const nombreCompleto = usuario?.nombreCompleto ?? 'Usuario'
   const rol = usuario?.rol ?? 'Usuario'
   const esAdministrador = rol === ROL_ADMINISTRADOR
+  const puedeRegistrarVehiculo = ROLES_CON_ALTA_VEHICULO.includes(rol)
 
   return (
     <main className="min-h-screen bg-slate-100 pb-10">
@@ -167,21 +168,23 @@ export function DashboardPage() {
             <button
               type="button"
               onClick={() => navigate('/catalogo')}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-3 py-4 text-sm font-bold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className={`${
+                puedeRegistrarVehiculo ? '' : 'col-span-2'
+              } flex flex-col items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-3 py-4 text-sm font-bold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600`}
             >
               <Search className="h-6 w-6" aria-hidden="true" />
               Buscar Inventario
             </button>
-            <button
-              type="button"
-              onClick={() =>
-                setAvisoAccion('Registrar Vehículo: ' + MENSAJES.moduloProximamente)
-              }
-              className="flex flex-col items-center gap-2 rounded-2xl border border-green-200 bg-green-50 px-3 py-4 text-sm font-bold text-green-800 transition hover:bg-green-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
-            >
-              <PlusCircle className="h-6 w-6" aria-hidden="true" />
-              Registrar Vehículo
-            </button>
+            {puedeRegistrarVehiculo && (
+              <button
+                type="button"
+                onClick={() => navigate('/registrar-vehiculo')}
+                className="flex flex-col items-center gap-2 rounded-2xl border border-green-200 bg-green-50 px-3 py-4 text-sm font-bold text-green-800 transition hover:bg-green-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
+              >
+                <PlusCircle className="h-6 w-6" aria-hidden="true" />
+                Registrar Vehículo
+              </button>
+            )}
             {esAdministrador && (
               <button
                 type="button"
@@ -193,11 +196,6 @@ export function DashboardPage() {
               </button>
             )}
           </div>
-          {avisoAccion && (
-            <p role="status" className="mt-3 text-center text-sm text-slate-600">
-              {avisoAccion}
-            </p>
-          )}
         </section>
 
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
