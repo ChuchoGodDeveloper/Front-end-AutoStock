@@ -79,7 +79,7 @@ export function CatalogoPage() {
 
   return (
     <main className="min-h-screen bg-slate-100 pb-10">
-      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6">
+      <div className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8 py-6">
         <OfflineBanner visible={!enLinea} />
 
         <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-md">
@@ -212,7 +212,7 @@ export function CatalogoPage() {
         )}
 
         {vehiculos.length > 0 && (
-          <section aria-label="Vehículos del catálogo" className="space-y-4">
+          <section aria-label="Vehículos del catálogo" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {vehiculos.map((vehiculo) => (
               <VehiculoCard key={vehiculo.id} vehiculo={vehiculo} />
             ))}

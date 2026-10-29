@@ -1,8 +1,10 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent } from 'react'
 import {
   AlertCircle,
   ArrowLeft,
+  ArrowRight,
   Car,
+  CheckCircle2,
   ExternalLink,
   Loader2,
   MapPin,
@@ -13,12 +15,12 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { OfflineBanner } from '../components/OfflineBanner'
+import { obtenerMarcas } from '../config/marcasModelos'
+import { useEsMovil } from '../hooks/useMediaQuery'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
-import { HttpError } from '../services/httpClient'
-import { vehiculosService } from '../services/vehiculosService'
+import { useRegistroVehiculoForm } from '../hooks/useRegistroVehiculoForm'
 import { useAuthStore } from '../stores/authStore'
-import { useCatalogoStore } from '../stores/catalogoStore'
-import { EstadoOperativo, type RegistrarVehiculoDto, TipoVehiculo } from '../types/vehiculo'
+import { EstadoOperativo, TipoVehiculo } from '../types/vehiculo'
 
 const ROLES_CON_ALTA_VEHICULO = ['Encargado de Lote y Recepción', 'Administrador']
 
@@ -30,787 +32,776 @@ const ESTADOS_ALTA: { valor: EstadoOperativo; etiqueta: string }[] = [
   { valor: EstadoOperativo.Reservado, etiqueta: 'Reservado' },
 ]
 
-const ZONAS_SUGERIDAS = ['Zona A', 'Zona B', 'Zona C', 'Talleres']
+const ZONAS_SUGERIDAS = ['Zona A', 'Zona B', 'Zona C', 'Talleres', 'Lavado']
 const TRANSMISIONES_SUGERIDAS = ['Automática', 'Manual', 'CVT', 'Doble Embrague (DCT)']
-
-const REGEX_VIN = /^[A-HJ-NPR-Z0-9]{17}$/
-
-interface CamposFormulario {
-  tipo: TipoVehiculo
-  vin: string
-  marca: string
-  modelo: string
-  version: string
-  anio: string
-  placa: string
-  kilometraje: string
-  transmision: string
-  motor: string
-  potencia: string
-  colorExterior: string
-  colorInterior: string
-  precio: string
-  estado: EstadoOperativo
-  zonaLote: string
-  cajonLote: string
-  equipamiento: string
-  notasInspeccion: string
-}
-
-type ErroresCampo = Partial<Record<keyof CamposFormulario, string>>
-
-const ANIO_MINIMO = 1990
 
 export function RegistroVehiculoPage() {
   const navigate = useNavigate()
-  const enLinea = useOnlineStatus()
   const rol = useAuthStore((estado) => estado.usuario?.rol ?? '')
-  const invalidarCatalogo = useCatalogoStore((estado) => estado.invalidarCatalogo)
-  const cargarConteosRapidos = useCatalogoStore((estado) => estado.cargarConteosRapidos)
+  const esMovil = useEsMovil()
+  const enLinea = useOnlineStatus()
 
-  const anioMaximo = new Date().getFullYear() + 1
-
-  const [campos, setCampos] = useState<CamposFormulario>({
-    tipo: TipoVehiculo.Seminuevo,
-    vin: '',
-    marca: '',
-    modelo: '',
-    version: '',
-    anio: String(new Date().getFullYear()),
-    placa: '',
-    kilometraje: '',
-    transmision: 'Automática',
-    motor: '',
-    potencia: '',
-    colorExterior: '',
-    colorInterior: '',
-    precio: '',
-    estado: EstadoOperativo.Disponible,
-    zonaLote: 'Zona A',
-    cajonLote: '',
-    equipamiento: '',
-    notasInspeccion: '',
-  })
-
-  const [errores, setErrores] = useState<ErroresCampo>({})
-  const [errorServidor, setErrorServidor] = useState<string | null>(null)
-  const [vehiculoDuplicadoId, setVehiculoDuplicadoId] = useState<string | null>(null)
-  const [guardando, setGuardando] = useState(false)
+  const {
+    campos,
+    errores,
+    tocado,
+    guardando,
+    mensajeError,
+    vehiculoDuplicadoId,
+    pasoActual,
+    anioMaximo,
+    modelosDisponibles,
+    cambiarCampo,
+    siguientePaso,
+    pasoAnterior,
+    irAlPaso,
+    manejarEnvio,
+  } = useRegistroVehiculoForm()
 
   const puedeRegistrar = ROLES_CON_ALTA_VEHICULO.includes(rol)
   const esNuevo = campos.tipo === TipoVehiculo.Nuevo
-
-  const actualizarCampo = <K extends keyof CamposFormulario>(
-    campo: K,
-    valor: CamposFormulario[K],
-  ) => {
-    setCampos((previo) => ({ ...previo, [campo]: valor }))
-    setErrores((previo) => {
-      if (!previo[campo]) return previo
-      const copia = { ...previo }
-      delete copia[campo]
-      return copia
-    })
-    setErrorServidor(null)
-    if (campo === 'vin') {
-      setVehiculoDuplicadoId(null)
-    }
-  }
-
-  const cambiarTipoUnidad = (nuevoTipo: TipoVehiculo) => {
-    setCampos((previo) => ({
-      ...previo,
-      tipo: nuevoTipo,
-      kilometraje: nuevoTipo === TipoVehiculo.Nuevo ? '0' : previo.kilometraje === '0' ? '' : previo.kilometraje,
-      placa: nuevoTipo === TipoVehiculo.Nuevo ? '' : previo.placa,
-    }))
-    setErrores((previo) => {
-      const copia = { ...previo }
-      delete copia.placa
-      delete copia.kilometraje
-      return copia
-    })
-  }
-
-  const validarFormulario = (): boolean => {
-    const nuevosErrores: ErroresCampo = {}
-    const vinLimpio = campos.vin.trim().toUpperCase()
-
-    if (!vinLimpio) {
-      nuevosErrores.vin = 'El VIN es obligatorio'
-    } else if (/[IOQ]/.test(vinLimpio)) {
-      nuevosErrores.vin = 'El VIN no puede contener las letras I, O ni Q'
-    } else if (!REGEX_VIN.test(vinLimpio)) {
-      nuevosErrores.vin = 'El VIN debe tener exactamente 17 caracteres alfanuméricos válidos'
-    }
-
-    if (!campos.marca.trim()) {
-      nuevosErrores.marca = 'La marca es obligatoria'
-    }
-
-    if (!campos.modelo.trim()) {
-      nuevosErrores.modelo = 'El modelo es obligatorio'
-    }
-
-    const anioNum = Number(campos.anio)
-    if (!campos.anio.trim() || !Number.isInteger(anioNum)) {
-      nuevosErrores.anio = 'El año es obligatorio'
-    } else if (anioNum < ANIO_MINIMO || anioNum > anioMaximo) {
-      nuevosErrores.anio = `El año debe estar entre ${ANIO_MINIMO} y ${anioMaximo}`
-    }
-
-    if (campos.tipo === TipoVehiculo.Seminuevo) {
-      if (!campos.placa.trim()) {
-        nuevosErrores.placa = 'La placa es obligatoria para unidades seminuevas'
-      }
-
-      const kmNum = Number(campos.kilometraje)
-      if (campos.kilometraje.trim() === '' || Number.isNaN(kmNum)) {
-        nuevosErrores.kilometraje = 'El kilometraje es obligatorio para unidades seminuevas'
-      } else if (kmNum < 0) {
-        nuevosErrores.kilometraje = 'El kilometraje no puede ser negativo'
-      }
-    }
-
-    if (!campos.transmision.trim()) {
-      nuevosErrores.transmision = 'La transmisión es obligatoria'
-    }
-
-    if (!campos.motor.trim()) {
-      nuevosErrores.motor = 'El motor es obligatorio'
-    }
-
-    if (!campos.colorExterior.trim()) {
-      nuevosErrores.colorExterior = 'El color exterior es obligatorio'
-    }
-
-    if (!campos.colorInterior.trim()) {
-      nuevosErrores.colorInterior = 'El color interior es obligatorio'
-    }
-
-    const precioNum = Number(campos.precio)
-    if (!campos.precio.trim() || Number.isNaN(precioNum)) {
-      nuevosErrores.precio = 'El precio de venta es obligatorio'
-    } else if (precioNum <= 0) {
-      nuevosErrores.precio = 'El precio debe ser mayor a $0 MXN'
-    }
-
-    if (!campos.zonaLote.trim()) {
-      nuevosErrores.zonaLote = 'La zona del lote es obligatoria'
-    }
-
-    if (!campos.cajonLote.trim()) {
-      nuevosErrores.cajonLote = 'El cajón del lote es obligatorio'
-    }
-
-    setErrores(nuevosErrores)
-    return Object.keys(nuevosErrores).length === 0
-  }
-
-  const manejarEnvio = async (evento: FormEvent<HTMLFormElement>) => {
-    evento.preventDefault()
-    setErrorServidor(null)
-    setVehiculoDuplicadoId(null)
-
-    if (!validarFormulario()) {
-      return
-    }
-
-    setGuardando(true)
-
-    try {
-      const payload: RegistrarVehiculoDto = {
-        tipo: campos.tipo,
-        vin: campos.vin.trim().toUpperCase(),
-        marca: campos.marca.trim(),
-        modelo: campos.modelo.trim(),
-        version: campos.version.trim() || null,
-        anio: Number(campos.anio),
-        placa: esNuevo ? null : campos.placa.trim().toUpperCase(),
-        kilometraje: esNuevo ? 0 : Math.round(Number(campos.kilometraje)),
-        transmision: campos.transmision.trim(),
-        motor: campos.motor.trim(),
-        potencia: campos.potencia.trim() || null,
-        colorExterior: campos.colorExterior.trim(),
-        colorInterior: campos.colorInterior.trim(),
-        precio: Number(campos.precio),
-        estado: campos.estado,
-        zonaLote: campos.zonaLote.trim(),
-        cajonLote: campos.cajonLote.trim().toUpperCase(),
-        equipamiento: campos.equipamiento.trim() || null,
-        notasInspeccion: campos.notasInspeccion.trim() || null,
-      }
-
-      const creado = await vehiculosService.registrarVehiculo(payload)
-      invalidarCatalogo()
-      void cargarConteosRapidos()
-      navigate(`/vehiculo/${creado.id}`, {
-        replace: true,
-        state: { recienRegistrado: true },
-      })
-    } catch (err) {
-      if (err instanceof HttpError) {
-        setErrorServidor(err.message)
-        const cuerpo = err.body as Record<string, unknown> | null
-        const idExistente =
-          typeof cuerpo?.vehiculoId === 'string' ? cuerpo.vehiculoId : null
-        if (idExistente) {
-          setVehiculoDuplicadoId(idExistente)
-          setErrores((previo) => ({ ...previo, vin: err.message }))
-        }
-      } else {
-        setErrorServidor('No fue posible registrar la unidad. Intenta de nuevo.')
-      }
-    } finally {
-      setGuardando(false)
-    }
-  }
+  const listaMarcas = obtenerMarcas()
 
   if (!puedeRegistrar) {
     return (
-      <main className="min-h-screen bg-slate-100 pb-10">
-        <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6">
-          <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-md">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
-                  AUTOSTOCK PRO
-                </p>
-                <h1 className="text-2xl font-black text-slate-900">Registrar Unidad</h1>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard', { replace: true })}
-                className="flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                Volver
-              </button>
-            </div>
-          </header>
-
-          <section className="flex flex-col items-center gap-3 rounded-3xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
-            <ShieldAlert className="h-10 w-10 text-red-600" aria-hidden="true" />
-            <h2 className="text-base font-black text-red-900">Acceso restringido</h2>
-            <p className="text-sm text-red-800">
-              Solo el Encargado de Lote y Recepción o el Administrador pueden dar de alta nuevas
-              unidades en el inventario.
-            </p>
-          </section>
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-red-100 p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Acceso Restringido</h2>
+          <p className="text-slate-600 text-sm mb-6">
+            Solo el personal con rol de <strong>Encargado de Lote y Recepción</strong> o{' '}
+            <strong>Administrador</strong> tiene autorización para dar de alta unidades en el inventario.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/catalogo')}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver al Catálogo
+          </button>
         </div>
-      </main>
+      </div>
     )
   }
 
-  const longitudVin = campos.vin.trim().length
-  const contieneLetrasProhibidasVin = /[IOQ]/i.test(campos.vin)
-
-  const clasesInput = (tieneError: boolean) =>
-    `mt-1 w-full rounded-xl border px-3.5 py-2.5 text-sm font-semibold text-slate-900 transition focus:outline-none focus:ring-2 ${
-      tieneError
-        ? 'border-red-500 bg-red-50/40 focus:border-red-600 focus:ring-red-500'
-        : 'border-slate-300 bg-white focus:border-blue-600 focus:ring-blue-600'
-    }`
-
-  return (
-    <main className="min-h-screen bg-slate-100 pb-12">
-      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6">
-        <OfflineBanner visible={!enLinea} />
-
-        <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-md">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
-                AUTOSTOCK PRO
-              </p>
-              <h1 className="text-2xl font-black text-slate-900">Registrar Unidad</h1>
-              <p className="mt-1 text-xs font-semibold text-slate-500">
-                Recepción e ingreso físico de vehículo al lote
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-            >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Volver
-            </button>
-          </div>
-        </header>
-
-        {errorServidor && (
-          <section
-            role="alert"
-            className="space-y-3 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm text-red-900 shadow-sm"
+  // Renderizador de campos del Paso 1: Identificación básica
+  const renderPaso1 = () => (
+    <div className="space-y-6">
+      {/* Selector de Tipo: Nuevo vs Seminuevo */}
+      <div>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
+          Condición de la Unidad <span className="text-red-500">*</span>
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => cambiarCampo('tipo', TipoVehiculo.Seminuevo)}
+            className={`p-3.5 rounded-xl border-2 text-left transition flex items-center gap-3 ${
+              campos.tipo === TipoVehiculo.Seminuevo
+                ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm'
+                : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700'
+            }`}
           >
-            <div className="flex items-start gap-2.5">
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" aria-hidden="true" />
-              <div className="space-y-1">
-                <p className="font-bold">{errorServidor}</p>
-                {vehiculoDuplicadoId && (
-                  <p className="text-xs text-red-800">
-                    Puedes consultar la ficha técnica de la unidad registrada con este VIN.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {vehiculoDuplicadoId && (
-              <button
-                type="button"
-                onClick={() => navigate(`/vehiculo/${vehiculoDuplicadoId}`)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-700 px-3.5 py-2.5 text-xs font-bold text-white transition hover:bg-red-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
-              >
-                <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                Ver ficha técnica de la unidad existente
-              </button>
-            )}
-          </section>
-        )}
-
-        <form onSubmit={(e) => void manejarEnvio(e)} noValidate className="space-y-5">
-          {/* 1. Clasificación e Identificación */}
-          <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Car className="h-4 w-4 text-blue-600" aria-hidden="true" />
-              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-                1. Tipo e Identificación
-              </h2>
-            </div>
-
+            <Car className={`w-5 h-5 ${campos.tipo === TipoVehiculo.Seminuevo ? 'text-blue-600' : 'text-slate-400'}`} />
             <div>
-              <span className="block text-xs font-bold text-slate-700">Tipo de unidad *</span>
-              <div className="mt-1.5 grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => cambiarTipoUnidad(TipoVehiculo.Seminuevo)}
-                  className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
-                    !esNuevo
-                      ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                      : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <Car className="h-4 w-4" aria-hidden="true" />
-                  Seminuevo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => cambiarTipoUnidad(TipoVehiculo.Nuevo)}
-                  className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
-                    esNuevo
-                      ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                      : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <Sparkles className="h-4 w-4" aria-hidden="true" />
-                  Nuevo de planta
-                </button>
-              </div>
+              <div className="font-semibold text-sm">Seminuevo</div>
+              <div className="text-xs text-slate-500">Requiere placa y odómetro</div>
             </div>
-
-            <div>
-              <div className="flex items-center justify-between">
-                <label htmlFor="vin" className="text-xs font-bold text-slate-700">
-                  Número de Serie (VIN) *
-                </label>
-                <span
-                  className={`font-mono text-xs font-bold ${
-                    longitudVin === 17 && !contieneLetrasProhibidasVin
-                      ? 'text-green-700'
-                      : 'text-slate-500'
-                  }`}
-                >
-                  {`${longitudVin} / 17`}
-                </span>
-              </div>
-              <input
-                id="vin"
-                type="text"
-                maxLength={17}
-                value={campos.vin}
-                onChange={(e) =>
-                  actualizarCampo(
-                    'vin',
-                    e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''),
-                  )
-                }
-                placeholder="Ej. 3N1CN7AP9KL887512"
-                className={`${clasesInput(Boolean(errores.vin))} font-mono uppercase tracking-wider`}
-              />
-              {contieneLetrasProhibidasVin && !errores.vin && (
-                <p className="mt-1 text-xs font-semibold text-amber-700">
-                  El estándar VIN no permite las letras I, O ni Q.
-                </p>
-              )}
-              {errores.vin && (
-                <p className="mt-1 text-xs font-semibold text-red-600">{errores.vin}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="marca" className="block text-xs font-bold text-slate-700">
-                  Marca *
-                </label>
-                <input
-                  id="marca"
-                  type="text"
-                  value={campos.marca}
-                  onChange={(e) => actualizarCampo('marca', e.target.value)}
-                  placeholder="Ej. Nissan"
-                  className={clasesInput(Boolean(errores.marca))}
-                />
-                {errores.marca && (
-                  <p className="mt-1 text-xs font-semibold text-red-600">{errores.marca}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="modelo" className="block text-xs font-bold text-slate-700">
-                  Modelo *
-                </label>
-                <input
-                  id="modelo"
-                  type="text"
-                  value={campos.modelo}
-                  onChange={(e) => actualizarCampo('modelo', e.target.value)}
-                  placeholder="Ej. Versa"
-                  className={clasesInput(Boolean(errores.modelo))}
-                />
-                {errores.modelo && (
-                  <p className="mt-1 text-xs font-semibold text-red-600">{errores.modelo}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="version" className="block text-xs font-bold text-slate-700">
-                  Versión (opcional)
-                </label>
-                <input
-                  id="version"
-                  type="text"
-                  value={campos.version}
-                  onChange={(e) => actualizarCampo('version', e.target.value)}
-                  placeholder="Ej. Exclusive"
-                  className={clasesInput(false)}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="anio" className="block text-xs font-bold text-slate-700">
-                  Año *
-                </label>
-                <input
-                  id="anio"
-                  type="number"
-                  min={ANIO_MINIMO}
-                  max={anioMaximo}
-                  value={campos.anio}
-                  onChange={(e) => actualizarCampo('anio', e.target.value)}
-                  placeholder={String(new Date().getFullYear())}
-                  className={clasesInput(Boolean(errores.anio))}
-                />
-                {errores.anio && (
-                  <p className="mt-1 text-xs font-semibold text-red-600">{errores.anio}</p>
-                )}
-              </div>
-            </div>
-
-            {!esNuevo ? (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="placa" className="block text-xs font-bold text-slate-700">
-                    Placa *
-                  </label>
-                  <input
-                    id="placa"
-                    type="text"
-                    value={campos.placa}
-                    onChange={(e) => actualizarCampo('placa', e.target.value.toUpperCase())}
-                    placeholder="Ej. HMK-421-A"
-                    className={`${clasesInput(Boolean(errores.placa))} uppercase`}
-                  />
-                  {errores.placa && (
-                    <p className="mt-1 text-xs font-semibold text-red-600">{errores.placa}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="kilometraje" className="block text-xs font-bold text-slate-700">
-                    Kilometraje (km) *
-                  </label>
-                  <input
-                    id="kilometraje"
-                    type="number"
-                    min={0}
-                    step={1}
-                    value={campos.kilometraje}
-                    onChange={(e) => actualizarCampo('kilometraje', e.target.value)}
-                    placeholder="Ej. 38500"
-                    className={clasesInput(Boolean(errores.kilometraje))}
-                  />
-                  {errores.kilometraje && (
-                    <p className="mt-1 text-xs font-semibold text-red-600">
-                      {errores.kilometraje}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-3 text-xs font-semibold text-blue-800">
-                Unidad nueva de planta: el kilometraje se fija automáticamente en{' '}
-                <span className="font-black">0 km</span> y no requiere placa de circulación.
-              </div>
-            )}
-          </section>
-
-          {/* 2. Especificaciones mecánicas y estéticas */}
-          <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Wrench className="h-4 w-4 text-blue-600" aria-hidden="true" />
-              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-                2. Especificaciones y Precio
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="transmision" className="block text-xs font-bold text-slate-700">
-                  Transmisión *
-                </label>
-                <select
-                  id="transmision"
-                  value={campos.transmision}
-                  onChange={(e) => actualizarCampo('transmision', e.target.value)}
-                  className={clasesInput(Boolean(errores.transmision))}
-                >
-                  {TRANSMISIONES_SUGERIDAS.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-                {errores.transmision && (
-                  <p className="mt-1 text-xs font-semibold text-red-600">{errores.transmision}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="motor" className="block text-xs font-bold text-slate-700">
-                  Motor *
-                </label>
-                <input
-                  id="motor"
-                  type="text"
-                  value={campos.motor}
-                  onChange={(e) => actualizarCampo('motor', e.target.value)}
-                  placeholder="Ej. 1.6L 4 Cilindros"
-                  className={clasesInput(Boolean(errores.motor))}
-                />
-                {errores.motor && (
-                  <p className="mt-1 text-xs font-semibold text-red-600">{errores.motor}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="potencia" className="block text-xs font-bold text-slate-700">
-                  Potencia (opcional)
-                </label>
-                <input
-                  id="potencia"
-                  type="text"
-                  value={campos.potencia}
-                  onChange={(e) => actualizarCampo('potencia', e.target.value)}
-                  placeholder="Ej. 118 HP"
-                  className={clasesInput(false)}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="precio" className="block text-xs font-bold text-slate-700">
-                  Precio de venta (MXN) *
-                </label>
-                <input
-                  id="precio"
-                  type="number"
-                  min={1}
-                  step="any"
-                  value={campos.precio}
-                  onChange={(e) => actualizarCampo('precio', e.target.value)}
-                  placeholder="Ej. 289000"
-                  className={clasesInput(Boolean(errores.precio))}
-                />
-                {errores.precio && (
-                  <p className="mt-1 text-xs font-semibold text-red-600">{errores.precio}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="colorExterior" className="block text-xs font-bold text-slate-700">
-                  Color exterior *
-                </label>
-                <input
-                  id="colorExterior"
-                  type="text"
-                  value={campos.colorExterior}
-                  onChange={(e) => actualizarCampo('colorExterior', e.target.value)}
-                  placeholder="Ej. Blanco Perlado"
-                  className={clasesInput(Boolean(errores.colorExterior))}
-                />
-                {errores.colorExterior && (
-                  <p className="mt-1 text-xs font-semibold text-red-600">
-                    {errores.colorExterior}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="colorInterior" className="block text-xs font-bold text-slate-700">
-                  Color interior *
-                </label>
-                <input
-                  id="colorInterior"
-                  type="text"
-                  value={campos.colorInterior}
-                  onChange={(e) => actualizarCampo('colorInterior', e.target.value)}
-                  placeholder="Ej. Negro Piel"
-                  className={clasesInput(Boolean(errores.colorInterior))}
-                />
-                {errores.colorInterior && (
-                  <p className="mt-1 text-xs font-semibold text-red-600">
-                    {errores.colorInterior}
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
-
-          {/* 3. Estado, Ubicación y Notas */}
-          <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-blue-600" aria-hidden="true" />
-              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-                3. Ubicación en Lote e Inspección
-              </h2>
-            </div>
-
-            <div>
-              <label htmlFor="estado" className="block text-xs font-bold text-slate-700">
-                Estado operativo inicial *
-              </label>
-              <select
-                id="estado"
-                value={campos.estado}
-                onChange={(e) =>
-                  actualizarCampo('estado', e.target.value as EstadoOperativo)
-                }
-                className={clasesInput(Boolean(errores.estado))}
-              >
-                {ESTADOS_ALTA.map((item) => (
-                  <option key={item.valor} value={item.valor}>
-                    {item.etiqueta}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="zonaLote" className="block text-xs font-bold text-slate-700">
-                  Zona del lote *
-                </label>
-                <select
-                  id="zonaLote"
-                  value={campos.zonaLote}
-                  onChange={(e) => actualizarCampo('zonaLote', e.target.value)}
-                  className={clasesInput(Boolean(errores.zonaLote))}
-                >
-                  {ZONAS_SUGERIDAS.map((zona) => (
-                    <option key={zona} value={zona}>
-                      {zona}
-                    </option>
-                  ))}
-                </select>
-                {errores.zonaLote && (
-                  <p className="mt-1 text-xs font-semibold text-red-600">{errores.zonaLote}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="cajonLote" className="block text-xs font-bold text-slate-700">
-                  Cajón *
-                </label>
-                <input
-                  id="cajonLote"
-                  type="text"
-                  value={campos.cajonLote}
-                  onChange={(e) => actualizarCampo('cajonLote', e.target.value.toUpperCase())}
-                  placeholder="Ej. A-12"
-                  className={`${clasesInput(Boolean(errores.cajonLote))} uppercase`}
-                />
-                {errores.cajonLote && (
-                  <p className="mt-1 text-xs font-semibold text-red-600">{errores.cajonLote}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="equipamiento" className="block text-xs font-bold text-slate-700">
-                Equipamiento destacado (opcional)
-              </label>
-              <textarea
-                id="equipamiento"
-                rows={2}
-                value={campos.equipamiento}
-                onChange={(e) => actualizarCampo('equipamiento', e.target.value)}
-                placeholder="Ej. Cámara de reversa, CarPlay, rines de aluminio 17 pulgadas..."
-                className={clasesInput(false)}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="notasInspeccion" className="block text-xs font-bold text-slate-700">
-                Notas iniciales de inspección (opcional)
-              </label>
-              <textarea
-                id="notasInspeccion"
-                rows={2}
-                value={campos.notasInspeccion}
-                onChange={(e) => actualizarCampo('notasInspeccion', e.target.value)}
-                placeholder="Ej. Ingresa sin detalles estéticos, duplicado de llave entregado..."
-                className={clasesInput(false)}
-              />
-            </div>
-          </section>
+          </button>
 
           <button
-            type="submit"
-            disabled={guardando || !enLinea}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-4 text-sm font-black text-white shadow-md transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            type="button"
+            onClick={() => cambiarCampo('tipo', TipoVehiculo.Nuevo)}
+            className={`p-3.5 rounded-xl border-2 text-left transition flex items-center gap-3 ${
+              campos.tipo === TipoVehiculo.Nuevo
+                ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm'
+                : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700'
+            }`}
           >
-            {guardando ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                Registrando unidad...
-              </>
-            ) : (
-              <>
-                <PlusCircle className="h-5 w-5" aria-hidden="true" />
-                Registrar Unidad en Inventario
-              </>
-            )}
+            <Sparkles className={`w-5 h-5 ${campos.tipo === TipoVehiculo.Nuevo ? 'text-blue-600' : 'text-slate-400'}`} />
+            <div>
+              <div className="font-semibold text-sm">Nuevo de Planta</div>
+              <div className="text-xs text-slate-500">Km 0, sin placa previa</div>
+            </div>
           </button>
-        </form>
+        </div>
       </div>
-    </main>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* VIN */}
+        <div className="sm:col-span-2">
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="vin" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+              Número de Identificación Vehicular (VIN) <span className="text-red-500">*</span>
+            </label>
+            <span className="text-xs text-slate-400 font-mono">{campos.vin.length}/17</span>
+          </div>
+          <input
+            id="vin"
+            type="text"
+            maxLength={17}
+            autoCapitalize="characters"
+            autoComplete="off"
+            placeholder="Ej. 3N1AB7AP6HY123456"
+            value={campos.vin}
+            onChange={(e) =>
+              cambiarCampo('vin', e.target.value.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '').slice(0, 17))
+            }
+            className={`w-full px-3.5 py-2.5 rounded-xl border font-mono uppercase tracking-wider text-sm transition focus:outline-none focus:ring-2 ${
+              errores.vin && tocado.vin
+                ? 'border-red-400 bg-red-50/50 focus:ring-red-200 text-red-900'
+                : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100 bg-white'
+            }`}
+          />
+          {errores.vin && tocado.vin && (
+            <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.vin}
+            </p>
+          )}
+        </div>
+
+        {/* Marca (Select Dependiente Principal) */}
+        <div>
+          <label htmlFor="marca" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+            Marca <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="marca"
+            value={campos.marca}
+            onChange={(e) => cambiarCampo('marca', e.target.value)}
+            className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 ${
+              errores.marca && tocado.marca
+                ? 'border-red-400 bg-red-50/50 focus:ring-red-200 text-red-900'
+                : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100 bg-white'
+            }`}
+          >
+            <option value="">Selecciona una marca...</option>
+            {listaMarcas.map((marca) => (
+              <option key={marca} value={marca}>
+                {marca}
+              </option>
+            ))}
+          </select>
+          {errores.marca && tocado.marca && (
+            <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.marca}
+            </p>
+          )}
+        </div>
+
+        {/* Modelo (Select en Cascada) */}
+        <div>
+          <label htmlFor="modelo" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+            Modelo <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="modelo"
+            disabled={!campos.marca}
+            value={campos.modelo}
+            onChange={(e) => cambiarCampo('modelo', e.target.value)}
+            className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed ${
+              errores.modelo && tocado.modelo
+                ? 'border-red-400 bg-red-50/50 focus:ring-red-200 text-red-900'
+                : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100 bg-white'
+            }`}
+          >
+            <option value="">
+              {!campos.marca ? 'Selecciona primero una marca' : 'Selecciona un modelo...'}
+            </option>
+            {modelosDisponibles.map((modelo) => (
+              <option key={modelo} value={modelo}>
+                {modelo}
+              </option>
+            ))}
+          </select>
+          {errores.modelo && tocado.modelo && (
+            <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.modelo}
+            </p>
+          )}
+        </div>
+
+        {/* Año */}
+        <div>
+          <label htmlFor="anio" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+            Año Modelo <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="anio"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={4}
+            placeholder={`1990 - ${anioMaximo}`}
+            value={campos.anio}
+            onChange={(e) => cambiarCampo('anio', e.target.value.replace(/\D/g, '').slice(0, 4))}
+            className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 ${
+              errores.anio && tocado.anio
+                ? 'border-red-400 bg-red-50/50 focus:ring-red-200 text-red-900'
+                : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100 bg-white'
+            }`}
+          />
+          {errores.anio && tocado.anio && (
+            <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.anio}
+            </p>
+          )}
+        </div>
+
+        {/* Versión / Equipamiento */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="version" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+              Versión / Nivel de Paquete
+            </label>
+            <span className="text-xs text-slate-400">{campos.version.length}/100</span>
+          </div>
+          <input
+            id="version"
+            type="text"
+            maxLength={100}
+            placeholder="Ej. Touring, XLE, Platinum"
+            value={campos.version}
+            onChange={(e) => cambiarCampo('version', e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm bg-white"
+          />
+        </div>
+
+        {/* Placas (Condicionales según Nuevo / Seminuevo) */}
+        {!esNuevo && (
+          <div className="sm:col-span-2">
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="placa" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                Placa de Circulación <span className="text-red-500">*</span>
+              </label>
+              <span className="text-xs text-slate-400 font-mono">{campos.placa.length}/10</span>
+            </div>
+            <input
+              id="placa"
+              type="text"
+              maxLength={10}
+              autoCapitalize="characters"
+              placeholder="Ej. ABC-123-D"
+              value={campos.placa}
+              onChange={(e) =>
+                cambiarCampo('placa', e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 10))
+              }
+              className={`w-full px-3.5 py-2.5 rounded-xl border font-mono uppercase tracking-wider text-sm transition focus:outline-none focus:ring-2 ${
+                errores.placa && tocado.placa
+                  ? 'border-red-400 bg-red-50/50 focus:ring-red-200 text-red-900'
+                  : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100 bg-white'
+              }`}
+            />
+            {errores.placa && tocado.placa && (
+              <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                {errores.placa}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  // Renderizador de campos del Paso 2: Mecánica y Carrocería
+  const renderPaso2 = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Kilometraje */}
+        <div>
+          <label htmlFor="kilometraje" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+            Kilometraje (km) <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="kilometraje"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={7}
+            disabled={esNuevo}
+            placeholder={esNuevo ? '0 km (Nuevo de planta)' : 'Ej. 35400'}
+            value={campos.kilometraje}
+            onChange={(e) => cambiarCampo('kilometraje', e.target.value.replace(/\D/g, '').slice(0, 7))}
+            className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 disabled:bg-slate-100 disabled:text-slate-500 ${
+              errores.kilometraje && tocado.kilometraje
+                ? 'border-red-400 bg-red-50/50 focus:ring-red-200 text-red-900'
+                : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100 bg-white'
+            }`}
+          />
+          {errores.kilometraje && tocado.kilometraje && (
+            <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.kilometraje}
+            </p>
+          )}
+        </div>
+
+        {/* Transmisión */}
+        <div>
+          <label htmlFor="transmision" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+            Transmisión <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="transmision"
+            value={campos.transmision}
+            onChange={(e) => cambiarCampo('transmision', e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm bg-white"
+          >
+            {TRANSMISIONES_SUGERIDAS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Motor */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="motor" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+              Motor
+            </label>
+            <span className="text-xs text-slate-400">{campos.motor.length}/100</span>
+          </div>
+          <input
+            id="motor"
+            type="text"
+            maxLength={100}
+            placeholder="Ej. 2.0L 4 Cilindros Turbo"
+            value={campos.motor}
+            onChange={(e) => cambiarCampo('motor', e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm bg-white"
+          />
+        </div>
+
+        {/* Potencia */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="potencia" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+              Potencia (HP)
+            </label>
+            <span className="text-xs text-slate-400">{campos.potencia.length}/50</span>
+          </div>
+          <input
+            id="potencia"
+            type="text"
+            maxLength={50}
+            placeholder="Ej. 187 HP @ 6,000 RPM"
+            value={campos.potencia}
+            onChange={(e) => cambiarCampo('potencia', e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm bg-white"
+          />
+        </div>
+
+        {/* Color Exterior */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="colorExterior" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+              Color Exterior
+            </label>
+            <span className="text-xs text-slate-400">{campos.colorExterior.length}/50</span>
+          </div>
+          <input
+            id="colorExterior"
+            type="text"
+            maxLength={50}
+            placeholder="Ej. Blanco Perla"
+            value={campos.colorExterior}
+            onChange={(e) => cambiarCampo('colorExterior', e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm bg-white"
+          />
+        </div>
+
+        {/* Color Interior */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="colorInterior" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+              Color Interior
+            </label>
+            <span className="text-xs text-slate-400">{campos.colorInterior.length}/50</span>
+          </div>
+          <input
+            id="colorInterior"
+            type="text"
+            maxLength={50}
+            placeholder="Ej. Piel Negra"
+            value={campos.colorInterior}
+            onChange={(e) => cambiarCampo('colorInterior', e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm bg-white"
+          />
+        </div>
+      </div>
+    </div>
+  )
+
+  // Renderizador de campos del Paso 3: Estado, Precio, Ubicación y Notas
+  const renderPaso3 = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Precio de Lista */}
+        <div>
+          <label htmlFor="precio" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+            Precio de Lista (MXN) <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">$</span>
+            <input
+              id="precio"
+              type="text"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={campos.precio}
+              onChange={(e) => {
+                // Permitir dígitos y un solo punto decimal
+                const val = e.target.value.replace(/[^0-9.]/g, '')
+                const partes = val.split('.')
+                if (partes.length <= 2) {
+                  cambiarCampo('precio', val)
+                }
+              }}
+              className={`w-full pl-8 pr-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 ${
+                errores.precio && tocado.precio
+                  ? 'border-red-400 bg-red-50/50 focus:ring-red-200 text-red-900'
+                  : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100 bg-white'
+              }`}
+            />
+          </div>
+          {errores.precio && tocado.precio && (
+            <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.precio}
+            </p>
+          )}
+        </div>
+
+        {/* Estado Operativo */}
+        <div>
+          <label htmlFor="estado" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+            Estado Operativo Inicial <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="estado"
+            value={campos.estado}
+            onChange={(e) => cambiarCampo('estado', e.target.value as EstadoOperativo)}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm bg-white"
+          >
+            {ESTADOS_ALTA.map((est) => (
+              <option key={est.valor} value={est.valor}>
+                {est.etiqueta}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Zona del Lote */}
+        <div>
+          <label htmlFor="zonaLote" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+            Zona del Lote <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="zonaLote"
+            value={campos.zonaLote}
+            onChange={(e) => cambiarCampo('zonaLote', e.target.value)}
+            className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 ${
+              errores.zonaLote && tocado.zonaLote
+                ? 'border-red-400 bg-red-50/50 focus:ring-red-200 text-red-900'
+                : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100 bg-white'
+            }`}
+          >
+            {ZONAS_SUGERIDAS.map((zona) => (
+              <option key={zona} value={zona}>
+                {zona}
+              </option>
+            ))}
+          </select>
+          {errores.zonaLote && tocado.zonaLote && (
+            <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.zonaLote}
+            </p>
+          )}
+        </div>
+
+        {/* Cajón del Lote */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="cajonLote" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+              Cajón / Posición <span className="text-red-500">*</span>
+            </label>
+            <span className="text-xs text-slate-400 font-mono">{campos.cajonLote.length}/20</span>
+          </div>
+          <input
+            id="cajonLote"
+            type="text"
+            maxLength={20}
+            placeholder="Ej. A-12, B-04"
+            value={campos.cajonLote}
+            onChange={(e) => cambiarCampo('cajonLote', e.target.value.toUpperCase())}
+            className={`w-full px-3.5 py-2.5 rounded-xl border text-sm uppercase transition focus:outline-none focus:ring-2 ${
+              errores.cajonLote && tocado.cajonLote
+                ? 'border-red-400 bg-red-50/50 focus:ring-red-200 text-red-900'
+                : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100 bg-white'
+            }`}
+          />
+          {errores.cajonLote && tocado.cajonLote && (
+            <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.cajonLote}
+            </p>
+          )}
+        </div>
+
+        {/* Equipamiento Adicional */}
+        <div className="sm:col-span-2">
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="equipamiento" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+              Equipamiento Destacado
+            </label>
+            <span className="text-xs text-slate-400">{campos.equipamiento.length}/500</span>
+          </div>
+          <textarea
+            id="equipamiento"
+            rows={2}
+            maxLength={500}
+            placeholder="Ej. Quemacocos eléctrico, Apple CarPlay inalámbrico, cámara 360°, rines 18 pulgadas..."
+            value={campos.equipamiento}
+            onChange={(e) => cambiarCampo('equipamiento', e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm bg-white"
+          />
+        </div>
+
+        {/* Notas de Inspección */}
+        <div className="sm:col-span-2">
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="notasInspeccion" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+              Notas Iniciales de Inspección
+            </label>
+            <span className="text-xs text-slate-400">{campos.notasInspeccion.length}/1000</span>
+          </div>
+          <textarea
+            id="notasInspeccion"
+            rows={3}
+            maxLength={1000}
+            placeholder="Observaciones de carrocería, faltantes de accesorios o estado al ingresar al lote..."
+            value={campos.notasInspeccion}
+            onChange={(e) => cambiarCampo('notasInspeccion', e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm bg-white"
+          />
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24 sm:pb-12">
+      <OfflineBanner visible={!enLinea} />
+
+      {/* Encabezado */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <button
+            type="button"
+            onClick={() => navigate('/catalogo')}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-blue-600 transition mb-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver al Catálogo
+          </button>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <PlusCircle className="w-7 h-7 text-blue-600" />
+            Registrar Nuevo Vehículo
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Ingreso de unidad al inventario físico de la concesionaria.
+          </p>
+        </div>
+      </div>
+
+      {/* Alerta de VIN duplicado con enlace directo */}
+      {vehiculoDuplicadoId && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3 shadow-sm">
+          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1 text-sm">
+            <p className="font-semibold">Unidad existente con el mismo VIN</p>
+            <p className="mt-0.5 text-amber-800">
+              Ya existe un vehículo registrado con este VIN en el sistema. Puedes consultar su ficha técnica para
+              actualizar sus datos o inspección:
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate(`/vehiculo/${vehiculoDuplicadoId}`)}
+              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition shadow-sm text-xs"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Ver Ficha Técnica Existente
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Alerta de Error General */}
+      {mensajeError && !vehiculoDuplicadoId && (
+        <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-900 flex items-center gap-3 shadow-sm text-sm">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+          <span>{mensajeError}</span>
+        </div>
+      )}
+
+      {/* Formulario Principal Adaptativo */}
+      <form onSubmit={(e: FormEvent) => manejarEnvio(e)} noValidate>
+        {esMovil ? (
+          /* ======================================================== */
+          /* VISTA ADAPTATIVA MÓVIL: STEPPER ASISTENTE POR PASOS      */
+          /* ======================================================== */
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* Barra de progreso de pasos */}
+            <div className="bg-slate-50 p-4 border-b border-slate-200">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                <span>Paso {pasoActual} de 3</span>
+                <span>
+                  {pasoActual === 1 && 'Identificación'}
+                  {pasoActual === 2 && 'Mecánica'}
+                  {pasoActual === 3 && 'Lote y Precio'}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[1, 2, 3].map((paso) => (
+                  <button
+                    key={paso}
+                    type="button"
+                    onClick={() => irAlPaso(paso)}
+                    className={`h-2 rounded-full transition-all ${
+                      paso <= pasoActual ? 'bg-blue-600' : 'bg-slate-200'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Contenido del paso actual en móvil */}
+            <div className="p-5">
+              {pasoActual === 1 && renderPaso1()}
+              {pasoActual === 2 && renderPaso2()}
+              {pasoActual === 3 && renderPaso3()}
+            </div>
+
+            {/* Botones de navegación inferior móvil */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+              {pasoActual > 1 ? (
+                <button
+                  type="button"
+                  onClick={pasoAnterior}
+                  disabled={guardando}
+                  className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 bg-white font-medium hover:bg-slate-100 transition inline-flex items-center gap-1.5 text-sm"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Anterior
+                </button>
+              ) : (
+                <div />
+              )}
+
+              {pasoActual < 3 ? (
+                <button
+                  type="button"
+                  onClick={siguientePaso}
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition inline-flex items-center gap-1.5 text-sm shadow-sm"
+                >
+                  Siguiente
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={guardando || !enLinea}
+                  className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition inline-flex items-center gap-2 text-sm shadow-sm disabled:opacity-50"
+                >
+                  {guardando ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Registrando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Guardar Unidad
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* ======================================================== */
+          /* VISTA ADAPTATIVA DESKTOP: SECCIONES MULTICOLUMNA         */
+          /* ======================================================== */
+          <div className="space-y-6">
+            {/* Sección 1: Identificación */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <h2 className="text-base font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                <Car className="w-5 h-5 text-blue-600" />
+                1. Identificación y Carrocería
+              </h2>
+              {renderPaso1()}
+            </div>
+
+            {/* Sección 2: Especificaciones Mecánicas */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <h2 className="text-base font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                <Wrench className="w-5 h-5 text-blue-600" />
+                2. Tren Motriz y Especificaciones
+              </h2>
+              {renderPaso2()}
+            </div>
+
+            {/* Sección 3: Ubicación, Precio y Notas */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <h2 className="text-base font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-blue-600" />
+                3. Estado Operativo, Precio y Ubicación
+              </h2>
+              {renderPaso3()}
+            </div>
+
+            {/* Barra de acciones Desktop */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => navigate('/catalogo')}
+                disabled={guardando}
+                className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 bg-white font-medium hover:bg-slate-100 transition text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={guardando || !enLinea}
+                className="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition inline-flex items-center gap-2 text-sm shadow-md disabled:opacity-50"
+              >
+                {guardando ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Registrando Unidad...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Completar Registro
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </form>
+    </div>
   )
 }

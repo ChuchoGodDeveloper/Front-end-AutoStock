@@ -252,7 +252,7 @@ export function VehiculoDetallePage() {
 
   return (
     <main className="min-h-screen bg-slate-100 pb-10">
-      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6">
+      <div className="mx-auto w-full max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8 py-6">
         <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-md">
           <div className="flex items-start justify-between gap-3">
             <div>

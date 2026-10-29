@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Car, History, LogOut, PlusCircle, Search, Users, Wrench } from 'lucide-react'
+import {
+  Car,
+  Clock,
+  History,
+  LogOut,
+  PlusCircle,
+  Search,
+  Sparkles,
+  Users,
+  Wrench,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { MENSAJES } from '../config/mensajes'
@@ -119,121 +129,174 @@ export function DashboardPage() {
   const puedeRegistrarVehiculo = ROLES_CON_ALTA_VEHICULO.includes(rol)
 
   return (
-    <main className="min-h-screen bg-slate-100 pb-10">
-      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6">
+    <main className="min-h-screen bg-slate-50/50 py-6 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-12">
+      <div className="mx-auto w-full max-w-5xl space-y-6">
         <OfflineBanner visible={!enLinea} />
 
-        <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-md">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
-                AUTOSTOCK PRO
-              </p>
-              <h1 className="text-2xl font-black text-slate-900">Menú Principal</h1>
+        {/* Encabezado Responsivo */}
+        <header className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div
+                aria-hidden="true"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white shadow-sm ring-4 ring-blue-50"
+              >
+                {obtenerIniciales(nombreCompleto)}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                    AutoStock Pro
+                  </span>
+                  <span className="inline-flex rounded-full bg-slate-900 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                    {rol}
+                  </span>
+                </div>
+                <h1 className="truncate text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  {`${obtenerSaludo()}, ${nombreCompleto}`}
+                </h1>
+              </div>
             </div>
 
             <button
               type="button"
               onClick={() => void manejarCerrarSesion()}
-              className="flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
             >
               <LogOut className="h-4 w-4" aria-hidden="true" />
               Cerrar sesión
             </button>
           </div>
-
-          <div className="mt-4 flex items-center gap-3">
-            <div
-              aria-hidden="true"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-black text-white shadow-sm"
-            >
-              {obtenerIniciales(nombreCompleto)}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-base font-bold text-slate-900">
-                {`${obtenerSaludo()}, ${nombreCompleto}`}
-              </p>
-              <span className="mt-1 inline-flex rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold text-white">
-                {rol}
-              </span>
-            </div>
-          </div>
         </header>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-            Accesos rápidos
-          </h2>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => navigate('/catalogo')}
-              className={`${
-                puedeRegistrarVehiculo ? '' : 'col-span-2'
-              } flex flex-col items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-3 py-4 text-sm font-bold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600`}
-            >
-              <Search className="h-6 w-6" aria-hidden="true" />
-              Buscar Inventario
-            </button>
-            {puedeRegistrarVehiculo && (
-              <button
-                type="button"
-                onClick={() => navigate('/registrar-vehiculo')}
-                className="flex flex-col items-center gap-2 rounded-2xl border border-green-200 bg-green-50 px-3 py-4 text-sm font-bold text-green-800 transition hover:bg-green-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
-              >
-                <PlusCircle className="h-6 w-6" aria-hidden="true" />
-                Registrar Vehículo
-              </button>
-            )}
-            {esAdministrador && (
-              <button
-                type="button"
-                onClick={() => navigate('/usuarios')}
-                className="col-span-2 flex items-center justify-center gap-2.5 rounded-2xl border border-slate-300 bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-              >
-                <Users className="h-5 w-5" aria-hidden="true" />
-                Administración de usuarios
-              </button>
-            )}
-          </div>
-        </section>
+        {/* Grilla Principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Columna Izquierda: Accesos Rápidos y Métricas */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Accesos Rápidos */}
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 mb-4 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                Módulos y Operaciones
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <button
+                  type="button"
+                  onClick={() => navigate('/catalogo')}
+                  className={`${
+                    puedeRegistrarVehiculo ? '' : 'sm:col-span-2'
+                  } flex items-center gap-3.5 rounded-xl border border-blue-200 bg-blue-50/70 p-4 text-left transition hover:bg-blue-100 hover:shadow-xs group`}
+                >
+                  <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                    <Search className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Buscar Inventario</h3>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      Catálogo completo, filtros y fichas técnicas
+                    </p>
+                  </div>
+                </button>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-            MÉTRICAS RÁPIDAS
-          </h2>
-          <dl className="mt-3 grid grid-cols-3 gap-2">
-            <div className="rounded-2xl bg-green-50 p-3 text-center">
-              <dt className="text-xs font-semibold text-slate-700">Autos Disponibles</dt>
-              <dd className="mt-1 text-2xl font-black text-green-700">{resumen.disponibles}</dd>
-            </div>
-            <div className="rounded-2xl bg-blue-50 p-3 text-center">
-              <dt className="text-xs font-semibold text-slate-700">En Prueba de Manejo</dt>
-              <dd className="mt-1 text-2xl font-black text-blue-700">
-                {resumen.pruebaDeManejo}
-              </dd>
-            </div>
-            <div className="rounded-2xl bg-orange-50 p-3 text-center">
-              <dt className="text-xs font-semibold text-slate-700">En Taller</dt>
-              <dd className="mt-1 text-2xl font-black text-orange-700">{resumen.enTaller}</dd>
-            </div>
-          </dl>
-          <div className="mt-3 flex items-center justify-center gap-2 text-xs text-slate-500">
-            <Car className="h-4 w-4" aria-hidden="true" />
-            <Wrench className="h-4 w-4" aria-hidden="true" />
-            <span>{enLinea ? 'Datos en vivo' : 'Datos locales'}</span>
-          </div>
-        </section>
+                {puedeRegistrarVehiculo && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/registrar-vehiculo')}
+                    className="flex items-center gap-3.5 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 text-left transition hover:bg-emerald-100 hover:shadow-xs group"
+                  >
+                    <div className="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                      <PlusCircle className="h-5 w-5" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">Registrar Unidad</h3>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">
+                        Alta de vehículos nuevos o seminuevos
+                      </p>
+                    </div>
+                  </button>
+                )}
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-            ACTIVIDAD RECIENTE
-          </h2>
-          <div className="mt-3 flex items-center gap-3 rounded-2xl bg-slate-50 p-4 text-slate-600">
-            <History className="h-5 w-5 shrink-0" aria-hidden="true" />
-            <p className="text-sm">{MENSAJES.sinActividad}</p>
+                {esAdministrador && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/usuarios')}
+                    className="sm:col-span-2 flex items-center gap-3.5 rounded-xl border border-slate-300 bg-slate-900 p-4 text-left transition hover:bg-slate-800 hover:shadow-xs group"
+                  >
+                    <div className="w-11 h-11 rounded-xl bg-white/10 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                      <Users className="h-5 w-5" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Directorio de Personal</h3>
+                      <p className="text-xs text-slate-300 font-medium mt-0.5">
+                        Administración de accesos, roles y usuarios
+                      </p>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </section>
+
+            {/* Métricas Rápidas */}
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 flex items-center gap-1.5">
+                  <Car className="w-3.5 h-3.5 text-blue-600" />
+                  Métricas de Inventario
+                </h2>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                  <span className={`w-2 h-2 rounded-full ${enLinea ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                  <span>{enLinea ? 'En vivo' : 'Local'}</span>
+                </div>
+              </div>
+              <dl className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 text-center">
+                  <dt className="text-xs font-bold uppercase tracking-wider text-emerald-800">Disponibles</dt>
+                  <dd className="mt-1.5 text-2xl sm:text-3xl font-black text-emerald-700">{resumen.disponibles}</dd>
+                </div>
+                <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 text-center">
+                  <dt className="text-xs font-bold uppercase tracking-wider text-blue-800">Test Drive</dt>
+                  <dd className="mt-1.5 text-2xl sm:text-3xl font-black text-blue-700">
+                    {resumen.pruebaDeManejo}
+                  </dd>
+                </div>
+                <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-4 text-center">
+                  <dt className="text-xs font-bold uppercase tracking-wider text-amber-800">En Taller</dt>
+                  <dd className="mt-1.5 text-2xl sm:text-3xl font-black text-amber-700">{resumen.enTaller}</dd>
+                </div>
+              </dl>
+            </section>
           </div>
-        </section>
+
+          {/* Columna Derecha: Actividad y Estado de Conexión */}
+          <div className="space-y-6">
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 mb-4 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-blue-600" />
+                Actividad Reciente
+              </h2>
+              <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-4 text-slate-600 border border-slate-100">
+                <History className="h-5 w-5 shrink-0 text-slate-400 mt-0.5" aria-hidden="true" />
+                <div>
+                  <p className="text-xs font-bold text-slate-700">Sin movimientos pendientes</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{MENSAJES.sinActividad}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 mb-3">
+                Sincronización
+              </h2>
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                AutoStock almacena la sesión de manera segura con cifrado offline en IndexedDB por hasta 8 horas continuas.
+              </p>
+              <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500">
+                <Wrench className="w-3.5 h-3.5 text-slate-400" />
+                <span>Modo de sincronización activa</span>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
     </main>
   )

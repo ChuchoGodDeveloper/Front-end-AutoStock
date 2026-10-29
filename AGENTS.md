@@ -205,3 +205,66 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 | **HU-23** | Crear orden de servicio de taller (5 pts) | José de Jesús López Islas | Baja | Sprint 5 | Pendiente | Prioridad Baja: recortable si el tiempo se ajusta, sin afectar el MVP. |
 | **HU-24** | Dar seguimiento y cerrar orden de servicio (5 pts) | Delia Leslie Jimenez Neri | Baja | Sprint 5 | Pendiente | Depende de HU-23. Prioridad Baja, recortable si el tiempo se ajusta. |
 | **HU-25** | Consultar historial de mantenimiento (3 pts) | José de Jesús López Islas | Baja | Sprint 5 | Pendiente | Depende de HU-23 y HU-24. No se puede probar de forma aislada. |
+
+---
+
+## 8. Paquete de Mejoras Integrales de Formularios y UI (Fase 1 Sprint 2)
+
+Durante esta fase de optimización y robustecimiento, se implementaron mejoras de accesibilidad, validaciones en cascada y adaptabilidad móvil/desktop bajo **MODO CERO DESTRUCCIÓN** (sin afectar esquemas existentes, claves primarias, contratos ni datos en Azure SQL):
+
+1. **Adaptabilidad de Formularios (Responsive & Adaptive UI):**
+   * **Alta de Vehículos (RegistroVehiculoPage.tsx):**
+     * En móvil: diseño por pasos (*stepper*) de 3 etapas (Datos Principales, Tren Motriz, Ubicación y Precio) con botones Anterior/Siguiente y barra de progreso animada para evitar scroll vertical excesivo.
+     * En desktop: layout multicolumna estructurado en tarjetas claras.
+     * Compartición del 100% de la lógica y validaciones mediante el custom hook useRegistroVehiculoForm.ts y detección reactiva de pantalla en useMediaQuery.ts.
+     * Configuración de atributos de accesibilidad móvil nativa (inputMode, utoComplete, utoCapitalize).
+
+2. **Selects Dependientes en Cascada (Marca -> Modelo):**
+   * Catálogo tipado oficial de 17 marcas y sus modelos correspondientes en Frontend (src/config/marcasModelos.ts) y Backend (AutoStock.Domain/Constants/CatalogoMarcasModelos.cs).
+   * Cascada reactiva en formulario: al seleccionar una Marca, el selector de Modelo filtra las opciones válidas. Si la Marca cambia, el campo Modelo se reinicia automáticamente a vacío ("") para impedir combinaciones inconsistentes.
+   * Selector de Modelo deshabilitado con placeholder dinámico mientras no exista una Marca elegida.
+   * Validación en Backend (VehiculosService.cs): rechaza combinaciones inconsistentes devolviendo HTTP 400 con mensaje { "mensaje": "El modelo no corresponde a la marca seleccionada" }.
+
+3. **Sincronización de Límites de Caracteres y Sanitización:**
+   * Sincronización exacta de longitudes entre configuraciones de EF Core (HasMaxLength), validaciones en Application (VehiculosService.cs, UsuariosService.cs) y atributos Frontend (maxLength, contadores en tiempo real):
+     * VIN: 17 caracteres alfanuméricos estrictos (sin I, O, Q).
+     * Marca: máx. 50.
+     * Modelo: máx. 50.
+     * Version: máx. 100.
+     * Placa: máx. 20 (opcional en nuevos, obligatoria en seminuevos).
+     * ZonaLote: máx. 20.
+     * CajonLote: máx. 20.
+     * Transmision: máx. 50.
+     * Motor: máx. 100.
+     * Potencia: máx. 50.
+     * ColorExterior: máx. 50.
+     * ColorInterior: máx. 50.
+     * Equipamiento: máx. 500.
+     * NotasInspeccion: máx. 1000.
+     * Precio: mayor a cero y máx. $99,999,999.99.
+     * Kilometraje: mayor o igual a cero y máx. 1,000,000 km.
+     * NombreCompleto (Usuario): 3 a 150 caracteres.
+     * Correo (Usuario): máx. 100 caracteres con validación de formato.
+     * EmpleadoId (Usuario): máx. 20 caracteres.
+   * Pruebas unitarias añadidas en VehiculosServiceTests.cs (escenarios de campos desbordados y combinaciones marca-modelo inválidas).
+
+4. **Registro de Usuarios — Fecha de Nacimiento y Generación Automática de ID:**
+   * **Cero Ruptura de Base de Datos:** Se preservó intacta la clave primaria numérica Id (Identity) en SQL Server sin tocar ninguna de las relaciones foráneas (Sesiones, Vehiculos, HistorialEstadosVehiculo).
+   * **Entidad Usuario:** Se incorporó FechaNacimiento (DateOnly) con valor por defecto seguro 2000-01-01 en UsuarioConfiguration.cs para mantener la compatibilidad absoluta con datos preexistentes en Azure SQL.
+   * **Migración Aditiva EF Core:** 20261029000320_UpdateUsuarios_AddFechaNacimiento (Up agrega columna date no nula con valor por defecto).
+   * **Algoritmo Determinista de Identificador (GeneradorIdentificadorUsuario.cs / generadorIdentificador.ts):**
+     * Normalización de nombres (remueve acentos, diacríticos y palabras conectoras como DE, DEL, LOS, Y).
+     * Formato: [INICIALES]-[AAMMDD]-[01] (ej. ML-950420-01), con longitud de 12 a 14 caracteres (dentro del límite de 20 de EmpleadoId).
+     * Resolución de colisiones incremental automática (-01, -02, etc.) verificando en base de datos.
+   * **Previsualización Reactiva en Frontend:** NuevoUsuarioPage.tsx muestra un badge en tiempo real con el código calculado conforme el usuario teclea su nombre y selecciona su fecha de nacimiento, con opción de ingreso manual si se requiere.
+   * **Validación de Mayoría de Edad:** Tanto en Frontend como en Backend se valida estrictamente que el usuario tenga al menos 18 años cumplidos al momento del registro.
+   * **Compatibilidad de Sesión Offline:** Campo opcional echaNacimiento?: string en UsuarioSesion (sessionDb.ts / sesion.ts) para no invalidar sesiones almacenadas en IndexedDB.
+   * **Pruebas Unitarias:** 5 nuevas pruebas unitarias en UsuariosServiceTests.cs cubriendo generación automática, resolución de colisiones, cálculo de edad y rechazo de menores de edad (60/60 pruebas pasando exitosamente).
+
+5. **Auditoría y Optimización UI/UX en Todas las Pantallas:**
+   * Sustitución de contenedores forzados a ancho móvil (max-w-md) por contenedores adaptativos fluidos (max-w-5xl / max-w-6xl):
+     * CatalogoPage.tsx: Grilla responsiva de tarjetas de vehículos (grid-cols-1 sm:grid-cols-2 lg:grid-cols-3).
+     * DashboardPage.tsx: Vista de dos columnas en desktop (módulos y accesos a la izquierda, métricas y estado a la derecha).
+     * UsuariosPage.tsx: Catálogo de tarjetas de personal con badge de ID, rol, estado y buscador dinámico.
+     * VehiculoDetallePage.tsx: Ficha técnica extendida para desktop y móvil sin cortes de texto.
+     * EvidenciaVehiculoPage.tsx: Grilla 2x2 para las 4 tomas fotográficas obligatorias en pantallas medianas y grandes.

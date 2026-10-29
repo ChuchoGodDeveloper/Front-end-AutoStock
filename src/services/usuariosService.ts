@@ -5,14 +5,16 @@ export interface UsuarioBackend {
   nombreCompleto: string
   empleadoId: string
   correo: string
+  fechaNacimiento?: string
   rol: string
   activo: boolean
 }
 
 export interface CrearUsuarioBackend {
-  empleadoId: string
+  empleadoId?: string
   nombreCompleto: string
   correo: string
+  fechaNacimiento: string
   rolId: number
 }
 
