@@ -25,7 +25,7 @@ export const vehiculosService = {
       params.set('busqueda', busqueda.trim())
     }
 
-    filtros?.estados.forEach((estado) => params.append('estados[]', estado))
+    filtros?.estados.forEach((estado) => params.append('estados', estado))
 
     if (filtros?.tipo != null) {
       params.set('tipo', String(filtros.tipo))
@@ -39,7 +39,7 @@ export const vehiculosService = {
       params.set('precioMax', String(filtros.precioMax))
     }
 
-    return apiFetch<PaginaCatalogo>(`/vehiculos/catalogo?${params.toString()}`)
+    return apiFetch<PaginaCatalogo>(`/vehiculos?${params.toString()}`)
   },
 
   obtenerConteosRapidos: () => apiFetch<ConteosRapidos>('/vehiculos/conteos-rapidos'),
