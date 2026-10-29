@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { ModalEdicionKilometraje } from '../components/ModalEdicionKilometraje'
 import { ModalReubicacion } from '../components/ModalReubicacion'
 import { ESTILOS_ESTADO } from '../config/estadosOperativos'
 import { MENSAJES } from '../config/mensajes'
@@ -128,6 +129,7 @@ export function VehiculoDetallePage() {
   const [errorCambioEstado, setErrorCambioEstado] = useState<string | null>(null)
   const [avisoReubicacion, setAvisoReubicacion] = useState<string | null>(null)
   const [modalReubicacionAbierto, setModalReubicacionAbierto] = useState(false)
+  const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false)
   const puedeReubicar = tienePermiso('asignar_cajon')
 
   const cargarVehiculo = useCallback(async () => {
@@ -516,8 +518,13 @@ export function VehiculoDetallePage() {
               {tienePermiso('editar_kilometraje_notas') && (
                 <button
                   type="button"
-                  disabled
-                  title={MENSAJES.moduloProximamente}
+                  disabled={vehiculo.estado === EstadoOperativo.Vendido}
+                  title={
+                    vehiculo.estado === EstadoOperativo.Vendido
+                      ? 'Las unidades con estado Vendido no se pueden editar'
+                      : undefined
+                  }
+                  onClick={() => setModalEdicionAbierto(true)}
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                 >
                   <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -558,6 +565,16 @@ export function VehiculoDetallePage() {
                   <dd className="mt-1 text-base font-black text-slate-800">{vehiculo.cajonLote}</dd>
                 </div>
               </dl>
+
+              {/* Registro de Verificación de Kilometraje (CA 2) */}
+              {vehiculo.kilometrajeActualizadoPor && vehiculo.fechaActualizacionKilometraje && (
+                <div className="mt-3 flex items-center gap-2 rounded-xl bg-blue-50/80 border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-900">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+                  <span>
+                    {`Verificado por ${vehiculo.kilometrajeActualizadoPor} el ${formatearFechaHora(vehiculo.fechaActualizacionKilometraje)}`}
+                  </span>
+                </div>
+              )}
 
               {/* Registro de Última Reubicación (CA 3) */}
               {vehiculo.reubicadoPor && vehiculo.fechaReubicacion && (
@@ -797,15 +814,26 @@ export function VehiculoDetallePage() {
         </div>
       )}
       {vehiculo && (
-        <ModalReubicacion
-          abierto={modalReubicacionAbierto}
-          vehiculo={vehiculo}
-          onCerrar={() => setModalReubicacionAbierto(false)}
-          onReubicacionExitosa={(actualizado) => {
-            setVehiculo(actualizado)
-            actualizarVehiculoEnCatalogo(actualizado)
-          }}
-        />
+        <>
+          <ModalReubicacion
+            abierto={modalReubicacionAbierto}
+            vehiculo={vehiculo}
+            onCerrar={() => setModalReubicacionAbierto(false)}
+            onReubicacionExitosa={(actualizado) => {
+              setVehiculo(actualizado)
+              actualizarVehiculoEnCatalogo(actualizado)
+            }}
+          />
+          <ModalEdicionKilometraje
+            abierto={modalEdicionAbierto}
+            vehiculo={vehiculo}
+            onCerrar={() => setModalEdicionAbierto(false)}
+            onGuardadoExitoso={(actualizado) => {
+              setVehiculo(actualizado)
+              actualizarVehiculoEnCatalogo(actualizado)
+            }}
+          />
+        </>
       )}
     </main>
   )
