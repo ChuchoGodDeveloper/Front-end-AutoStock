@@ -298,3 +298,18 @@ Durante esta fase de optimización y robustecimiento, se implementaron mejoras d
   7. **Integración con Alta y Cambio de Estado (CA 7):** En el modal de cambio de estado (HU-10) y en el formulario de alta (HU-08), se estandariza el catálogo de zonas y la longitud máxima de 6 caracteres para cajón, validando disponibilidad.
   8. **Control de Acceso por Permiso (CA 8):** El botón "Reubicar" solo se muestra a usuarios que cuenten con el permiso `asignar_cajon` (Encargado de Lote y Administrador por defecto).
   9. **Calidad y Cobertura:** 76/76 pruebas unitarias en verde en Backend (`xUnit` + `Moq`), 0 errores y 0 advertencias con Roslynator en modo Release. En Frontend: 100% libre de errores en `eslint`, `typecheck` y compilación de producción Vite PWA exitosa.
+
+## 11. Historia de Usuario HU-14: Editar kilometraje y notas de inspección (Sprint 3)
+* **Responsable:** Delia Leslie Jimenez Neri (`Leslie-Neri` / `23300765@uttt.edu.mx`).
+* **Puntos de Historia:** 3 SP.
+* **Estado:** **Completada**.
+* **Criterios de Aceptación Cumplidos:**
+  1. **Resumen y campos actuales (CA 1):** En la ficha técnica (`VehiculoDetallePage.tsx`), el botón "Editar Kilometraje / Datos" abre el modal `ModalEdicionKilometraje.tsx` desplegando la miniatura del vehículo, marca, modelo, versión, VIN, número de stock y el kilometraje registrado actualmente como referencia.
+  2. **Guardado normal y trazabilidad (CA 2):** Al ingresar un kilometraje mayor o igual al actual, los cambios se persisten inmediatamente en base de datos (`HistorialKilometrajeVehiculo`), actualizando el detalle y el catálogo en Zustand (`catalogoStore.ts`) sin recarga de página, exhibiendo la insignia de verificación: *"Verificado por {nombre} el {fecha}"*.
+  3. **Bloqueo de reducción para Encargado (CA 3):** Si un Encargado de Inventario u otro rol no administrativo intenta ingresar un kilometraje menor al registrado, el sistema bloquea la acción con el mensaje exacto: *"El kilometraje no puede ser menor al registrado ({actual} km)"*.
+  4. **Corrección a la baja autorizada con motivo (CA 4):** Si un Gerente de Ventas o Administrador registra un kilometraje menor al actual, el modal solicita obligatoriamente el motivo de la corrección (`motivoCorreccion` con al menos 5 caracteres). Al guardar, se almacena en el historial de auditoría inmutable.
+  5. **Validación de formato de KM (CA 5):** El campo de odómetro restringe la entrada a dígitos enteros en el rango de 0 a 999,999 km, rechazando números negativos, caracteres alfabéticos o decimales (`inputMode="numeric"`).
+  6. **Límite y contador de notas (CA 6):** El campo de notas de inspección tiene un tope estricto de 500 caracteres, con contador interactivo en tiempo real (`X/500`) y alerta visual al aproximarse al límite.
+  7. **Confirmación de descarte de cambios (CA 7):** Si el formulario ha sido modificado y el usuario hace clic en "Cancelar" o el botón de cierre, se despliega un diálogo de confirmación: *"¿Descartar cambios? Tienes modificaciones sin guardar..."*, evitando pérdidas accidentales.
+  8. **Control de acceso por permisos y regla de negocio (CA 8):** El botón "Editar Kilometraje / Datos" solo se muestra si el usuario tiene el permiso activo `editar_kilometraje_notas`. Además, las unidades en estado `Vendido` no permiten edición (botón deshabilitado con tooltip explicativo y validación HTTP 400 en Backend).
+  9. **Calidad y Cobertura:** 84/84 pruebas unitarias en verde en Backend (`xUnit` + `Moq`), 0 errores y 0 advertencias con Roslynator en modo Release. En Frontend: 100% libre de errores en `eslint`, `typecheck` y compilación de producción Vite PWA exitosa.

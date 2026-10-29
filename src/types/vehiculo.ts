@@ -108,6 +108,10 @@ export interface VehiculoDetalle extends Vehiculo {
   fechaReubicacion?: string | null
   reubicadoPor?: string | null
   reubicadoPorUsuarioId?: number | null
+  fechaActualizacionKilometraje?: string | null
+  kilometrajeActualizadoPor?: string | null
+  kilometrajeActualizadoPorUsuarioId?: number | null
+  historialKilometrajes?: HistorialKilometrajeVehiculo[]
   tomasObligatoriasCompletadas: number
   porcentajeEvidencia: number
   inspeccionCompleta: boolean
@@ -177,4 +181,21 @@ export interface OcupanteCajonRespuesta {
   modelo?: string | null
   placa?: string | null
   mensaje?: string | null
+}
+
+export interface HistorialKilometrajeVehiculo {
+  id: string
+  kilometrajeAnterior: number
+  kilometrajeNuevo: number
+  notasInspeccion?: string | null
+  motivoCorreccion?: string | null
+  usuarioId?: number | null
+  actualizadoPor: string
+  fechaActualizacion: string
+}
+
+export interface ActualizarKilometrajePayload {
+  kilometraje: number
+  notasInspeccion?: string | null
+  motivoCorreccion?: string | null
 }
