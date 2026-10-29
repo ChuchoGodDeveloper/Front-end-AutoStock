@@ -292,7 +292,7 @@ export function usuarioDesdePerfil(
     empleadoId: perfil.empleadoId,
     nombreCompleto: perfil.nombreCompleto,
     correo: perfil.correo,
-    rol: perfil.rol,
+    rol: perfil.rol?.trim() ? perfil.rol.trim() : 'Usuario',
     requiereCambioPassword: Boolean(
       perfil.requiereCambioPassword ?? requiereCambioPasswordActual,
     ),
