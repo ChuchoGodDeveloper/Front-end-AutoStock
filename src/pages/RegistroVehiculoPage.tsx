@@ -32,7 +32,7 @@ const ESTADOS_ALTA: { valor: EstadoOperativo; etiqueta: string }[] = [
   { valor: EstadoOperativo.Reservado, etiqueta: 'Reservado' },
 ]
 
-const ZONAS_SUGERIDAS = ['Zona A', 'Zona B', 'Zona C', 'Talleres', 'Lavado']
+const ZONAS_SUGERIDAS = ['Zona A', 'Zona B', 'Zona C', 'Taller', 'Lavado']
 const TRANSMISIONES_SUGERIDAS = ['Automática', 'Manual', 'CVT', 'Doble Embrague (DCT)']
 
 export function RegistroVehiculoPage() {
@@ -536,13 +536,13 @@ export function RegistroVehiculoPage() {
             <label htmlFor="cajonLote" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
               Cajón / Posición <span className="text-red-500">*</span>
             </label>
-            <span className="text-xs text-slate-400 font-mono">{campos.cajonLote.length}/20</span>
+            <span className="text-xs text-slate-400 font-mono">{campos.cajonLote.length}/6</span>
           </div>
           <input
             id="cajonLote"
             type="text"
-            maxLength={20}
-            placeholder="Ej. A-12, B-04"
+            maxLength={6}
+            placeholder="Ej. 14, T-04"
             value={campos.cajonLote}
             onChange={(e) => cambiarCampo('cajonLote', e.target.value.toUpperCase())}
             className={`w-full px-3.5 py-2.5 rounded-xl border text-sm uppercase transition focus:outline-none focus:ring-2 ${

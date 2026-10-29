@@ -16,7 +16,7 @@ Este documento maestro concentra el estado actual del proyecto **AutoStock**, la
   * **.NET 10** con **Clean Architecture** en 5 proyectos independientes (`Domain`, `Application`, `Infrastructure`, `API`, `UnitTests`).
   * **SQL Server (Azure SQL)** con **Entity Framework Core** (Migraciones versionadas y Data Seeder en `DbInitializer.cs`).
   * Autenticación **JWT** (vigencia de 8 horas) y hash de contraseñas con **BCrypt**.
-  * Pruebas unitarias con **xUnit** y **Moq** (68/68 pruebas en verde hasta HU-12).
+  * Pruebas unitarias con **xUnit** y **Moq** (76/76 pruebas en verde hasta HU-13).
   * Análisis estático con **Roslynator** (`.editorconfig` y `Directory.Build.props`) y GitHub Actions (`.github/workflows/ci-quality-tests.yml`).
 * **Frontend (Repositorio: `Front-end-AutoStock`):**
   * **React 18**, **TypeScript**, **Vite**, **Tailwind CSS** y **React Router DOM v6**.
@@ -192,7 +192,7 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 | **HU-10** | Cambiar estado operativo (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 2 | **Completada** | 5 estados operativos, bitácora inmutable, Test Drive y Reservas. |
 | **HU-11** | Configurar permisos por rol (5 pts) | José de Jesús López Islas | Alta | Sprint 3 | **Completada** | Matriz de permisos, protección inmutable Admin y obligatorio catálogo. |
 | **HU-12** | Restringir funciones según mi rol (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | **Completada** | Restricción dinámica de funciones por rol en frontend y backend (HTTP 403 Forbidden), Route Guard y sincronización con HU-11. |
-| **HU-13** | Asignar o reubicar cajón en el lote (3 pts) | José de Jesús López Islas | Alta | Sprint 3 | Pendiente | Lista de zonas y cajones del lote. |
+| **HU-13** | Asignar o reubicar cajón en el lote (3 pts) | José de Jesús López Islas | Alta | Sprint 3 | **Completada** | Reubicación con modal interactivo, validación de colisión de cajones, trazabilidad inmutable y actualización en tiempo real. |
 | **HU-14** | Editar kilometraje y notas de inspección (3 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | Pendiente | Edición de kilometraje y notas sobre unidades existentes. |
 | **HU-15** | Recuperar mi contraseña (3 pts) | José de Jesús López Islas | Media | Sprint 3 | Pendiente | Requiere servicio de correo electrónico funcionando. |
 | **HU-16** | Editar y desactivar usuarios (3 pts) | Delia Leslie Jimenez Neri | Media | Sprint 3 | Pendiente | Los usuarios se desactivan, nunca se eliminan, para conservar historiales. |
@@ -282,3 +282,19 @@ Durante esta fase de optimización y robustecimiento, se implementaron mejoras d
   5. **Sincronización Dinámica de Permisos:** La sesión de usuario incluye su lista de permisos activos calculados al iniciar sesión o refrescar perfil (`/auth/perfil`), permitiendo que cualquier cambio realizado desde la matriz de permisos (HU-11) surta efecto inmediato en el navegador sin requerir migraciones destructivas ni invalidar la persistencia offline en IndexedDB.
   6. **Identidad Visible en Encabezado:** Encabezado con avatar, nombre completo del usuario autenticado y badge con su rol asignado.
   7. **Calidad y Cobertura:** 68/68 pruebas unitarias en verde en Backend (`xUnit` + `Moq`), 0 errores y 0 advertencias con Roslynator en modo Release. En Frontend: 100% libre de errores en `eslint`, `typecheck` y compilación de producción Vite PWA exitosa.
+
+
+## 10. Historia de Usuario HU-13: Asignar o reubicar cajón en el lote (Sprint 3)
+* **Responsable:** José de Jesús López Islas (`ChuchoGodDeveloper` / `loij030909hmcpssa0@gmail.com`).
+* **Puntos de Historia:** 3 SP.
+* **Estado:** **Completada**.
+* **Criterios de Aceptación Cumplidos:**
+  1. **Selector de Reubicación (CA 1):** En la tarjeta de ubicación de la ficha técnica (`VehiculoDetallePage.tsx`), el botón "Reubicar" abre `ModalReubicacion.tsx` mostrando la ubicación actual, selector de zona (`Zona A`, `Zona B`, `Zona C`, `Taller`, `Lavado`) y campo de cajón (clave corta de hasta 6 caracteres en mayúsculas).
+  2. **Actualización Inmediata (CA 2):** Al confirmar una zona y cajón libre, la ubicación se actualiza al instante en la ficha técnica y en el catálogo en Zustand (`catalogoStore.ts`) sin recargar la página.
+  3. **Trazabilidad Inmutable (CA 3):** Cada movimiento registra la ubicación anterior, la nueva, el colaborador que reubicó, fecha y hora en la entidad `HistorialUbicacionVehiculo` y se muestra en la ficha: *"Reubicado por {nombre} el {fecha}"*.
+  4. **Blindaje de Cajón Ocupado (CA 4):** Si el cajón elegido ya está ocupado por otra unidad activa (no vendida), el servidor responde HTTP 400 y el modal despliega una alerta con la marca, modelo y placa del vehículo ocupante (`El cajón ya está ocupado por {Marca} {Modelo} (Placa: {Placa})`), impidiendo la reubicación.
+  5. **Prevención de Misma Ubicación (CA 5):** Si el usuario selecciona la misma zona y cajón que la unidad ya tiene asignada, el botón "Confirmar" permanece deshabilitado.
+  6. **Validación de Campos Vacíos (CA 6):** Validación en Frontend y Backend que impide guardar campos vacíos o cadenas de cajón mayores a 6 caracteres.
+  7. **Integración con Alta y Cambio de Estado (CA 7):** En el modal de cambio de estado (HU-10) y en el formulario de alta (HU-08), se estandariza el catálogo de zonas y la longitud máxima de 6 caracteres para cajón, validando disponibilidad.
+  8. **Control de Acceso por Permiso (CA 8):** El botón "Reubicar" solo se muestra a usuarios que cuenten con el permiso `asignar_cajon` (Encargado de Lote y Administrador por defecto).
+  9. **Calidad y Cobertura:** 76/76 pruebas unitarias en verde en Backend (`xUnit` + `Moq`), 0 errores y 0 advertencias con Roslynator en modo Release. En Frontend: 100% libre de errores en `eslint`, `typecheck` y compilación de producción Vite PWA exitosa.
