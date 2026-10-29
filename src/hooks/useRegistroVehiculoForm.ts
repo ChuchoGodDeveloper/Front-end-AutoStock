@@ -179,6 +179,8 @@ export function useRegistroVehiculoForm(valoresPrecarga?: Partial<CamposVehiculo
 
       if (!campos.cajonLote.trim()) {
         nuevosErrores.cajonLote = 'El cajón del lote es obligatorio'
+      } else if (campos.cajonLote.trim().length > 6) {
+        nuevosErrores.cajonLote = 'El cajón no puede exceder 6 caracteres'
       }
     }
 

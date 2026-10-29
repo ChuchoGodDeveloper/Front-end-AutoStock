@@ -67,6 +67,17 @@ export interface ImagenVehiculo {
   capturadaPor?: string | null
 }
 
+export interface HistorialUbicacionVehiculo {
+  id: string
+  zonaAnterior: string
+  cajonAnterior: string
+  zonaNueva: string
+  cajonNuevo: string
+  usuarioId?: number | null
+  reubicadoPor: string
+  fechaMovimiento: string
+}
+
 export interface HistorialEstadoVehiculo {
   id: string
   estadoAnterior: EstadoOperativo
@@ -94,11 +105,15 @@ export interface VehiculoDetalle extends Vehiculo {
   responsableTestDrive?: string | null
   reservadoPorUsuarioId?: number | null
   reservadoPorNombre?: string | null
+  fechaReubicacion?: string | null
+  reubicadoPor?: string | null
+  reubicadoPorUsuarioId?: number | null
   tomasObligatoriasCompletadas: number
   porcentajeEvidencia: number
   inspeccionCompleta: boolean
   imagenes: ImagenVehiculo[]
   historialEstados?: HistorialEstadoVehiculo[]
+  historialUbicaciones?: HistorialUbicacionVehiculo[]
 }
 
 export interface RegistrarVehiculoDto {
@@ -149,4 +164,17 @@ export function obtenerEtiquetaToma(tipoToma?: string | null): string {
     default:
       return tipoToma || 'Fotografía'
   }
+}
+
+export interface ReubicarVehiculoPayload {
+  zona: string
+  cajon: string
+}
+
+export interface OcupanteCajonRespuesta {
+  ocupado: boolean
+  marca?: string | null
+  modelo?: string | null
+  placa?: string | null
+  mensaje?: string | null
 }
