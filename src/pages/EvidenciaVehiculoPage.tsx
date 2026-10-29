@@ -380,7 +380,7 @@ export function EvidenciaVehiculoPage() {
   if (!tienePermisoRol) {
     return (
       <main className="min-h-screen bg-slate-100 pb-10">
-        <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6">
+        <div className="mx-auto w-full max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8 py-6">
           <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-md">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -431,7 +431,7 @@ export function EvidenciaVehiculoPage() {
 
   return (
     <main className="min-h-screen bg-slate-100 pb-12">
-      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6">
+      <div className="mx-auto w-full max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8 py-6">
         <OfflineBanner visible={!enLinea} />
 
         <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-md">
@@ -564,7 +564,7 @@ export function EvidenciaVehiculoPage() {
                 Tomas Obligatorias (4)
               </h2>
 
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {TOMAS_OBLIGATORIAS.map((toma) => {
                   const imagenGuardada = buscarImagenPorToma(toma.clave)
 
@@ -683,7 +683,7 @@ export function EvidenciaVehiculoPage() {
               </div>
 
               {fotosAdicionalesGuardadas.length > 0 && (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {fotosAdicionalesGuardadas.map(({ definicion, imagen }) => {
                     if (!imagen) return null
                     return (
@@ -835,7 +835,7 @@ export function EvidenciaVehiculoPage() {
 
             {/* Vista en vivo de la cámara */}
             {!previsualizacionBase64 && !permisoCamaraDenegado && (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-slate-900">
                   <video
                     ref={videoRef}
@@ -876,7 +876,7 @@ export function EvidenciaVehiculoPage() {
 
             {/* Previsualización antes de aceptar y guardar */}
             {previsualizacionBase64 && (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="relative h-64 w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-900">
                   <img
                     src={previsualizacionBase64}

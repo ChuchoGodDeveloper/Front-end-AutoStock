@@ -3,6 +3,7 @@ export interface UsuarioSesion {
   empleadoId: string
   nombreCompleto: string
   correo: string
+  fechaNacimiento?: string
   rol: string
   requiereCambioPassword: boolean
 }
