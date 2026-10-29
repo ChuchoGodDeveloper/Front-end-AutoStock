@@ -74,7 +74,12 @@ export function DashboardPage() {
         const perfil = await authService.obtenerPerfil()
 
         if (vigente && perfil?.id) {
-          await actualizarUsuario(usuarioDesdePerfil(perfil))
+          const rolActual = useAuthStore.getState().usuario?.rol
+          const perfilAjustado: typeof perfil = {
+            ...perfil,
+            rol: perfil.rol?.trim() ? perfil.rol.trim() : rolActual || 'Usuario',
+          }
+          await actualizarUsuario(usuarioDesdePerfil(perfilAjustado))
         }
       } catch {
         // Sin conexión o con el token vencido se conserva la sesión local.
@@ -124,7 +129,7 @@ export function DashboardPage() {
   }
 
   const nombreCompleto = usuario?.nombreCompleto ?? 'Usuario'
-  const rol = usuario?.rol ?? 'Usuario'
+  const rol = usuario?.rol?.trim() ? usuario.rol.trim() : 'Usuario'
   const esAdministrador = rol === ROL_ADMINISTRADOR
   const puedeRegistrarVehiculo = ROLES_CON_ALTA_VEHICULO.includes(rol)
 
