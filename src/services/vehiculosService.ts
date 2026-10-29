@@ -4,8 +4,10 @@ import type {
   ConteosRapidos,
   FiltrosCatalogo,
   GuardarFotografiaDto,
+  OcupanteCajonRespuesta,
   PaginaCatalogo,
   RegistrarVehiculoDto,
+  ReubicarVehiculoPayload,
   VehiculoDetalle,
 } from '../types/vehiculo'
 
@@ -65,4 +67,20 @@ export const vehiculosService = {
       method: 'PATCH',
       body: JSON.stringify(datos),
     }),
+
+  reubicarVehiculo: (vehiculoId: string, datos: ReubicarVehiculoPayload) =>
+    apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/reubicar`, {
+      method: 'POST',
+      body: JSON.stringify(datos),
+    }),
+
+  obtenerZonas: () => apiFetch<string[]>('/vehiculos/zonas'),
+
+  validarCajonDisponible: (zona: string, cajon: string, ignorarVehiculoId?: string) => {
+    const params = new URLSearchParams({ zona, cajon })
+    if (ignorarVehiculoId) {
+      params.set('ignorarVehiculoId', ignorarVehiculoId)
+    }
+    return apiFetch<OcupanteCajonRespuesta>(`/vehiculos/cajon-disponible?${params.toString()}`)
+  },
 }
