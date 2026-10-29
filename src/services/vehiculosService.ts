@@ -6,6 +6,7 @@ import type {
   GuardarFotografiaDto,
   OcupanteCajonRespuesta,
   PaginaCatalogo,
+  ActualizarKilometrajePayload,
   RegistrarVehiculoDto,
   ReubicarVehiculoPayload,
   VehiculoDetalle,
@@ -83,4 +84,10 @@ export const vehiculosService = {
     }
     return apiFetch<OcupanteCajonRespuesta>(`/vehiculos/cajon-disponible?${params.toString()}`)
   },
+
+  actualizarKilometrajeYNotas: (vehiculoId: string, datos: ActualizarKilometrajePayload) =>
+    apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/kilometraje-notas`, {
+      method: 'PUT',
+      body: JSON.stringify(datos),
+    }),
 }
