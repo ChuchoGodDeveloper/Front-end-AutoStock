@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AdminRoute } from './components/AdminRoute'
 import { InstallPrompt } from './components/InstallPrompt'
+import { PermisoRoute } from './components/PermisoRoute'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { CambiarPasswordPage } from './pages/CambiarPasswordPage'
 import { CatalogoPage } from './pages/CatalogoPage'
@@ -64,17 +65,17 @@ export default function App() {
         <Route
           path="/vehiculo/:id/evidencia"
           element={
-            <ProtectedRoute>
+            <PermisoRoute codigoPermiso="capturar_fotografias">
               <EvidenciaVehiculoPage />
-            </ProtectedRoute>
+            </PermisoRoute>
           }
         />
         <Route
           path="/registrar-vehiculo"
           element={
-            <ProtectedRoute>
+            <PermisoRoute codigoPermiso="registrar_vehiculos">
               <RegistroVehiculoPage />
-            </ProtectedRoute>
+            </PermisoRoute>
           }
         />
         <Route

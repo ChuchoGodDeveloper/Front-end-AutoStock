@@ -36,7 +36,13 @@ export function AdminRoute({ children }: { children: ReactNode }) {
   }
 
   if (usuario?.rol !== ROL_ADMINISTRADOR) {
-    return <Navigate to="/dashboard" replace />
+    return (
+      <Navigate
+        to="/dashboard"
+        replace
+        state={{ mensajeNoAutorizado: 'No tienes permiso para acceder a esta sección' }}
+      />
+    )
   }
 
   return <>{children}</>

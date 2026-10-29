@@ -26,6 +26,7 @@ interface EstadoAuth {
   actualizarUsuario: (usuario: UsuarioSesion) => Promise<void>
   cambiarPasswordPrimerAcceso: (passwordNueva: string, passwordActual?: string) => Promise<void>
   cerrarSesion: () => Promise<void>
+  tienePermiso: (codigo: string) => boolean
 }
 
 function comoTexto(valor: unknown): string {
@@ -82,6 +83,7 @@ function construirUsuarioDesdeLogin(
     nombreCompleto: usuario?.nombreCompleto || comoTexto(claims.nombre) || nombreSugerido,
     correo: usuario?.correo || comoTexto(claims.email) || (esCorreo ? identificador : ''),
     rol: usuario?.rol || comoTexto(claims.role) || 'Usuario',
+    permisos: usuario?.permisos ?? [],
     requiereCambioPassword: Boolean(
       respuesta.requiereCambioPassword ?? usuario?.requiereCambioPassword ?? false,
     ),
@@ -259,6 +261,8 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
     })
   },
 
+  tienePermiso: (codigo: string) => tienePermisoUsuario(get().usuario, codigo),
+
   cerrarSesion: async () => {
     const { token } = get()
 
@@ -283,6 +287,57 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
   },
 }))
 
+const PERMISOS_BASE_POR_ROL: Record<string, string[]> = {
+  Administrador: [
+    'consultar_catalogo',
+    'cambiar_estado',
+    'registrar_vehiculos',
+    'capturar_fotografias',
+    'asignar_cajon',
+    'editar_kilometraje_notas',
+    'gestionar_ordenes_servicio',
+    'marcar_vendido',
+    'ver_reporte_ventas',
+    'ver_metricas_lote',
+  ],
+  'Gerente de Ventas': [
+    'consultar_catalogo',
+    'cambiar_estado',
+    'editar_kilometraje_notas',
+    'gestionar_ordenes_servicio',
+    'marcar_vendido',
+    'ver_reporte_ventas',
+    'ver_metricas_lote',
+  ],
+  'Encargado de Lote y Recepción': [
+    'consultar_catalogo',
+    'cambiar_estado',
+    'registrar_vehiculos',
+    'capturar_fotografias',
+    'asignar_cajon',
+    'editar_kilometraje_notas',
+    'gestionar_ordenes_servicio',
+  ],
+  'Asesor de Ventas': ['consultar_catalogo', 'cambiar_estado'],
+}
+
+export function tienePermisoUsuario(
+  usuario: UsuarioSesion | null | undefined,
+  codigoPermiso: string,
+): boolean {
+  if (!usuario) return false
+
+  const rol = usuario.rol?.trim() ?? ''
+  if (rol === 'Administrador') return true
+
+  if (Array.isArray(usuario.permisos) && usuario.permisos.length > 0) {
+    return usuario.permisos.includes(codigoPermiso)
+  }
+
+  const permisosBase = PERMISOS_BASE_POR_ROL[rol] ?? ['consultar_catalogo']
+  return permisosBase.includes(codigoPermiso)
+}
+
 export function usuarioDesdePerfil(
   perfil: PerfilBackend,
   requiereCambioPasswordActual = false,
@@ -293,6 +348,7 @@ export function usuarioDesdePerfil(
     nombreCompleto: perfil.nombreCompleto,
     correo: perfil.correo,
     rol: perfil.rol?.trim() ? perfil.rol.trim() : 'Usuario',
+    permisos: perfil.permisos ?? [],
     requiereCambioPassword: Boolean(
       perfil.requiereCambioPassword ?? requiereCambioPasswordActual,
     ),

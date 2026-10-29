@@ -5,6 +5,7 @@ export interface UsuarioSesion {
   correo: string
   fechaNacimiento?: string
   rol: string
+  permisos?: string[]
   requiereCambioPassword: boolean
 }
 
