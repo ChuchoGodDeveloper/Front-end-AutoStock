@@ -7,6 +7,7 @@ import {
   PlusCircle,
   Search,
   Sparkles,
+  ShieldCheck,
   Users,
   Wrench,
 } from 'lucide-react'
@@ -222,21 +223,39 @@ export function DashboardPage() {
                 )}
 
                 {esAdministrador && (
-                  <button
-                    type="button"
-                    onClick={() => navigate('/usuarios')}
-                    className="sm:col-span-2 flex items-center gap-3.5 rounded-xl border border-slate-300 bg-slate-900 p-4 text-left transition hover:bg-slate-800 hover:shadow-xs group"
-                  >
-                    <div className="w-11 h-11 rounded-xl bg-white/10 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                      <Users className="h-5 w-5" aria-hidden="true" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-white">Directorio de Personal</h3>
-                      <p className="text-xs text-slate-300 font-medium mt-0.5">
-                        Administración de accesos, roles y usuarios
-                      </p>
-                    </div>
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/usuarios')}
+                      className="flex items-center gap-3.5 rounded-xl border border-slate-300 bg-slate-900 p-4 text-left transition hover:bg-slate-800 hover:shadow-xs group"
+                    >
+                      <div className="w-11 h-11 rounded-xl bg-white/10 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                        <Users className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">Directorio de Personal</h3>
+                        <p className="text-xs text-slate-300 font-medium mt-0.5">
+                          Administración de accesos, roles y usuarios
+                        </p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate('/permisos')}
+                      className="flex items-center gap-3.5 rounded-xl border border-indigo-200 bg-indigo-50/70 p-4 text-left transition hover:bg-indigo-100 hover:shadow-xs group"
+                    >
+                      <div className="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                        <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900">Permisos por Rol</h3>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                          Matriz de control de facultades del sistema
+                        </p>
+                      </div>
+                    </button>
+                  </>
                 )}
               </div>
             </section>
