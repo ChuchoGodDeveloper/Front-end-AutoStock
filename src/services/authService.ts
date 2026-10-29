@@ -1,3 +1,8 @@
+import type {
+  RestablecerPasswordPayload,
+  SolicitarRecuperacionRespuesta,
+  ValidarTokenRespuesta,
+} from '../types/sesion'
 import { apiFetch } from './httpClient'
 
 export interface UsuarioLoginBackend {
@@ -48,5 +53,20 @@ export const authService = {
     apiFetch<RespuestaCambioPasswordBackend>('/auth/cambiar-password', {
       method: 'POST',
       body: JSON.stringify({ passwordActual, passwordNueva }),
+    }),
+
+  solicitarRecuperacionPassword: (correo: string) =>
+    apiFetch<SolicitarRecuperacionRespuesta>('/auth/recuperar-password', {
+      method: 'POST',
+      body: JSON.stringify({ correo }),
+    }),
+
+  validarTokenRecuperacion: (token: string) =>
+    apiFetch<ValidarTokenRespuesta>(`/auth/validar-token-recuperacion?token=${encodeURIComponent(token)}`),
+
+  restablecerPassword: (datos: RestablecerPasswordPayload) =>
+    apiFetch<{ mensaje: string }>('/auth/restablecer-password', {
+      method: 'POST',
+      body: JSON.stringify(datos),
     }),
 }

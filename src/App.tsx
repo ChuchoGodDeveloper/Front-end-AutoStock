@@ -9,6 +9,8 @@ import { CatalogoPage } from './pages/CatalogoPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { EvidenciaVehiculoPage } from './pages/EvidenciaVehiculoPage'
 import { LoginPage } from './pages/LoginPage'
+import { RecuperarPasswordPage } from './pages/RecuperarPasswordPage'
+import { RestablecerPasswordPage } from './pages/RestablecerPasswordPage'
 import { NuevoUsuarioPage } from './pages/NuevoUsuarioPage'
 import { PermisosPage } from './pages/PermisosPage'
 import { RegistroVehiculoPage } from './pages/RegistroVehiculoPage'
@@ -30,6 +32,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/recuperar-password" element={<RecuperarPasswordPage />} />
+        <Route path="/restablecer-password" element={<RestablecerPasswordPage />} />
         <Route
           path="/cambiar-password"
           element={

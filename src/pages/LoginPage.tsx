@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Car, Eye, EyeOff, Loader2, LockKeyhole, LogIn, UserRound } from 'lucide-react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { CheckCircle2 } from 'lucide-react'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { MENSAJES } from '../config/mensajes'
 import { useAuthStore } from '../stores/authStore'
 
@@ -11,6 +12,8 @@ interface ErroresCampo {
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const mensajeExito = (location.state as { mensajeExito?: string } | null)?.mensajeExito
   const estaAutenticado = useAuthStore((estado) => estado.estaAutenticado)
   const sesionCargada = useAuthStore((estado) => estado.sesionCargada)
   const usuario = useAuthStore((estado) => estado.usuario)
@@ -85,7 +88,17 @@ export function LoginPage() {
             </p>
           </header>
 
-          <form onSubmit={manejarEnvio} noValidate aria-busy={iniciandoSesion} className="space-y-5">
+          {mensajeExito && (
+              <div
+                role="status"
+                className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800"
+              >
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                <span>{mensajeExito}</span>
+              </div>
+            )}
+
+            <form onSubmit={manejarEnvio} noValidate aria-busy={iniciandoSesion} className="space-y-5">
             <div>
               <label
                 htmlFor="credencial"
@@ -189,6 +202,14 @@ export function LoginPage() {
                   {erroresCampo.password}
                 </p>
               )}
+              <div className="mt-1.5 flex justify-end">
+                <Link
+                  to="/recuperar-password"
+                  className="text-xs font-semibold text-blue-600 transition hover:text-blue-800 hover:underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
             </div>
 
             {mensajeError && (

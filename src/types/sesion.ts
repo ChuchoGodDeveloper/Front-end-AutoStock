@@ -24,3 +24,24 @@ export interface SesionActiva {
   usuario: UsuarioSesion
   guardadoEn: string
 }
+
+export interface SolicitarRecuperacionPayload {
+  correo: string
+}
+
+export interface SolicitarRecuperacionRespuesta {
+  mensaje: string
+  tokenDev?: string
+}
+
+export interface ValidarTokenRespuesta {
+  esValido: boolean
+  mensaje: string
+  correoEnmascarado?: string
+}
+
+export interface RestablecerPasswordPayload {
+  token: string
+  passwordNueva: string
+  confirmarPassword: string
+}
