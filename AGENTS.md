@@ -193,7 +193,7 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 | **HU-11** | Configurar permisos por rol (5 pts) | José de Jesús López Islas | Alta | Sprint 3 | **Completada** | Matriz de permisos, protección inmutable Admin y obligatorio catálogo. |
 | **HU-12** | Restringir funciones según mi rol (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | **Completada** | Restricción dinámica de funciones por rol en frontend y backend (HTTP 403 Forbidden), Route Guard y sincronización con HU-11. |
 | **HU-13** | Asignar o reubicar cajón en el lote (3 pts) | José de Jesús López Islas | Alta | Sprint 3 | **Completada** | Reubicación con modal interactivo, validación de colisión de cajones, trazabilidad inmutable y actualización en tiempo real. |
-| **HU-14** | Editar kilometraje y notas de inspección (3 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | Pendiente | Edición de kilometraje y notas sobre unidades existentes. |
+| **HU-14** | Editar kilometraje y notas de inspección (3 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | **Completada** | Edición de kilometraje y notas sobre unidades existentes. |
 | **HU-15** | Recuperar mi contraseña (3 pts) | José de Jesús López Islas | Media | Sprint 3 | Pendiente | Requiere servicio de correo electrónico funcionando. |
 | **HU-16** | Editar y desactivar usuarios (3 pts) | Delia Leslie Jimenez Neri | Media | Sprint 3 | Pendiente | Los usuarios se desactivan, nunca se eliminan, para conservar historiales. |
 | **HU-17** | Consultar inventario y fichas sin conexión (8 pts) | José de Jesús López Islas | Alta | Sprint 4 | Pendiente | Historia de mayor riesgo técnico; caché local en IndexedDB. |
