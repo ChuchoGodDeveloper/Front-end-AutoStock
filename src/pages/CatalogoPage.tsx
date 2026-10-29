@@ -11,7 +11,6 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { useAuthStore } from '../stores/authStore'
 import { FILTROS_VACIOS, hayFiltrosActivos, useCatalogoStore } from '../stores/catalogoStore'
 
-const ROLES_PUEDE_REGISTRAR = ['Encargado de Lote y Recepción', 'Administrador']
 
 export function CatalogoPage() {
   const navigate = useNavigate()
@@ -28,7 +27,8 @@ export function CatalogoPage() {
   const setTerminoBusqueda = useCatalogoStore((estado) => estado.setTerminoBusqueda)
   const setFiltros = useCatalogoStore((estado) => estado.setFiltros)
 
-  const rol = useAuthStore((estado) => estado.usuario?.rol ?? '')
+  const tienePermiso = useAuthStore((estado) => estado.tienePermiso)
+  const puedeRegistrar = tienePermiso('registrar_vehiculos')
 
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const [versionBusqueda, setVersionBusqueda] = useState(0)
@@ -150,7 +150,7 @@ export function CatalogoPage() {
               Limpiar búsqueda
             </button>
 
-            {ROLES_PUEDE_REGISTRAR.includes(rol) && (
+            {puedeRegistrar && (
               <Link
                 to="/registrar-vehiculo"
                 className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
@@ -176,7 +176,7 @@ export function CatalogoPage() {
               Limpiar filtros
             </button>
 
-            {ROLES_PUEDE_REGISTRAR.includes(rol) && (
+            {puedeRegistrar && (
               <Link
                 to="/registrar-vehiculo"
                 className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"

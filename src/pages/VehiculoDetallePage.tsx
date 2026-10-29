@@ -45,12 +45,6 @@ const formateadorMoneda = new Intl.NumberFormat('es-MX', {
 
 const formateadorKilometraje = new Intl.NumberFormat('es-MX')
 
-const ROLES_CON_EDICION = [
-  'Encargado de Lote y Recepción',
-  'Gerente de Ventas',
-  'Administrador',
-]
-const ROLES_CON_EVIDENCIA = ['Encargado de Lote y Recepción', 'Administrador']
 const ROLES_SUPERIORES_RESERVA = ['Gerente de Ventas', 'Administrador']
 
 interface OpcionEstadoModal {
@@ -112,6 +106,7 @@ export function VehiculoDetallePage() {
   const estadoNavegacion = (location.state as EstadoNavegacionDetalle | null) ?? null
   const usuario = useAuthStore((estado) => estado.usuario)
   const rol = usuario?.rol ?? ''
+  const tienePermiso = useAuthStore((estado) => estado.tienePermiso)
   const actualizarVehiculoEnCatalogo = useCatalogoStore(
     (estado) => estado.actualizarVehiculoEnCatalogo,
   )
@@ -220,7 +215,7 @@ export function VehiculoDetallePage() {
   const urlImagen =
     totalImagenes > 0 && imagenActual && !fotoFallida ? imagenActual.url : null
 
-  const puedeGestionarFotos = ROLES_CON_EVIDENCIA.includes(rol)
+  const puedeGestionarFotos = tienePermiso('capturar_fotografias')
   const inspeccionCompleta =
     vehiculo?.inspeccionCompleta ?? (vehiculo?.tomasObligatoriasCompletadas ?? 0) >= 4
 
@@ -246,8 +241,9 @@ export function VehiculoDetallePage() {
   const bloqueadoPorReservaDeOtro =
     estaReservado && tieneDuenoReserva && !esMismoUsuarioReserva && !esGerenteOAdmin
 
+  const puedeCambiarEstado = tienePermiso('cambiar_estado')
   const mostrarBotonCambioEstado = Boolean(
-    vehiculo && !estaVendido && !bloqueadoPorReservaDeOtro,
+    puedeCambiarEstado && vehiculo && !estaVendido && !bloqueadoPorReservaDeOtro,
   )
 
   return (
@@ -514,7 +510,7 @@ export function VehiculoDetallePage() {
                 </button>
               )}
 
-              {ROLES_CON_EDICION.includes(rol) && (
+              {tienePermiso('editar_kilometraje_notas') && (
                 <button
                   type="button"
                   disabled

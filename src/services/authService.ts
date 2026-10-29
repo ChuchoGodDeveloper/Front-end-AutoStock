@@ -6,6 +6,7 @@ export interface UsuarioLoginBackend {
   nombreCompleto: string
   correo: string
   rol: string
+  permisos?: string[]
   requiereCambioPassword?: boolean
 }
 
