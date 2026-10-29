@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { EvidenciaVehiculoPage } from './pages/EvidenciaVehiculoPage'
 import { LoginPage } from './pages/LoginPage'
 import { NuevoUsuarioPage } from './pages/NuevoUsuarioPage'
+import { PermisosPage } from './pages/PermisosPage'
 import { RegistroVehiculoPage } from './pages/RegistroVehiculoPage'
 import { UsuariosPage } from './pages/UsuariosPage'
 import { VehiculoDetallePage } from './pages/VehiculoDetallePage'
@@ -93,6 +94,14 @@ export default function App() {
           }
         />
         <Route
+          path="/permisos"
+          element={
+            <AdminRoute>
+              <PermisosPage />
+            </AdminRoute>
+          }
+        />
+        <Route
           path="/"
           element={
             <ProtectedRoute>
@@ -100,9 +109,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-
       <InstallPrompt />
     </BrowserRouter>
   )

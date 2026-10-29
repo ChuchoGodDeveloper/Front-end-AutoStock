@@ -16,7 +16,7 @@ Este documento maestro concentra el estado actual del proyecto **AutoStock**, la
   * **.NET 10** con **Clean Architecture** en 5 proyectos independientes (`Domain`, `Application`, `Infrastructure`, `API`, `UnitTests`).
   * **SQL Server (Azure SQL)** con **Entity Framework Core** (Migraciones versionadas y Data Seeder en `DbInitializer.cs`).
   * Autenticación **JWT** (vigencia de 8 horas) y hash de contraseñas con **BCrypt**.
-  * Pruebas unitarias con **xUnit** y **Moq** (55/55 pruebas en verde hasta HU-10).
+  * Pruebas unitarias con **xUnit** y **Moq** (66/66 pruebas en verde hasta HU-11).
   * Análisis estático con **Roslynator** (`.editorconfig` y `Directory.Build.props`) y GitHub Actions (`.github/workflows/ci-quality-tests.yml`).
 * **Frontend (Repositorio: `Front-end-AutoStock`):**
   * **React 18**, **TypeScript**, **Vite**, **Tailwind CSS** y **React Router DOM v6**.
@@ -190,7 +190,7 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 | **HU-08** | Registrar un vehículo (alta) (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 2 | **Completada** | Las fotografías se completan después con HU-09. |
 | **HU-09** | Capturar evidencia fotográfica (5 pts) | José de Jesús López Islas | Alta | Sprint 2 | **Completada** | 4 tomas obligatorias + 2 adicionales; máx. 6 fotos (1600px). |
 | **HU-10** | Cambiar estado operativo (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 2 | **Completada** | 5 estados operativos, bitácora inmutable, Test Drive y Reservas. |
-| **HU-11** | Configurar permisos por rol (5 pts) | José de Jesús López Islas | Alta | Sprint 3 | Pendiente | Da origen a la matriz de permisos que aplica HU-12. |
+| **HU-11** | Configurar permisos por rol (5 pts) | José de Jesús López Islas | Alta | Sprint 3 | **Completada** | Matriz de permisos, protección inmutable Admin y obligatorio catálogo. |
 | **HU-12** | Restringir funciones según mi rol (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | Pendiente | Depende de HU-11. Debe verificarse en cada historia nueva. |
 | **HU-13** | Asignar o reubicar cajón en el lote (3 pts) | José de Jesús López Islas | Alta | Sprint 3 | Pendiente | Lista de zonas y cajones del lote. |
 | **HU-14** | Editar kilometraje y notas de inspección (3 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | Pendiente | Edición de kilometraje y notas sobre unidades existentes. |
