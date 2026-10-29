@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  AlertCircle,
   Car,
   Clock,
   History,
@@ -10,8 +11,9 @@ import {
   ShieldCheck,
   Users,
   Wrench,
+  X,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { MENSAJES } from '../config/mensajes'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
@@ -32,7 +34,6 @@ const RESUMEN_VACIO: ResumenMetricas = {
 }
 
 const ROL_ADMINISTRADOR = 'Administrador'
-const ROLES_CON_ALTA_VEHICULO = ['Encargado de Lote y Recepción', 'Administrador']
 
 function obtenerSaludo(): string {
   const hora = new Date().getHours()
@@ -58,6 +59,19 @@ function aNumero(valor: unknown): number {
 
 export function DashboardPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const tienePermiso = useAuthStore((estado) => estado.tienePermiso)
+  const estadoNavegacion = location.state as { mensajeNoAutorizado?: string } | null
+  const [mensajeAlerta, setMensajeAlerta] = useState<string | null>(
+    estadoNavegacion?.mensajeNoAutorizado ?? null
+  )
+
+  useEffect(() => {
+    if (estadoNavegacion?.mensajeNoAutorizado) {
+      setMensajeAlerta(estadoNavegacion.mensajeNoAutorizado)
+      window.history.replaceState({}, document.title)
+    }
+  }, [estadoNavegacion?.mensajeNoAutorizado])
   const usuario = useAuthStore((estado) => estado.usuario)
   const cerrarSesion = useAuthStore((estado) => estado.cerrarSesion)
   const actualizarUsuario = useAuthStore((estado) => estado.actualizarUsuario)
@@ -132,12 +146,32 @@ export function DashboardPage() {
   const nombreCompleto = usuario?.nombreCompleto ?? 'Usuario'
   const rol = usuario?.rol?.trim() ? usuario.rol.trim() : 'Usuario'
   const esAdministrador = rol === ROL_ADMINISTRADOR
-  const puedeRegistrarVehiculo = ROLES_CON_ALTA_VEHICULO.includes(rol)
+  const puedeRegistrarVehiculo = tienePermiso('registrar_vehiculos')
 
   return (
     <main className="min-h-screen bg-slate-50/50 py-6 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-12">
       <div className="mx-auto w-full max-w-5xl space-y-6">
         <OfflineBanner visible={!enLinea} />
+
+        {mensajeAlerta && (
+          <div
+            role="alert"
+            className="flex items-center justify-between gap-3 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm font-semibold text-red-900 shadow-sm"
+          >
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="h-5 w-5 shrink-0 text-red-600" aria-hidden="true" />
+              <span>{mensajeAlerta}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMensajeAlerta(null)}
+              className="rounded-lg p-1 text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600"
+              aria-label="Cerrar aviso de restricción"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Encabezado Responsivo */}
         <header className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">

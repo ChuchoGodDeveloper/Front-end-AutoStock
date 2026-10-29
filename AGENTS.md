@@ -16,7 +16,7 @@ Este documento maestro concentra el estado actual del proyecto **AutoStock**, la
   * **.NET 10** con **Clean Architecture** en 5 proyectos independientes (`Domain`, `Application`, `Infrastructure`, `API`, `UnitTests`).
   * **SQL Server (Azure SQL)** con **Entity Framework Core** (Migraciones versionadas y Data Seeder en `DbInitializer.cs`).
   * Autenticación **JWT** (vigencia de 8 horas) y hash de contraseñas con **BCrypt**.
-  * Pruebas unitarias con **xUnit** y **Moq** (66/66 pruebas en verde hasta HU-11).
+  * Pruebas unitarias con **xUnit** y **Moq** (68/68 pruebas en verde hasta HU-12).
   * Análisis estático con **Roslynator** (`.editorconfig` y `Directory.Build.props`) y GitHub Actions (`.github/workflows/ci-quality-tests.yml`).
 * **Frontend (Repositorio: `Front-end-AutoStock`):**
   * **React 18**, **TypeScript**, **Vite**, **Tailwind CSS** y **React Router DOM v6**.
@@ -191,7 +191,7 @@ El objetivo es desarrollar proyectos alineados con buenas prácticas profesional
 | **HU-09** | Capturar evidencia fotográfica (5 pts) | José de Jesús López Islas | Alta | Sprint 2 | **Completada** | 4 tomas obligatorias + 2 adicionales; máx. 6 fotos (1600px). |
 | **HU-10** | Cambiar estado operativo (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 2 | **Completada** | 5 estados operativos, bitácora inmutable, Test Drive y Reservas. |
 | **HU-11** | Configurar permisos por rol (5 pts) | José de Jesús López Islas | Alta | Sprint 3 | **Completada** | Matriz de permisos, protección inmutable Admin y obligatorio catálogo. |
-| **HU-12** | Restringir funciones según mi rol (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | Pendiente | Depende de HU-11. Debe verificarse en cada historia nueva. |
+| **HU-12** | Restringir funciones según mi rol (5 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | **Completada** | Restricción dinámica de funciones por rol en frontend y backend (HTTP 403 Forbidden), Route Guard y sincronización con HU-11. |
 | **HU-13** | Asignar o reubicar cajón en el lote (3 pts) | José de Jesús López Islas | Alta | Sprint 3 | Pendiente | Lista de zonas y cajones del lote. |
 | **HU-14** | Editar kilometraje y notas de inspección (3 pts) | Delia Leslie Jimenez Neri | Alta | Sprint 3 | Pendiente | Edición de kilometraje y notas sobre unidades existentes. |
 | **HU-15** | Recuperar mi contraseña (3 pts) | José de Jesús López Islas | Media | Sprint 3 | Pendiente | Requiere servicio de correo electrónico funcionando. |
@@ -268,3 +268,17 @@ Durante esta fase de optimización y robustecimiento, se implementaron mejoras d
      * UsuariosPage.tsx: Catálogo de tarjetas de personal con badge de ID, rol, estado y buscador dinámico.
      * VehiculoDetallePage.tsx: Ficha técnica extendida para desktop y móvil sin cortes de texto.
      * EvidenciaVehiculoPage.tsx: Grilla 2x2 para las 4 tomas fotográficas obligatorias en pantallas medianas y grandes.
+
+
+## 9. Historia de Usuario HU-12: Restringir funciones según mi rol (Sprint 3)
+* **Responsable:** Delia Leslie Jimenez Neri (`Leslie-Neri` / `23300765@uttt.edu.mx`).
+* **Puntos de Historia:** 5 SP.
+* **Estado:** **Completada**.
+* **Criterios de Aceptación Cumplidos:**
+  1. **Menú Principal / Dashboard adaptativo:** Solo se muestran las opciones permitidas según el rol y permisos activos del usuario. Por ejemplo, un Asesor de Ventas no visualiza "Registrar Unidad" ni los módulos de administración de usuarios/permisos. El Administrador conserva acceso irrestricto a todas las funciones.
+  2. **Ficha Técnica protegida:** Los botones de acciones no autorizadas (`cambiar_estado`, `capturar_fotografias`, `editar_kilometraje_notas`) se ocultan automáticamente si el usuario no cuenta con la facultad correspondiente.
+  3. **Protección contra acceso directo por URL (`PermisoRoute` & `AdminRoute`):** Si un usuario intenta acceder por URL directa a una sección no autorizada (ej. `/registrar-vehiculo`, `/vehiculo/:id/evidencia`, `/usuarios`, `/permisos`), el sistema lo redirige de inmediato a `/dashboard` y muestra un banner de advertencia claro: *"No tienes permiso para acceder a esta sección"*.
+  4. **Blindaje en Servidor (Backend HTTP 403 Forbidden):** Excepción de aplicación `ForbiddenAppException` capturada por `ExceptionHandlingMiddleware` devolviendo código HTTP 403 y payload estándar `{ "mensaje": "No tienes permiso para realizar esta acción" }`. Validación dinámica en servicios (`IPermisosService.ValidarPermisoAsync`) al registrar vehículos, capturar fotos o cambiar estados.
+  5. **Sincronización Dinámica de Permisos:** La sesión de usuario incluye su lista de permisos activos calculados al iniciar sesión o refrescar perfil (`/auth/perfil`), permitiendo que cualquier cambio realizado desde la matriz de permisos (HU-11) surta efecto inmediato en el navegador sin requerir migraciones destructivas ni invalidar la persistencia offline en IndexedDB.
+  6. **Identidad Visible en Encabezado:** Encabezado con avatar, nombre completo del usuario autenticado y badge con su rol asignado.
+  7. **Calidad y Cobertura:** 68/68 pruebas unitarias en verde en Backend (`xUnit` + `Moq`), 0 errores y 0 advertencias con Roslynator en modo Release. En Frontend: 100% libre de errores en `eslint`, `typecheck` y compilación de producción Vite PWA exitosa.
