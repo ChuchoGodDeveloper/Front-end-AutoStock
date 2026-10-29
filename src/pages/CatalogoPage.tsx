@@ -52,7 +52,7 @@ export function CatalogoPage() {
 
   useEffect(() => {
     const sentinel = sentinelRef.current
-    if (!sentinel || !hayMas || cargando) return
+    if (!sentinel || !hayMas || cargando || Boolean(error)) return
 
     const observador = new IntersectionObserver(
       (entradas) => {
@@ -66,7 +66,7 @@ export function CatalogoPage() {
     observador.observe(sentinel)
 
     return () => observador.disconnect()
-  }, [hayMas, cargando, cargarMasVehiculos])
+  }, [hayMas, cargando, error, cargarMasVehiculos])
 
   const limpiarBusqueda = () => {
     void setTerminoBusqueda('')

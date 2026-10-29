@@ -64,9 +64,9 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
     conteos: { todos: 0, disponibles: 0, seminuevos: 0, nuevos: 0 },
 
     cargarMasVehiculos: async (resetear = false) => {
-      const { cargando, hayMas, paginaActual, vehiculos, terminoBusqueda, filtros } = get()
+      const { cargando, hayMas, error, paginaActual, vehiculos, terminoBusqueda, filtros } = get()
 
-      if (!resetear && (cargando || !hayMas)) return
+      if (!resetear && (cargando || !hayMas || error !== null)) return
 
       solicitudActual += 1
       const solicitud = solicitudActual
