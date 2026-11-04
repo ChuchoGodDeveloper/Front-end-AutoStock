@@ -1,3 +1,4 @@
+import { normalizarPaginaCatalogo, normalizarVehiculoDetalle } from '../utils/imagenVehiculo'
 import { apiFetch } from './httpClient'
 import type {
   CambiarEstadoOperativoDto,
@@ -39,41 +40,44 @@ export const vehiculosService = {
       params.set('precioMax', String(filtros.precioMax))
     }
 
-    return apiFetch<PaginaCatalogo>(`/vehiculos?${params.toString()}`)
+    return apiFetch<PaginaCatalogo>(`/vehiculos?${params.toString()}`).then(
+      normalizarPaginaCatalogo,
+    )
   },
 
   obtenerConteosRapidos: () => apiFetch<ConteosRapidos>('/vehiculos/conteos-rapidos'),
 
-  obtenerVehiculoPorId: (id: string) => apiFetch<VehiculoDetalle>(`/vehiculos/${id}`),
+  obtenerVehiculoPorId: (id: string) =>
+    apiFetch<VehiculoDetalle>(`/vehiculos/${id}`).then(normalizarVehiculoDetalle),
 
   registrarVehiculo: (datos: RegistrarVehiculoDto) =>
     apiFetch<VehiculoDetalle>('/vehiculos', {
       method: 'POST',
       body: JSON.stringify(datos),
-    }),
+    }).then(normalizarVehiculoDetalle),
 
   guardarFotografia: (vehiculoId: string, datos: GuardarFotografiaDto) =>
     apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/fotografias`, {
       method: 'POST',
       body: JSON.stringify(datos),
-    }),
+    }).then(normalizarVehiculoDetalle),
 
   eliminarFotografia: (vehiculoId: string, imagenId: string) =>
     apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/fotografias/${imagenId}`, {
       method: 'DELETE',
-    }),
+    }).then(normalizarVehiculoDetalle),
 
   cambiarEstadoOperativo: (vehiculoId: string, datos: CambiarEstadoOperativoDto) =>
     apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/estado`, {
       method: 'PATCH',
       body: JSON.stringify(datos),
-    }),
+    }).then(normalizarVehiculoDetalle),
 
   reubicarVehiculo: (vehiculoId: string, datos: ReubicarVehiculoPayload) =>
     apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/reubicar`, {
       method: 'POST',
       body: JSON.stringify(datos),
-    }),
+    }).then(normalizarVehiculoDetalle),
 
   obtenerZonas: () => apiFetch<string[]>('/vehiculos/zonas'),
 
@@ -89,5 +93,5 @@ export const vehiculosService = {
     apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/kilometraje-notas`, {
       method: 'PUT',
       body: JSON.stringify(datos),
-    }),
+    }).then(normalizarVehiculoDetalle),
 }

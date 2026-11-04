@@ -3,6 +3,7 @@ import { Car, MapPin, Ticket } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ESTILOS_ESTADO } from '../config/estadosOperativos'
 import type { Vehiculo } from '../types/vehiculo'
+import { normalizarUrlImagenVehiculo } from '../utils/imagenVehiculo'
 
 const formateadorMoneda = new Intl.NumberFormat('es-MX', {
   style: 'currency',
@@ -15,10 +16,14 @@ const formateadorKilometraje = new Intl.NumberFormat('es-MX')
 export function VehiculoCard({ vehiculo }: { vehiculo: Vehiculo }) {
   const [fotoFallida, setFotoFallida] = useState(false)
 
-  const urlFoto = vehiculo.fotoPrincipalUrl?.trim() || null
-  const estiloEstado = ESTILOS_ESTADO[vehiculo.estado]
   const ubicacion = `${vehiculo.zonaLote} - Cajón ${vehiculo.cajonLote}`
   const nombreVehiculo = `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio}`
+  const urlFoto = normalizarUrlImagenVehiculo(
+    vehiculo.fotoPrincipalUrl,
+    nombreVehiculo,
+    `${vehiculo.zonaLote} · CAJÓN ${vehiculo.cajonLote}`,
+  )
+  const estiloEstado = ESTILOS_ESTADO[vehiculo.estado]
 
   return (
     <article className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
