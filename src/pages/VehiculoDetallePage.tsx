@@ -25,10 +25,13 @@ import {
   X,
 } from 'lucide-react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { ModalEdicionKilometraje } from '../components/ModalEdicionKilometraje'
 import { ModalReubicacion } from '../components/ModalReubicacion'
+import { VehicleSilhouette } from '../components/ShowroomWall'
 import { ESTILOS_ESTADO } from '../config/estadosOperativos'
 import { MENSAJES } from '../config/mensajes'
+import { inferirSiluetaVehiculo } from '../hooks/useShowroomEffects'
 import { HttpError } from '../services/httpClient'
 import { vehiculosService } from '../services/vehiculosService'
 import { useAuthStore } from '../stores/authStore'
@@ -252,17 +255,20 @@ export function VehiculoDetallePage() {
   )
 
   return (
-    <main className="min-h-screen bg-slate-100 pb-10">
-      <div className="mx-auto w-full max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8 py-6">
-        <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-md">
+    <main className="showroom-page">
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <SpotlightCard as="header" tone="ink" className="p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
+              <p
+                className="text-xs font-extrabold uppercase tracking-[0.2em]"
+                style={{ color: 'var(--champagne)' }}
+              >
                 AUTOSTOCK PRO
               </p>
-              <h1 className="text-2xl font-black text-slate-900">Ficha Técnica</h1>
+              <SplitTitle text="Ficha Técnica" className="text-2xl font-black tracking-tight" />
               {vehiculo && (
-                <p className="mt-1 text-sm font-semibold text-slate-500">
+                <p className="mt-1 text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
                   {vehiculo.marca} {vehiculo.modelo}
                   {vehiculo.version ? ` ${vehiculo.version}` : ''} {vehiculo.anio}
                 </p>
@@ -272,23 +278,28 @@ export function VehiculoDetallePage() {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="v-glass btn-squish flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition hover:border-sky-400/50"
+              style={{ color: 'var(--ink)' }}
             >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <ArrowLeft className="h-4 w-4 text-sky-400" aria-hidden="true" />
               Volver
             </button>
           </div>
-        </header>
+        </SpotlightCard>
 
         {estadoNavegacion?.recienRegistrado && vehiculo && (
           <div
             role="status"
-            className="flex items-start gap-2.5 rounded-2xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800 shadow-sm"
+            className="v-glass tone--green flex items-start gap-2.5 rounded-2xl p-4 text-sm font-semibold shadow-lg"
+            style={{ color: 'var(--ink)' }}
           >
-            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" aria-hidden="true" />
+            <CheckCircle2
+              className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400"
+              aria-hidden="true"
+            />
             <div>
               <p className="font-bold">Unidad registrada exitosamente</p>
-              <p className="text-xs text-green-700">
+              <p className="text-xs text-emerald-300">
                 {`Número de stock asignado: ${vehiculo.numeroStock}`}
               </p>
             </div>
@@ -298,16 +309,17 @@ export function VehiculoDetallePage() {
         {vehiculo && !cargando && !inspeccionCompleta && (
           <div
             role="status"
-            className="flex items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-xs font-semibold text-amber-900 shadow-sm"
+            className="v-glass tone--orange flex items-center justify-between gap-3 rounded-2xl p-4 text-xs font-semibold shadow-lg"
+            style={{ color: 'var(--ink)' }}
           >
             <div className="flex items-start gap-2.5">
               <AlertTriangle
-                className="mt-0.5 h-5 w-5 shrink-0 text-amber-600"
+                className="mt-0.5 h-5 w-5 shrink-0 text-amber-400"
                 aria-hidden="true"
               />
               <div>
-                <p className="text-sm font-black text-amber-900">Inspección incompleta</p>
-                <p className="text-amber-800">
+                <p className="text-sm font-black">Inspección incompleta</p>
+                <p style={{ color: 'var(--ink-2)' }}>
                   {`Evidencia obligatoria: ${vehiculo.tomasObligatoriasCompletadas ?? 0}/4 tomas (${vehiculo.porcentajeEvidencia ?? 0}%)`}
                 </p>
               </div>
@@ -316,7 +328,7 @@ export function VehiculoDetallePage() {
               <button
                 type="button"
                 onClick={() => navigate(`/vehiculo/${vehiculo.id}/evidencia`)}
-                className="shrink-0 rounded-xl bg-amber-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-amber-800"
+                className="btn-squish shrink-0 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-slate-950 shadow-md transition hover:bg-amber-400"
               >
                 Completar
               </button>
@@ -325,64 +337,80 @@ export function VehiculoDetallePage() {
         )}
 
         {cargando && (
-          <section className="flex flex-col items-center gap-3 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <Car className="h-10 w-10 animate-pulse text-blue-600" aria-hidden="true" />
-            <p className="text-sm font-semibold text-slate-700">Cargando ficha técnica...</p>
-          </section>
+          <SpotlightCard as="section" className="flex flex-col items-center gap-3 p-8">
+            <Car className="h-10 w-10 animate-pulse text-sky-400" aria-hidden="true" />
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
+              Cargando ficha técnica...
+            </p>
+          </SpotlightCard>
         )}
 
         {noEncontrado && (
-          <section className="flex flex-col items-center gap-3 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <Car className="h-10 w-10 text-slate-400" aria-hidden="true" />
-            <p className="text-center text-sm font-semibold text-slate-700">
+          <SpotlightCard as="section" className="flex flex-col items-center gap-3 p-8">
+            <Car className="h-10 w-10 text-sky-400" aria-hidden="true" />
+            <p className="text-center text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
               {MENSAJES.vehiculoNoEncontrado}
             </p>
-          </section>
+          </SpotlightCard>
         )}
 
         {error && !cargando && (
-          <section className="flex flex-col items-center gap-3 rounded-3xl border border-red-200 bg-red-50 p-8 shadow-sm">
-            <p className="text-center text-sm font-semibold text-red-700">{error}</p>
+          <SpotlightCard
+            as="section"
+            tone="coral"
+            className="flex flex-col items-center gap-3 p-8"
+          >
+            <p className="text-center text-sm font-bold" style={{ color: 'var(--ink)' }}>
+              {error}
+            </p>
             <button
               type="button"
               onClick={() => void cargarVehiculo()}
-              className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+              className="btn-squish flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition hover:bg-rose-500"
             >
               <RefreshCw className="h-4 w-4" aria-hidden="true" />
               Reintentar
             </button>
-          </section>
+          </SpotlightCard>
         )}
 
         {vehiculo && !cargando && (
           <>
-            <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="relative h-56 w-full bg-slate-100">
+            <SpotlightCard
+              as="section"
+              tone={estiloEstado?.tono ?? 'ink'}
+              className="overflow-hidden rounded-3xl"
+            >
+              <div className="relative h-64 w-full border-b border-white/10 bg-black/35">
                 {urlImagen ? (
                   <img
                     src={urlImagen}
                     alt={`${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio}`}
                     onError={() => setFotoFallida(true)}
-                    className="h-56 w-full object-cover"
+                    className="h-64 w-full object-cover"
                   />
                 ) : (
                   <div
                     role="img"
                     aria-label={`${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio} sin fotografía`}
-                    className="flex h-56 w-full items-center justify-center"
+                    className="flex h-64 w-full flex-col items-center justify-center px-8"
                   >
-                    <Car className="h-16 w-16 text-slate-400" aria-hidden="true" />
+                    <VehicleSilhouette
+                      tipo={inferirSiluetaVehiculo(vehiculo.marca, vehiculo.modelo)}
+                      colorAcento={estiloEstado?.colorAcento ?? '#4DA6FF'}
+                      className="h-32 w-full max-w-md"
+                    />
                   </div>
                 )}
 
                 {imagenActual?.tipoToma && (
-                  <span className="absolute bottom-2 left-2 rounded-full bg-slate-900/75 px-2.5 py-0.5 text-xs font-bold text-white">
+                  <span className="absolute bottom-3 left-3 rounded-full bg-black/75 border border-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
                     {obtenerEtiquetaToma(imagenActual.tipoToma)}
                   </span>
                 )}
 
                 {totalImagenes > 0 && (
-                  <span className="absolute bottom-2 right-2 rounded-full bg-slate-900/75 px-2.5 py-0.5 text-xs font-bold text-white">
+                  <span className="absolute bottom-3 right-3 rounded-full bg-black/75 border border-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
                     {`${indiceImagen + 1}/${totalImagenes}`}
                   </span>
                 )}
@@ -394,7 +422,7 @@ export function VehiculoDetallePage() {
                       onClick={imagenAnterior}
                       disabled={indiceImagen === 0}
                       aria-label="Imagen anterior"
-                      className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow transition hover:bg-white disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                      className="btn-squish absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/70 text-white border border-white/20 shadow-lg transition hover:bg-black/90 disabled:opacity-40"
                     >
                       <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                     </button>
@@ -403,7 +431,7 @@ export function VehiculoDetallePage() {
                       onClick={imagenSiguiente}
                       disabled={indiceImagen === totalImagenes - 1}
                       aria-label="Imagen siguiente"
-                      className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow transition hover:bg-white disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                      className="btn-squish absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/70 text-white border border-white/20 shadow-lg transition hover:bg-black/90 disabled:opacity-40"
                     >
                       <ChevronRight className="h-5 w-5" aria-hidden="true" />
                     </button>
@@ -411,104 +439,106 @@ export function VehiculoDetallePage() {
                 )}
               </div>
 
-              <div className="space-y-3 p-4">
+              <div className="space-y-4 p-6">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h2 className="text-lg font-black text-slate-900">
+                    <h2 className="text-xl font-black" style={{ color: 'var(--ink)' }}>
                       {vehiculo.marca} {vehiculo.modelo}
                       {vehiculo.version ? ` ${vehiculo.version}` : ''}
                     </h2>
-                    <p className="text-sm font-semibold text-slate-500">{vehiculo.anio}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
+                      Modelo {vehiculo.anio}
+                    </p>
                   </div>
 
                   {estiloEstado && (
                     <span
-                      className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-bold ${estiloEstado.clases}`}
+                      className={`shrink-0 rounded-full border px-3 py-1 text-xs font-extrabold ${estiloEstado.clases}`}
                     >
                       {estiloEstado.etiqueta}
                     </span>
                   )}
                 </div>
 
-                <p className="text-2xl font-black text-blue-700">
+                <p className="text-2xl sm:text-3xl font-black" style={{ color: 'var(--champagne)' }}>
                   {formateadorMoneda.format(vehiculo.precio)}
                 </p>
 
                 {/* Información de Test Drive o Reserva activa (CA 4, CA 7) */}
                 {vehiculo.estado === EstadoOperativo.TestDrive &&
                   vehiculo.responsableTestDrive && (
-                    <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">
-                      <UserCheck className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+                    <div className="flex items-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/15 px-3.5 py-2.5 text-xs font-bold text-sky-300">
+                      <UserCheck className="h-4 w-4 shrink-0 text-sky-400" aria-hidden="true" />
                       <span>{`Prueba de manejo a cargo de: ${vehiculo.responsableTestDrive}`}</span>
                     </div>
                   )}
 
                 {vehiculo.estado === EstadoOperativo.Reservado && vehiculo.reservadoPorNombre && (
-                  <div className="flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-bold text-purple-900">
-                    <Lock className="h-4 w-4 shrink-0 text-purple-600" aria-hidden="true" />
+                  <div className="flex items-center gap-2 rounded-xl border border-purple-400/40 bg-purple-500/15 px-3.5 py-2.5 text-xs font-bold text-purple-300">
+                    <Lock className="h-4 w-4 shrink-0 text-purple-400" aria-hidden="true" />
                     <span>{`Unidad reservada por: ${vehiculo.reservadoPorNombre}`}</span>
                   </div>
                 )}
 
                 {/* Quién hizo el último cambio de estado y cuándo (CA 3) */}
                 {vehiculo.estadoActualizadoPor && vehiculo.fechaCambioEstado && (
-                  <div className="flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
-                    <Clock className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                  <div
+                    className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-3.5 py-2.5 text-xs font-semibold"
+                    style={{ color: 'var(--ink-2)' }}
+                  >
+                    <Clock className="h-4 w-4 shrink-0 text-sky-400" aria-hidden="true" />
                     <span>
                       {`Estado actualizado por ${vehiculo.estadoActualizadoPor} el ${formatearFechaHora(vehiculo.fechaCambioEstado)}`}
                     </span>
                   </div>
                 )}
 
-                <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm text-slate-600">
+                <dl
+                  className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm pt-2 border-t border-white/10"
+                  style={{ color: 'var(--ink-2)' }}
+                >
                   <div className="flex items-center gap-2">
-                    <Hash className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <Hash className="h-4 w-4 shrink-0 text-sky-400" aria-hidden="true" />
                     <dt className="sr-only">Número de stock</dt>
-                    <dd className="font-semibold">{vehiculo.numeroStock}</dd>
+                    <dd className="font-bold" style={{ color: 'var(--ink)' }}>
+                      {vehiculo.numeroStock}
+                    </dd>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Ticket className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <Ticket className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
                     <dt className="sr-only">Placa</dt>
-                    <dd className="font-semibold">
+                    <dd className="font-bold" style={{ color: 'var(--ink)' }}>
                       {vehiculo.placa?.trim() ? vehiculo.placa.toUpperCase() : 'Sin placa'}
                     </dd>
                   </div>
                   <div className="col-span-2 flex items-center gap-2">
-                    <Info className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <Info className="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
                     <dt className="sr-only">VIN</dt>
                     <dd className="truncate font-mono text-xs">{vehiculo.vin}</dd>
                   </div>
                 </dl>
               </div>
-            </section>
+            </SpotlightCard>
 
             {/* Acciones operativas principales */}
-            <section className="space-y-3">
+            <section className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {mostrarBotonCambioEstado && (
                 <button
                   type="button"
                   onClick={abrirModalCambioEstado}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-300 bg-blue-50 px-4 py-3.5 text-sm font-black text-blue-900 shadow-sm transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  className="v-glass tone--blue btn-squish flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-xs font-extrabold uppercase tracking-wider shadow-lg"
+                  style={{ color: 'var(--ink)' }}
                 >
-                  <ToggleLeft className="h-5 w-5 text-blue-700" aria-hidden="true" />
+                  <ToggleLeft className="h-5 w-5 text-sky-400" aria-hidden="true" />
                   Cambiar Estado Operativo
                 </button>
-              )}
-
-              {bloqueadoPorReservaDeOtro && (
-                <div className="flex items-start gap-2.5 rounded-2xl border border-purple-200 bg-purple-50/70 p-3.5 text-xs font-semibold text-purple-900">
-                  <Lock className="mt-0.5 h-4 w-4 shrink-0 text-purple-600" aria-hidden="true" />
-                  <span>
-                    {`Esta unidad fue reservada por ${vehiculo.reservadoPorNombre}. Solo quien la reservó, el Gerente de Ventas o el Administrador pueden cambiar su estado.`}
-                  </span>
-                </div>
               )}
 
               {puedeGestionarFotos && (
                 <button
                   type="button"
                   onClick={() => navigate(`/vehiculo/${vehiculo.id}/evidencia`)}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3.5 text-sm font-black text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  className="btn-squish flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-3.5 text-xs font-extrabold uppercase tracking-wider text-white shadow-lg transition hover:brightness-110"
                 >
                   <Camera className="h-5 w-5" aria-hidden="true" />
                   Agregar fotos ({vehiculo.tomasObligatoriasCompletadas ?? 0}/4 obligatorias)
@@ -525,51 +555,75 @@ export function VehiculoDetallePage() {
                       : undefined
                   }
                   onClick={() => setModalEdicionAbierto(true)}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  className="v-glass btn-squish flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-xs font-extrabold uppercase tracking-wider transition disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{ color: 'var(--ink)' }}
                 >
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                  <Pencil className="h-4 w-4 text-amber-400" aria-hidden="true" />
                   Editar Kilometraje / Datos
                 </button>
               )}
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            {bloqueadoPorReservaDeOtro && (
+              <div className="v-glass tone--coral flex items-start gap-2.5 rounded-2xl p-4 text-xs font-semibold">
+                <Lock className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" aria-hidden="true" />
+                <span>
+                  {`Esta unidad fue reservada por ${vehiculo.reservadoPorNombre}. Solo quien la reservó, el Gerente de Ventas o el Administrador pueden cambiar su estado.`}
+                </span>
+              </div>
+            )}
+
+            <SpotlightCard as="section" className="p-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                <h3
+                  className="text-xs font-extrabold uppercase tracking-[0.2em]"
+                  style={{ color: 'var(--ink-2)' }}
+                >
                   Ubicación y kilometraje
                 </h3>
                 {puedeReubicar && (
                   <button
                     type="button"
                     onClick={() => setModalReubicacionAbierto(true)}
-                    className="flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                    className="v-glass tone--blue btn-squish flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold"
+                    style={{ color: 'var(--ink)' }}
                   >
-                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                    <MapPin className="h-3.5 w-3.5 text-sky-400" aria-hidden="true" />
                     Reubicar
                   </button>
                 )}
               </div>
-              <dl className="mt-3 grid grid-cols-3 gap-2">
-                <div className="rounded-2xl bg-blue-50 p-3 text-center">
-                  <dt className="text-xs font-semibold text-slate-700">Kilometraje</dt>
-                  <dd className="mt-1 text-base font-black text-blue-800">
+              <dl className="mt-4 grid grid-cols-3 gap-3">
+                <div className="rounded-2xl bg-sky-500/10 border border-sky-400/25 p-3.5 text-center">
+                  <dt className="text-xs font-bold" style={{ color: 'var(--ink-2)' }}>
+                    Kilometraje
+                  </dt>
+                  <dd className="mt-1 text-base font-black text-sky-400">
                     {`${formateadorKilometraje.format(vehiculo.kilometraje)} km`}
                   </dd>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-3 text-center">
-                  <dt className="text-xs font-semibold text-slate-700">Zona</dt>
-                  <dd className="mt-1 text-base font-black text-slate-800">{vehiculo.zonaLote}</dd>
+                <div className="rounded-2xl bg-white/5 border border-white/10 p-3.5 text-center">
+                  <dt className="text-xs font-bold" style={{ color: 'var(--ink-2)' }}>
+                    Zona
+                  </dt>
+                  <dd className="mt-1 text-base font-black" style={{ color: 'var(--ink)' }}>
+                    {vehiculo.zonaLote}
+                  </dd>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-3 text-center">
-                  <dt className="text-xs font-semibold text-slate-700">Cajón</dt>
-                  <dd className="mt-1 text-base font-black text-slate-800">{vehiculo.cajonLote}</dd>
+                <div className="rounded-2xl bg-white/5 border border-white/10 p-3.5 text-center">
+                  <dt className="text-xs font-bold" style={{ color: 'var(--ink-2)' }}>
+                    Cajón
+                  </dt>
+                  <dd className="mt-1 text-base font-black" style={{ color: 'var(--ink)' }}>
+                    {vehiculo.cajonLote}
+                  </dd>
                 </div>
               </dl>
 
               {/* Registro de Verificación de Kilometraje (CA 2) */}
               {vehiculo.kilometrajeActualizadoPor && vehiculo.fechaActualizacionKilometraje && (
-                <div className="mt-3 flex items-center gap-2 rounded-xl bg-blue-50/80 border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-900">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+                <div className="mt-3 flex items-center gap-2 rounded-xl bg-sky-500/15 border border-sky-400/30 px-3.5 py-2.5 text-xs font-semibold text-sky-300">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-sky-400" aria-hidden="true" />
                   <span>
                     {`Verificado por ${vehiculo.kilometrajeActualizadoPor} el ${formatearFechaHora(vehiculo.fechaActualizacionKilometraje)}`}
                   </span>
@@ -578,100 +632,147 @@ export function VehiculoDetallePage() {
 
               {/* Registro de Última Reubicación (CA 3) */}
               {vehiculo.reubicadoPor && vehiculo.fechaReubicacion && (
-                <div className="mt-3 flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
-                  <Clock className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                <div
+                  className="mt-3 flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-3.5 py-2.5 text-xs font-semibold"
+                  style={{ color: 'var(--ink-2)' }}
+                >
+                  <Clock className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
                   <span>
                     {`Reubicado por ${vehiculo.reubicadoPor} el ${formatearFechaHora(vehiculo.fechaReubicacion)}`}
                   </span>
                 </div>
               )}
-            </section>
+            </SpotlightCard>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+            <SpotlightCard as="section" className="p-6">
+              <h3
+                className="text-xs font-extrabold uppercase tracking-[0.2em]"
+                style={{ color: 'var(--ink-2)' }}
+              >
                 Especificaciones
               </h3>
-              <dl className="mt-3 space-y-2 text-sm text-slate-600">
+              <dl className="mt-4 space-y-2.5 text-sm" style={{ color: 'var(--ink-2)' }}>
                 {vehiculo.version && (
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-3 border-b border-white/5 pb-2">
                     <dt className="flex items-center gap-2 font-semibold">
-                      <Car className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                      <Car className="h-4 w-4 shrink-0 text-sky-400" aria-hidden="true" />
                       Versión
                     </dt>
-                    <dd className="text-right">{mostrarDato(vehiculo.version)}</dd>
+                    <dd className="text-right font-bold" style={{ color: 'var(--ink)' }}>
+                      {mostrarDato(vehiculo.version)}
+                    </dd>
                   </div>
                 )}
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 border-b border-white/5 pb-2">
                   <dt className="flex items-center gap-2 font-semibold">
-                    <Settings className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <Settings className="h-4 w-4 shrink-0 text-sky-400" aria-hidden="true" />
                     Motor
                   </dt>
-                  <dd className="text-right">{mostrarDato(vehiculo.motor)}</dd>
+                  <dd className="text-right font-bold" style={{ color: 'var(--ink)' }}>
+                    {mostrarDato(vehiculo.motor)}
+                  </dd>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 border-b border-white/5 pb-2">
                   <dt className="flex items-center gap-2 font-semibold">
-                    <Gauge className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <Gauge className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
                     Potencia
                   </dt>
-                  <dd className="text-right">{mostrarDato(vehiculo.potencia)}</dd>
+                  <dd className="text-right font-bold" style={{ color: 'var(--ink)' }}>
+                    {mostrarDato(vehiculo.potencia)}
+                  </dd>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 border-b border-white/5 pb-2">
                   <dt className="flex items-center gap-2 font-semibold">
-                    <Settings className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <Settings className="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
                     Transmisión
                   </dt>
-                  <dd className="text-right">{mostrarDato(vehiculo.transmision)}</dd>
+                  <dd className="text-right font-bold" style={{ color: 'var(--ink)' }}>
+                    {mostrarDato(vehiculo.transmision)}
+                  </dd>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 border-b border-white/5 pb-2">
                   <dt className="flex items-center gap-2 font-semibold">
-                    <Car className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <Car className="h-4 w-4 shrink-0 text-sky-400" aria-hidden="true" />
                     Color exterior
                   </dt>
-                  <dd className="text-right">{mostrarDato(vehiculo.colorExterior)}</dd>
+                  <dd className="text-right font-bold" style={{ color: 'var(--ink)' }}>
+                    {mostrarDato(vehiculo.colorExterior)}
+                  </dd>
                 </div>
                 <div className="flex items-start justify-between gap-3">
                   <dt className="flex items-center gap-2 font-semibold">
-                    <Car className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <Car className="h-4 w-4 shrink-0 text-sky-400" aria-hidden="true" />
                     Color interior
                   </dt>
-                  <dd className="text-right">{mostrarDato(vehiculo.colorInterior)}</dd>
+                  <dd className="text-right font-bold" style={{ color: 'var(--ink)' }}>
+                    {mostrarDato(vehiculo.colorInterior)}
+                  </dd>
                 </div>
               </dl>
-            </section>
+            </SpotlightCard>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-                Equipamiento
-              </h3>
-              <p className="mt-3 flex items-start gap-2 text-sm text-slate-600">
-                <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                {mostrarDato(vehiculo.equipamiento)}
-              </p>
-            </section>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <SpotlightCard as="section" className="p-6">
+                <h3
+                  className="text-xs font-extrabold uppercase tracking-[0.2em]"
+                  style={{ color: 'var(--ink-2)' }}
+                >
+                  Equipamiento
+                </h3>
+                <p
+                  className="mt-3 flex items-start gap-2 text-sm leading-relaxed"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  <ClipboardList
+                    className="mt-0.5 h-4 w-4 shrink-0 text-sky-400"
+                    aria-hidden="true"
+                  />
+                  {mostrarDato(vehiculo.equipamiento)}
+                </p>
+              </SpotlightCard>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-                Notas de inspección
-              </h3>
-              <p className="mt-3 flex items-start gap-2 text-sm text-slate-600">
-                <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                {mostrarDato(vehiculo.notasInspeccion)}
-              </p>
-            </section>
+              <SpotlightCard as="section" className="p-6">
+                <h3
+                  className="text-xs font-extrabold uppercase tracking-[0.2em]"
+                  style={{ color: 'var(--ink-2)' }}
+                >
+                  Notas de inspección
+                </h3>
+                <p
+                  className="mt-3 flex items-start gap-2 text-sm leading-relaxed"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  <ClipboardList
+                    className="mt-0.5 h-4 w-4 shrink-0 text-amber-400"
+                    aria-hidden="true"
+                  />
+                  {mostrarDato(vehiculo.notasInspeccion)}
+                </p>
+              </SpotlightCard>
+            </div>
 
             {vehiculo.registradoPor && (
-              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+              <SpotlightCard as="section" className="p-5">
+                <h3
+                  className="text-xs font-extrabold uppercase tracking-[0.2em]"
+                  style={{ color: 'var(--ink-2)' }}
+                >
                   Auditoría de recepción
                 </h3>
-                <p className="mt-3 flex items-center gap-2 text-sm text-slate-600">
-                  <UserCheck className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                <p
+                  className="mt-2 flex items-center gap-2 text-sm font-semibold"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  <UserCheck className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
                   <span>{`Registrado por: ${vehiculo.registradoPor}`}</span>
                 </p>
-              </section>
+              </SpotlightCard>
             )}
 
-            <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
+            <div
+              className="flex items-center justify-center gap-2 text-xs font-bold"
+              style={{ color: 'var(--ink-3)' }}
+            >
               <MapPin className="h-4 w-4" aria-hidden="true" />
               <span>{`${vehiculo.zonaLote} - Cajón ${vehiculo.cajonLote}`}</span>
             </div>
@@ -685,18 +786,25 @@ export function VehiculoDetallePage() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="titulo-modal-estado"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
         >
-          <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl">
-            <div className="flex items-start justify-between gap-2">
+          <div className="v-glass v-glass--thick max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-2 pb-3 border-b border-white/10">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                <p
+                  className="text-xs font-extrabold uppercase tracking-wider"
+                  style={{ color: 'var(--champagne)' }}
+                >
                   Estado en tiempo real
                 </p>
-                <h2 id="titulo-modal-estado" className="text-lg font-black text-slate-900">
+                <h2
+                  id="titulo-modal-estado"
+                  className="text-lg font-black"
+                  style={{ color: 'var(--ink)' }}
+                >
                   Cambiar Estado Operativo
                 </h2>
-                <p className="text-xs font-semibold text-slate-500">
+                <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>
                   {`${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio} · ${vehiculo.numeroStock}`}
                 </p>
               </div>
@@ -705,7 +813,8 @@ export function VehiculoDetallePage() {
                 onClick={cerrarModalCambioEstado}
                 disabled={guardandoEstado}
                 aria-label="Cerrar ventana"
-                className="rounded-xl p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                className="btn-squish rounded-xl p-1.5 hover:bg-white/10"
+                style={{ color: 'var(--ink-2)' }}
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -714,9 +823,10 @@ export function VehiculoDetallePage() {
             {errorCambioEstado && (
               <div
                 role="alert"
-                className="mt-3 flex items-start gap-2 rounded-2xl border border-red-300 bg-red-50 p-3 text-xs font-bold text-red-900"
+                className="v-glass tone--coral mt-3 flex items-start gap-2 rounded-2xl p-3 text-xs font-bold"
+                style={{ color: 'var(--ink)' }}
               >
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" aria-hidden="true" />
                 <span>{errorCambioEstado}</span>
               </div>
             )}
@@ -732,17 +842,19 @@ export function VehiculoDetallePage() {
                     key={opcion.valor}
                     type="button"
                     onClick={() => setEstadoSeleccionado(opcion.valor)}
-                    className={`flex w-full flex-col gap-1 rounded-2xl border p-3.5 text-left transition ${
+                    className={`btn-squish flex w-full flex-col gap-1 rounded-2xl border p-3.5 text-left transition ${
                       estaMarcado
-                        ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600'
-                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                        ? 'border-sky-400 bg-sky-500/20 ring-1 ring-sky-400'
+                        : 'border-white/10 bg-white/5 hover:border-white/25'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-black text-slate-900">{opcion.titulo}</span>
+                      <span className="text-sm font-black" style={{ color: 'var(--ink)' }}>
+                        {opcion.titulo}
+                      </span>
                       <div className="flex items-center gap-1.5">
                         {esActual && (
-                          <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">
+                          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold">
                             Actual
                           </span>
                         )}
@@ -755,31 +867,36 @@ export function VehiculoDetallePage() {
                         )}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-600">{opcion.descripcion}</p>
+                    <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
+                      {opcion.descripcion}
+                    </p>
                   </button>
                 )
               })}
             </div>
 
             {/* Acceso a la reubicación de la unidad en el lote desde la misma ventana (Alcance HU-10 -> HU-13) */}
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+            <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-3.5">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                  <MapPin className="h-4 w-4 text-blue-600" aria-hidden="true" />
+                <div
+                  className="flex items-center gap-2 text-xs font-bold"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  <MapPin className="h-4 w-4 text-sky-400" aria-hidden="true" />
                   <span>{`Ubicación actual: ${vehiculo.zonaLote} · Cajón ${vehiculo.cajonLote}`}</span>
                 </div>
                 {puedeReubicar && (
                   <button
                     type="button"
                     onClick={() => setModalReubicacionAbierto(true)}
-                    className="text-xs font-black text-blue-700 underline hover:text-blue-900"
+                    className="text-xs font-black text-sky-400 underline hover:text-sky-300"
                   >
                     Reubicar en lote
                   </button>
                 )}
               </div>
               {avisoReubicacion && (
-                <p className="mt-1.5 text-[11px] font-semibold text-slate-600">
+                <p className="mt-1.5 text-[11px] font-semibold" style={{ color: 'var(--ink-2)' }}>
                   {avisoReubicacion}
                 </p>
               )}
@@ -790,7 +907,8 @@ export function VehiculoDetallePage() {
                 type="button"
                 disabled={guardandoEstado}
                 onClick={cerrarModalCambioEstado}
-                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-slate-800 transition hover:bg-slate-50"
+                className="v-glass btn-squish rounded-xl px-4 py-3 text-xs font-bold"
+                style={{ color: 'var(--ink)' }}
               >
                 Cancelar
               </button>
@@ -798,7 +916,7 @@ export function VehiculoDetallePage() {
                 type="button"
                 disabled={estadoSeleccionado === vehiculo.estado || guardandoEstado}
                 onClick={() => void confirmarCambioEstado()}
-                className="flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-3 text-xs font-black text-white shadow-md transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn-squish flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-3 text-xs font-black text-white shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {guardandoEstado ? (
                   <>
@@ -813,6 +931,7 @@ export function VehiculoDetallePage() {
           </div>
         </div>
       )}
+
       {vehiculo && (
         <>
           <ModalReubicacion
