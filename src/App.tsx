@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AdminRoute } from './components/AdminRoute'
+import { AppShell } from './components/AppShell'
 import { InstallPrompt } from './components/InstallPrompt'
 import { PermisoRoute } from './components/PermisoRoute'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -30,6 +31,7 @@ export default function App() {
 
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <AppShell />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/recuperar-password" element={<RecuperarPasswordPage />} />
