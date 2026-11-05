@@ -14,6 +14,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { MENSAJES } from '../config/mensajes'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
@@ -175,21 +176,25 @@ export function NuevoUsuarioPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50/50 py-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-12">
+    <main className="showroom-page">
       <div className="mx-auto w-full max-w-2xl space-y-6">
         <OfflineBanner visible={!enLinea} />
 
-        <header className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <SpotlightCard
+          as="header"
+          tone="ink"
+          className="rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-500/15 text-blue-600 border border-blue-500/30">
                 <Sparkles className="w-3 h-3" />
                 Administración
               </span>
             </div>
             <h1 className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
               <UserPlus className="w-7 h-7 text-blue-600" />
-              Alta de Personal
+              <SplitTitle text="Alta de Personal" />
             </h1>
             <p className="mt-1 text-sm text-slate-500 font-medium">
               Registra personal autorizado con generación inteligente de ID y asignación de rol
@@ -200,14 +205,14 @@ export function NuevoUsuarioPage() {
             type="button"
             onClick={() => navigate('/usuarios')}
             disabled={guardando}
-            className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-60"
+            className="btn-squish v-glass self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold text-slate-700 transition focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-60"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Volver a usuarios
           </button>
-        </header>
+        </SpotlightCard>
 
-        <section className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-sm">
+        <SpotlightCard as="section" tone="blue" className="rounded-3xl p-6 sm:p-8">
           <form onSubmit={manejarEnvio} noValidate aria-busy={guardando} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Nombre Completo */}
@@ -241,7 +246,7 @@ export function NuevoUsuarioPage() {
                       setErroresCampo((prev) => ({ ...prev, nombreCompleto: undefined }))
                     }}
                     disabled={guardando}
-                    className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm font-medium transition"
+                    className="campo-base w-full pl-11 pr-4 py-2.5 text-sm font-medium"
                   />
                 </div>
                 {erroresCampo.nombreCompleto && (
@@ -276,7 +281,7 @@ export function NuevoUsuarioPage() {
                       setErroresCampo((prev) => ({ ...prev, fechaNacimiento: undefined }))
                     }}
                     disabled={guardando}
-                    className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm font-medium transition bg-white"
+                    className="campo-base w-full pl-11 pr-4 py-2.5 text-sm font-medium"
                   />
                 </div>
                 {edadCalculada !== null && edadCalculada >= 0 && (
@@ -316,7 +321,7 @@ export function NuevoUsuarioPage() {
                       setErroresCampo((prev) => ({ ...prev, rolId: undefined }))
                     }}
                     disabled={guardando}
-                    className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm font-medium transition bg-white"
+                    className="campo-base w-full pl-11 pr-4 py-2.5 text-sm font-medium"
                   >
                     {ROLES_SISTEMA.map((rol) => (
                       <option key={rol.id} value={rol.id}>
@@ -365,7 +370,7 @@ export function NuevoUsuarioPage() {
                       setErroresCampo((prev) => ({ ...prev, correo: undefined }))
                     }}
                     disabled={guardando}
-                    className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm font-medium transition"
+                    className="campo-base w-full pl-11 pr-4 py-2.5 text-sm font-medium"
                   />
                 </div>
                 {erroresCampo.correo && (
@@ -377,18 +382,18 @@ export function NuevoUsuarioPage() {
             </div>
 
             {/* Tarjeta de Previsualización y Control de Identificador */}
-            <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 sm:p-5 space-y-3">
+            <div className="v-glass tone--blue rounded-2xl p-4 sm:p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <IdCard className="w-5 h-5 text-blue-600" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-900">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-700">
                     Identificador de Empleado (ID)
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setUsarIdManual(!usarIdManual)}
-                  className="text-xs font-semibold text-blue-700 hover:text-blue-900 transition underline underline-offset-2"
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-500 transition underline underline-offset-2"
                 >
                   {usarIdManual ? 'Usar ID Automático' : 'Personalizar ID manual'}
                 </button>
@@ -400,11 +405,11 @@ export function NuevoUsuarioPage() {
                     <p className="text-xs text-slate-600 font-medium">
                       Generado automáticamente con iniciales del nombre + AAMMDD + consecutivo:
                     </p>
-                    <div className="mt-2 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-white border border-blue-200 shadow-xs">
-                      <span className="font-mono text-base font-black text-blue-700 tracking-wider">
+                    <div className="mt-2 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-blue-500/15 border border-blue-500/30">
+                      <span className="font-mono text-base font-black text-blue-600 tracking-wider">
                         {idPreview}
                       </span>
-                      <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                      <span className="text-[11px] font-semibold text-slate-500 bg-slate-500/15 px-2 py-0.5 rounded-md">
                         Auto
                       </span>
                     </div>
@@ -422,7 +427,7 @@ export function NuevoUsuarioPage() {
                     placeholder="Ej. EMP-00425"
                     value={empleadoIdPersonalizado}
                     onChange={(e) => setEmpleadoIdPersonalizado(e.target.value.toUpperCase())}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-sm font-mono font-bold uppercase bg-white"
+                    className="campo-base w-full px-3.5 py-2 text-sm font-mono font-bold uppercase"
                   />
                   {erroresCampo.empleadoId && (
                     <p role="alert" className="text-xs font-semibold text-red-600">
@@ -436,7 +441,7 @@ export function NuevoUsuarioPage() {
             {mensajeError && (
               <div
                 role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+                className="v-glass tone--coral rounded-2xl px-4 py-3 text-sm font-semibold text-red-600"
               >
                 {mensajeError}
               </div>
@@ -446,7 +451,7 @@ export function NuevoUsuarioPage() {
               <button
                 type="submit"
                 disabled={guardando || !enLinea}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn-squish flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {guardando ? (
                   <>
@@ -465,13 +470,13 @@ export function NuevoUsuarioPage() {
                 type="button"
                 onClick={() => navigate('/usuarios')}
                 disabled={guardando}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-60"
+                className="btn-squish v-glass inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-slate-700 transition focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-60"
               >
                 Cancelar
               </button>
             </div>
           </form>
-        </section>
+        </SpotlightCard>
       </div>
 
       {/* Modal de Éxito con Contraseña Temporal */}
@@ -480,10 +485,10 @@ export function NuevoUsuarioPage() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-usuario-creado-titulo"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md"
         >
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
+          <div className="v-glass v-glass--thick tone--green w-full max-w-md rounded-3xl p-6 shadow-2xl">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/30">
               <KeyRound className="h-7 w-7" aria-hidden="true" />
             </div>
 
@@ -500,14 +505,14 @@ export function NuevoUsuarioPage() {
               </strong>
             </p>
 
-            <dl className="mt-4 space-y-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-700">
+            <dl className="v-glass mt-4 space-y-2 rounded-2xl p-4 text-sm text-slate-700">
               <div className="flex items-center justify-between gap-2">
                 <dt className="font-semibold text-slate-500">Nombre:</dt>
                 <dd className="font-bold text-slate-900">{usuarioCreado.nombreCompleto}</dd>
               </div>
               <div className="flex items-center justify-between gap-2">
                 <dt className="font-semibold text-slate-500">ID de empleado:</dt>
-                <dd className="font-mono font-bold text-blue-700">{usuarioCreado.empleadoId}</dd>
+                <dd className="font-mono font-bold text-blue-600">{usuarioCreado.empleadoId}</dd>
               </div>
               <div className="flex items-center justify-between gap-2">
                 <dt className="font-semibold text-slate-500">Rol:</dt>
@@ -515,14 +520,14 @@ export function NuevoUsuarioPage() {
               </div>
               <div className="flex items-center justify-between gap-2">
                 <dt className="font-semibold text-slate-500">Estado:</dt>
-                <dd className="font-bold text-emerald-700">
+                <dd className="font-bold text-emerald-600">
                   {usuarioCreado.activo ? 'Activo' : 'Inactivo'}
                 </dd>
               </div>
             </dl>
 
-            <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-center">
-              <p className="text-xs font-bold uppercase tracking-wider text-amber-800">
+            <div className="v-glass tone--orange mt-4 rounded-2xl p-4 text-center">
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-700">
                 Contraseña temporal (12 caracteres)
               </p>
               <p className="mt-2 select-all font-mono text-2xl font-black tracking-wider text-slate-900">
@@ -531,7 +536,7 @@ export function NuevoUsuarioPage() {
               <button
                 type="button"
                 onClick={() => void manejarCopiarPassword()}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-amber-400 bg-white px-3.5 py-1.5 text-xs font-bold text-amber-900 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-600"
+                className="btn-squish v-glass mt-3 inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold text-amber-800 transition focus:outline-none focus:ring-2 focus:ring-amber-600"
               >
                 {copiado ? (
                   <>
@@ -550,7 +555,7 @@ export function NuevoUsuarioPage() {
             <button
               type="button"
               onClick={() => navigate('/usuarios', { replace: true })}
-              className="mt-5 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="btn-squish mt-5 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600"
             >
               Entendido, volver a la lista
             </button>

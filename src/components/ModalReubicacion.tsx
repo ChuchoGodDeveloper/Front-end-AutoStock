@@ -116,19 +116,23 @@ export function ModalReubicacion({
       role="dialog"
       aria-modal="true"
       aria-labelledby="titulo-modal-reubicacion"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm"
     >
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+      <div className="v-glass v-glass--thick w-full max-w-md rounded-3xl p-6 shadow-2xl">
+        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-400/30">
               <MapPin className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <h2 id="titulo-modal-reubicacion" className="text-base font-black text-slate-900">
+              <h2
+                id="titulo-modal-reubicacion"
+                className="text-base font-black"
+                style={{ color: 'var(--ink)' }}
+              >
                 Reubicar Unidad en el Lote
               </h2>
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>
                 {`${vehiculo.marca} ${vehiculo.modelo}`}
               </p>
             </div>
@@ -137,7 +141,8 @@ export function ModalReubicacion({
             type="button"
             disabled={guardando}
             onClick={onCerrar}
-            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus:outline-none"
+            className="btn-squish rounded-xl p-1.5 hover:bg-white/10 focus:outline-none"
+            style={{ color: 'var(--ink-2)' }}
             aria-label="Cerrar modal"
           >
             <X className="h-5 w-5" />
@@ -145,11 +150,11 @@ export function ModalReubicacion({
         </div>
 
         {/* Indicador de Ubicación Actual */}
-        <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50/70 p-3.5">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
+        <div className="v-glass tone--blue mt-4 rounded-2xl p-3.5">
+          <p className="text-[11px] font-extrabold uppercase tracking-wider text-sky-400">
             Ubicación actual de la unidad
           </p>
-          <p className="mt-0.5 text-sm font-black text-slate-900">
+          <p className="mt-0.5 text-sm font-black" style={{ color: 'var(--ink)' }}>
             {`${vehiculo.zonaLote || 'Sin zona'} · Cajón ${vehiculo.cajonLote || 'N/A'}`}
           </p>
         </div>
@@ -158,12 +163,13 @@ export function ModalReubicacion({
         {errorOcupado && (
           <div
             role="alert"
-            className="mt-3 flex items-start gap-2.5 rounded-2xl border border-red-300 bg-red-50 p-3.5 text-xs font-semibold text-red-900 shadow-xs"
+            className="v-glass tone--coral mt-3 flex items-start gap-2.5 rounded-2xl p-3.5 text-xs font-semibold"
+            style={{ color: 'var(--ink)' }}
           >
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" aria-hidden="true" />
             <div>
               <p className="font-bold">El cajón ya está ocupado</p>
-              <p className="text-red-700 mt-0.5">{errorOcupado}</p>
+              <p className="mt-0.5 text-rose-300">{errorOcupado}</p>
             </div>
           </div>
         )}
@@ -173,9 +179,10 @@ export function ModalReubicacion({
           <div>
             <label
               htmlFor="selector-zona-lote"
-              className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1"
+              className="block text-xs font-bold uppercase tracking-wider mb-1"
+              style={{ color: 'var(--ink-2)' }}
             >
-              Nueva Zona <span className="text-red-500">*</span>
+              Nueva Zona <span className="text-rose-400">*</span>
             </label>
             <select
               id="selector-zona-lote"
@@ -186,7 +193,7 @@ export function ModalReubicacion({
                 setErrorZona(null)
                 setErrorOcupado(null)
               }}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-900 shadow-xs transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="campo-base campo-valido py-2.5 text-sm font-semibold"
             >
               {zonasDisponibles.map((z) => (
                 <option key={z} value={z}>
@@ -195,7 +202,7 @@ export function ModalReubicacion({
               ))}
             </select>
             {errorZona && (
-              <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <p className="mt-1 text-xs text-rose-400 flex items-center gap-1">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 {errorZona}
               </p>
@@ -207,11 +214,12 @@ export function ModalReubicacion({
             <div className="flex items-center justify-between mb-1">
               <label
                 htmlFor="input-cajon-lote"
-                className="block text-xs font-bold uppercase tracking-wider text-slate-700"
+                className="block text-xs font-bold uppercase tracking-wider"
+                style={{ color: 'var(--ink-2)' }}
               >
-                Nuevo Cajón <span className="text-red-500">*</span>
+                Nuevo Cajón <span className="text-rose-400">*</span>
               </label>
-              <span className="text-xs text-slate-400 font-mono">
+              <span className="text-xs font-mono" style={{ color: 'var(--ink-3)' }}>
                 {cajonNormalizado.length}/6
               </span>
             </div>
@@ -227,16 +235,16 @@ export function ModalReubicacion({
                 setErrorCajon(null)
                 setErrorOcupado(null)
               }}
-              className="w-full uppercase rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-900 shadow-xs transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="campo-base campo-valido uppercase py-2.5 text-sm font-semibold"
             />
             {errorCajon && (
-              <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+              <p className="mt-1 text-xs text-rose-400 flex items-center gap-1">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 {errorCajon}
               </p>
             )}
             {esMismaUbicacion && (
-              <p className="mt-1 text-[11px] font-medium text-amber-700">
+              <p className="mt-1 text-[11px] font-medium text-amber-400">
                 La unidad ya se encuentra en esta zona y cajón.
               </p>
             )}
@@ -248,7 +256,8 @@ export function ModalReubicacion({
             type="button"
             disabled={guardando}
             onClick={onCerrar}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:opacity-50"
+            className="v-glass btn-squish rounded-xl px-4 py-2.5 text-sm font-bold transition disabled:opacity-50"
+            style={{ color: 'var(--ink)' }}
           >
             Cancelar
           </button>
@@ -256,7 +265,7 @@ export function ModalReubicacion({
             type="button"
             disabled={estaDeshabilitado}
             onClick={() => void manejarConfirmar()}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-squish inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2.5 text-sm font-black text-white shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {guardando ? (
               <>

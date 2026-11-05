@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { HttpError } from '../services/httpClient'
@@ -210,18 +211,18 @@ export function PermisosPage() {
   }, [matrizOriginal])
 
   return (
-    <main className="min-h-screen bg-slate-50/50 py-6 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-12">
+    <main className="showroom-page">
       <div className="mx-auto w-full max-w-6xl space-y-6">
         <OfflineBanner visible={!enLinea} />
 
         {/* Encabezado Responsivo */}
-        <header className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+        <SpotlightCard as="header" tone="ink" className="rounded-3xl p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <button
                 type="button"
                 onClick={manejarSalida}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-xs transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="btn-squish v-glass flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
                 aria-label="Volver al Dashboard"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -231,13 +232,13 @@ export function PermisosPage() {
                   <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
                     Seguridad y Accesos
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-0.5 text-[11px] font-semibold text-white">
                     <ShieldCheck className="h-3 w-3" />
                     Solo Administrador
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Permisos por rol
+                  <SplitTitle text="Permisos por rol" />
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium">
                   Configura qué acciones y módulos están habilitados para cada perfil de usuario.
@@ -251,7 +252,7 @@ export function PermisosPage() {
                 type="button"
                 onClick={() => setModalConfirmarRestablecer(true)}
                 disabled={cargando || guardando || restableciendo}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 hover:border-slate-400 disabled:opacity-50"
+                className="btn-squish v-glass inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 transition disabled:opacity-50"
               >
                 <RotateCcw className="h-4 w-4 text-slate-500" />
                 Restablecer valores iniciales
@@ -261,10 +262,10 @@ export function PermisosPage() {
                 type="button"
                 onClick={() => void manejarGuardar()}
                 disabled={cargando || guardando || !hayCambiosSinGuardar || !enLinea}
-                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                className={`btn-squish inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-600 ${
                   hayCambiosSinGuardar && enLinea
-                    ? 'bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-500/20'
-                    : 'bg-slate-400 cursor-not-allowed opacity-75'
+                    ? 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/25'
+                    : 'bg-slate-500/40 cursor-not-allowed opacity-75'
                 }`}
               >
                 <Save className="h-4 w-4" />
@@ -275,7 +276,7 @@ export function PermisosPage() {
 
           {/* Barra de estado / Auditoría */}
           {matrizOriginal && (
-            <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-slate-500">
+            <div className="mt-4 pt-4 border-t border-slate-500/15 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-slate-500">
               <div className="flex items-center gap-2">
                 <Info className="h-4 w-4 text-blue-600 shrink-0" />
                 <span>
@@ -290,20 +291,20 @@ export function PermisosPage() {
               </div>
 
               {hayCambiosSinGuardar && (
-                <span className="inline-flex items-center gap-1.5 font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1.5 font-bold text-amber-600 bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
                   <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
                   Cambios pendientes sin guardar
                 </span>
               )}
             </div>
           )}
-        </header>
+        </SpotlightCard>
 
         {/* Mensajes de retroalimentación */}
         {mensajeExito && (
           <div
             role="alert"
-            className="flex items-center gap-2.5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 shadow-sm"
+            className="v-glass tone--green flex items-center gap-2.5 rounded-2xl p-4 text-sm font-semibold text-emerald-700"
           >
             <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
             <span>{mensajeExito}</span>
@@ -313,7 +314,7 @@ export function PermisosPage() {
         {mensajeError && (
           <div
             role="alert"
-            className="flex items-center gap-2.5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800 shadow-sm"
+            className="v-glass tone--coral flex items-center gap-2.5 rounded-2xl p-4 text-sm font-semibold text-red-700"
           >
             <AlertTriangle className="h-5 w-5 shrink-0 text-red-600" />
             <span>{mensajeError}</span>
@@ -321,8 +322,8 @@ export function PermisosPage() {
         )}
 
         {/* Matriz de Permisos */}
-        <section className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-slate-100 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <SpotlightCard as="section" tone="blue" className="rounded-3xl overflow-hidden">
+          <div className="p-4 sm:p-6 border-b border-slate-500/15 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-blue-600" />
@@ -349,14 +350,14 @@ export function PermisosPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-100/70 text-slate-700 text-xs font-bold uppercase tracking-wider">
+                  <tr className="border-b border-slate-500/15 bg-slate-500/5 text-slate-700 text-xs font-bold uppercase tracking-wider">
                     <th className="py-3.5 px-4 sm:px-6 w-2/5">Acción / Capacidad</th>
                     {matrizOriginal?.roles.map((rol) => (
                       <th key={rol.rolId} className="py-3.5 px-4 text-center">
                         <div className="flex flex-col items-center gap-0.5">
                           <span>{rol.nombreRol}</span>
                           {rol.nombreRol === ROL_ADMINISTRADOR && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-700 font-semibold lowercase bg-blue-100 px-1.5 py-0.2 rounded-full">
+                            <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-600 font-semibold lowercase bg-blue-500/15 px-1.5 py-0.2 rounded-full">
                               <Lock className="h-2.5 w-2.5" /> inmutable
                             </span>
                           )}
@@ -365,23 +366,23 @@ export function PermisosPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
+                <tbody className="divide-y divide-slate-500/10 text-sm">
                   {accionesAgrupadas.map((accion: AccionPermisoBackend) => {
                     const esCatalogoFijo = accion.codigo === CODIGO_CONSULTAR_CATALOGO
 
                     return (
-                      <tr key={accion.id} className="hover:bg-slate-50/80 transition-colors">
+                      <tr key={accion.id} className="hover:bg-blue-500/5 transition-colors">
                         <td className="py-3.5 px-4 sm:px-6">
                           <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-slate-900 text-sm">
                                 {accion.nombre}
                               </span>
-                              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-500/15 text-slate-600">
                                 {accion.modulo}
                               </span>
                               {esCatalogoFijo && (
-                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                                   <Lock className="h-3 w-3" />
                                   Obligatorio
                                 </span>
@@ -435,12 +436,12 @@ export function PermisosPage() {
                                     }
                                   />
                                   <div
-                                    className={`w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                                    className={`w-11 h-6 bg-slate-500/25 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
                                       esAdmin
-                                        ? 'peer-checked:bg-slate-800'
+                                        ? 'peer-checked:bg-indigo-600'
                                         : valorActivo
                                         ? 'peer-checked:bg-blue-600'
-                                        : 'bg-slate-200'
+                                        : 'bg-slate-500/25'
                                     }`}
                                   />
                                   {deshabilitado && (
@@ -461,14 +462,14 @@ export function PermisosPage() {
               </table>
             </div>
           )}
-        </section>
+        </SpotlightCard>
 
         {/* Modal de Confirmación para Restablecer Valores Iniciales (Criterio 7) */}
         {modalConfirmarRestablecer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-md p-4">
+            <div className="v-glass v-glass--thick tone--orange w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4">
               <div className="flex items-center gap-3 text-amber-600">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20">
                   <RotateCcw className="h-5 w-5" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900">
@@ -484,7 +485,7 @@ export function PermisosPage() {
                   type="button"
                   onClick={() => setModalConfirmarRestablecer(false)}
                   disabled={restableciendo}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
+                  className="btn-squish v-glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 transition"
                 >
                   Cancelar
                 </button>
@@ -492,7 +493,7 @@ export function PermisosPage() {
                   type="button"
                   onClick={() => void confirmarRestablecer()}
                   disabled={restableciendo}
-                  className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700 transition shadow-sm"
+                  className="btn-squish rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700 transition shadow-sm"
                 >
                   {restableciendo ? 'Restableciendo...' : 'Sí, restablecer'}
                 </button>
@@ -503,10 +504,10 @@ export function PermisosPage() {
 
         {/* Modal de Advertencia de Salida con Cambios sin Guardar (Criterio 6) */}
         {modalDescartarCambios && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-md p-4">
+            <div className="v-glass v-glass--thick tone--coral w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4">
               <div className="flex items-center gap-3 text-red-600">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/20">
                   <AlertTriangle className="h-5 w-5" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900">
@@ -521,7 +522,7 @@ export function PermisosPage() {
                 <button
                   type="button"
                   onClick={() => setModalDescartarCambios(false)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
+                  className="btn-squish v-glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 transition"
                 >
                   Continuar editando
                 </button>
@@ -531,7 +532,7 @@ export function PermisosPage() {
                     setModalDescartarCambios(false)
                     navigate('/dashboard')
                   }}
-                  className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 transition shadow-sm"
+                  className="btn-squish rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 transition shadow-sm"
                 >
                   Descartar y salir
                 </button>

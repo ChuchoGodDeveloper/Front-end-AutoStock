@@ -12,9 +12,10 @@ export function OfflineBanner({ visible }: OfflineBannerProps) {
     <div
       role="status"
       aria-live="polite"
-      className="mx-auto flex w-full max-w-md items-center justify-center gap-2 rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-center text-sm font-semibold text-amber-900 shadow-sm"
+      className="v-glass tone--orange mx-auto flex w-full max-w-lg items-center justify-center gap-2.5 rounded-full px-5 py-2.5 text-center text-sm font-bold shadow-lg"
+      style={{ color: 'var(--ink)' }}
     >
-      <WifiOff className="h-4 w-4 shrink-0" aria-hidden="true" />
+      <WifiOff className="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
       <span>{MENSAJES.bannerOffline}</span>
     </div>
   )
