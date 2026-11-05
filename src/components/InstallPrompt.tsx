@@ -11,16 +11,18 @@ export function InstallPrompt() {
       role="dialog"
       aria-live="polite"
       aria-label="Instalar AutoStock"
-      className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-4"
+      className="fixed inset-x-0 bottom-20 md:bottom-5 z-50 flex justify-center px-4"
     >
-      <div className="flex w-full max-w-md items-center gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
+      <div className="v-glass v-glass--thick tone--blue flex w-full max-w-md items-center gap-3 rounded-3xl p-4 shadow-2xl">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-500 text-white shadow-md">
           <Download className="h-5 w-5" aria-hidden="true" />
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-black text-slate-900">Instalar AutoStock</p>
-          <p className="text-xs font-semibold text-slate-500">
+          <p className="text-sm font-black" style={{ color: 'var(--ink)' }}>
+            Instalar AutoStock
+          </p>
+          <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>
             Accede al inventario desde tu pantalla de inicio
           </p>
         </div>
@@ -30,14 +32,15 @@ export function InstallPrompt() {
             type="button"
             onClick={() => rechazarInstalacion()}
             aria-label="Ahora no"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            className="btn-squish flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            style={{ color: 'var(--ink-2)' }}
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
           <button
             type="button"
             onClick={() => void instalarApp()}
-            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            className="btn-squish rounded-xl bg-sky-500 px-4 py-2 text-sm font-bold text-white shadow-md transition hover:bg-sky-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
           >
             Instalar
           </button>
