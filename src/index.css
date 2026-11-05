@@ -8,16 +8,16 @@
   --bg: #06070b;
   --bg-elev: #0c0f17;
   --ink: #f4f6fb;
-  --ink-2: rgba(244, 246, 251, 0.72);
-  --ink-3: rgba(244, 246, 251, 0.45);
-  --ink-4: rgba(244, 246, 251, 0.24);
+  --ink-2: rgba(244, 246, 251, 0.82);
+  --ink-3: rgba(244, 246, 251, 0.62);
+  --ink-4: rgba(244, 246, 251, 0.34);
 
   /* Superficies Liquid Glass */
-  --glass: rgba(16, 20, 32, 0.56);
-  --glass-2: rgba(22, 28, 44, 0.68);
+  --glass: rgba(16, 20, 32, 0.64);
+  --glass-2: rgba(22, 28, 44, 0.76);
   --glass-chrome: rgba(14, 18, 29, 0.74);
-  --glass-thick: rgba(12, 16, 26, 0.86);
-  --stroke: rgba(255, 255, 255, 0.11);
+  --glass-thick: rgba(12, 16, 26, 0.92);
+  --stroke: rgba(255, 255, 255, 0.18);
   --stroke-hi: rgba(255, 255, 255, 0.28);
   --rim-hi: rgba(255, 255, 255, 0.34);
   --rim-lo: rgba(255, 255, 255, 0.06);
@@ -45,15 +45,15 @@
   --bg: #edf1f7;
   --bg-elev: #ffffff;
   --ink: #0a0e17;
-  --ink-2: rgba(10, 14, 23, 0.72);
-  --ink-3: rgba(10, 14, 23, 0.48);
-  --ink-4: rgba(10, 14, 23, 0.24);
+  --ink-2: rgba(10, 14, 23, 0.80);
+  --ink-3: rgba(10, 14, 23, 0.66);
+  --ink-4: rgba(10, 14, 23, 0.36);
 
-  --glass: rgba(255, 255, 255, 0.66);
-  --glass-2: rgba(255, 255, 255, 0.82);
-  --glass-chrome: rgba(255, 255, 255, 0.78);
-  --glass-thick: rgba(255, 255, 255, 0.9);
-  --stroke: rgba(15, 23, 42, 0.09);
+  --glass: rgba(255, 255, 255, 0.78);
+  --glass-2: rgba(255, 255, 255, 0.88);
+  --glass-chrome: rgba(255, 255, 255, 0.86);
+  --glass-thick: rgba(255, 255, 255, 0.96);
+  --stroke: rgba(15, 23, 42, 0.16);
   --stroke-hi: rgba(255, 255, 255, 0.95);
   --rim-hi: rgba(255, 255, 255, 0.98);
   --rim-lo: rgba(15, 23, 42, 0.06);
@@ -61,7 +61,7 @@
     0 20px 48px -14px rgba(15, 23, 42, 0.14),
     0 4px 14px -2px rgba(15, 23, 42, 0.06);
 
-  --champagne: #b8860b;
+  --champagne: #7c5200;
   --blue: #0066ff;
   --green: #059669;
   --orange: #d97706;
@@ -113,6 +113,20 @@
     border-color: var(--stroke);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+  }
+
+  .campo-base:hover:not(:disabled) {
+    border-color: var(--stroke-hi);
+  }
+
+  .campo-base:focus-visible {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(77, 166, 255, 0.28);
+  }
+
+  select.campo-base option {
+    background-color: var(--bg-elev);
+    color: var(--ink);
   }
 
   .campo-base::placeholder {
@@ -747,4 +761,101 @@
 
 .v-switch:active .v-switch-thumb {
   width: 25px;
+}
+
+/* ============================================================================
+   ADAPTACIÓN DE CONTRASTE WCAG 2.1 AA (MODO OSCURO Y MODO CLARO)
+   ============================================================================ */
+
+/* 1. Modo Showroom Nocturno (data-theme='dark'):
+      Reasignación automática de utilidades oscuras de Tailwind a tinta luminosa */
+:root .text-slate-950,
+:root .text-slate-900,
+:root .text-slate-800,
+[data-theme='dark'] .text-slate-950,
+[data-theme='dark'] .text-slate-900,
+[data-theme='dark'] .text-slate-800 {
+  color: var(--ink) !important;
+}
+
+:root .text-slate-700,
+:root .text-slate-600,
+[data-theme='dark'] .text-slate-700,
+[data-theme='dark'] .text-slate-600 {
+  color: var(--ink-2) !important;
+}
+
+:root .text-slate-500,
+:root .text-slate-400,
+[data-theme='dark'] .text-slate-500,
+[data-theme='dark'] .text-slate-400 {
+  color: var(--ink-3) !important;
+}
+
+:root .text-blue-700,
+:root .text-blue-600,
+:root .text-blue-500,
+[data-theme='dark'] .text-blue-700,
+[data-theme='dark'] .text-blue-600,
+[data-theme='dark'] .text-blue-500 {
+  color: #60a5fa !important;
+}
+
+:root .text-emerald-700,
+:root .text-emerald-600,
+[data-theme='dark'] .text-emerald-700,
+[data-theme='dark'] .text-emerald-600 {
+  color: #34d399 !important;
+}
+
+:root .text-amber-800,
+:root .text-amber-700,
+:root .text-amber-600,
+[data-theme='dark'] .text-amber-800,
+[data-theme='dark'] .text-amber-700,
+[data-theme='dark'] .text-amber-600 {
+  color: #fbbf24 !important;
+}
+
+:root .text-red-700,
+:root .text-red-600,
+:root .text-red-500,
+:root .text-rose-600,
+[data-theme='dark'] .text-red-700,
+[data-theme='dark'] .text-red-600,
+[data-theme='dark'] .text-red-500,
+[data-theme='dark'] .text-rose-600 {
+  color: #fb7185 !important;
+}
+
+/* 2. Modo Agencia de Día (data-theme='light'):
+      Reasignación de tonos pastel (-300/-400) a tonos profundos de alto contraste (> 4.5:1) */
+[data-theme='light'] .text-slate-300,
+[data-theme='light'] .text-slate-400 {
+  color: var(--ink-3) !important;
+}
+
+[data-theme='light'] .text-sky-300,
+[data-theme='light'] .text-sky-400 {
+  color: #0369a1 !important;
+}
+
+[data-theme='light'] .text-emerald-200,
+[data-theme='light'] .text-emerald-300,
+[data-theme='light'] .text-emerald-400 {
+  color: #047857 !important;
+}
+
+[data-theme='light'] .text-amber-300,
+[data-theme='light'] .text-amber-400 {
+  color: #b45309 !important;
+}
+
+[data-theme='light'] .text-rose-300,
+[data-theme='light'] .text-rose-400 {
+  color: #be123c !important;
+}
+
+[data-theme='light'] .text-cyan-300 {
+  color: #0e7490 !important;
 }
