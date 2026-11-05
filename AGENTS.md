@@ -342,3 +342,52 @@ Durante esta fase de optimización y robustecimiento, se implementaron mejoras d
   8. **Filtro por estatus de usuario (CA 8):** En `UsuariosPage.tsx`, se incorporaron pestañas de filtrado rápido con contadores en tiempo real: `Todos`, `Activos` y `Desactivados`, plenamente integradas con el buscador por texto y debounce.
   9. **Restricción de acceso por rol (CA 9):** Endpoints del controlador `UsuariosController` protegidos a nivel de clase con `[Authorize(Roles = "Administrador")]` y rutas en Frontend protegidas por `AdminRoute`.
   10. **Calidad y Cobertura:** 110/110 pruebas unitarias en verde en Backend (`xUnit` + `Moq`), 0 errores y 0 advertencias con Roslynator en modo Release. En Frontend: 100% libre de errores en `eslint`, `typecheck` y compilación de producción Vite PWA exitosa.
+
+
+---
+
+## 14. Plan de Trabajo por Fases: Rediseño UI/UX "Showroom Liquid Glass" (Inspirado en Vitrea)
+* **Responsable:** José de Jesús López Islas (`ChuchoGodDeveloper` / `loij030909hmcpssa0@gmail.com`).
+* **Referencia Visual y de Animaciones:** Adaptación integral del sistema de diseño **Liquid Glass** de *Vitrea* (`https://demo.codeandchill.store/vitrea/#/overview`) personalizado con temática **Showroom Automotriz de Lujo** (*AutoStock Pro · Showroom Edition*).
+* **Compatibilidad con Backend y Reglas de Negocio:** **100% compatible** con `BackEnd-AutoStock` sin tocar endpoints, contratos DTO, almacenamiento offline en IndexedDB (`sessionDb.ts`), ni los textos exactos exigidos por los Criterios de Aceptación de `HU-01` a `HU-16`.
+
+### 14.1 Arquitectura Visual y Catálogo de 17 Animaciones / Efectos
+1. **Materialidad Liquid Glass (3 espesores ópticos):**
+   * `.v-glass` (`backdrop-filter: blur(40px) saturate(185%)`, doble bisel especular `inset 0 1.5px 0 var(--rim-hi)` y sombra multicapa `--depth`).
+   * `.v-glass--chrome` (`backdrop-filter: blur(50px) saturate(200%)` para la barra superior flotante en 3 islas y el Dock adaptativo).
+   * `.v-glass--thick` (`backdrop-filter: blur(60px) saturate(210%)` para modales, paneles laterales de filtros y tarjetas de autenticación).
+2. **Doble Ambiente Automotriz (`themeStore.ts`):**
+   * **Showroom Nocturno (`data-theme="dark"`):** Piso de obsidiana (`#06070B`), titanio líquido, oro champán (`#D4AF37`), azul telemetría (`#4DA6FF`) y verde encendido (`#2EE59D`).
+   * **Agencia de Día (`data-theme="light"`):** Cristal polarizado perlado (`#EDF1F7`) con alto contraste para lectura en lote exterior bajo luz solar.
+3. **Escenario Automotriz de Fondo (`ShowroomWall.tsx`):**
+   * Silueta escultural SVG de un **Gran Turismo Coupé** a escala completa en el fondo fijo con pintura metálica multicapa, rines de aleación de 10 brazos con calipers dorados, **faros LED DRL con pulso encendido** (`@keyframes headlightPulse`), **líneas aerodinámicas de túnel de viento** (`@keyframes aeroFlow`), reflejo de piso de exhibición y micro-rejilla de fibra de carbono.
+4. **Sistema de 17 Micro-Interacciones y Animaciones (60 FPS):**
+   * **A1 — Píldora Líquida con Inversión Dual (`clip-path: inset(...)`):** Navegación y filtros rápidos con máscara sincronizada (`--seg-left`, `--seg-right`) y física de resorte `cubic-bezier(0.22, 1, 0.36, 1)`.
+   * **A2 — Compresión Elástica (*Squish*) + Onda Hueca (`.ripple`):** Respuesta física al presionar botones y tarjetas (`scale(0.95)`) acompañada de un anillo especular expansivo en las coordenadas exactas del clic.
+   * **A3 — Foco Radial Magnético (`--gx`, `--gy`):** Iluminación especular que sigue el cursor sobre tarjetas `.v-glass`.
+   * **A4 — Tipografía Cinética (`SplitTitle`):** Entrada escalonada letra por letra con giro 3D (`translateY(115%) rotateX(-75deg) -> 0`).
+   * **A5 — Contadores Interpolados (`AnimatedCounter`):** Interpolación numérica con curva `cubic-out` para KPIs, odómetros y precios.
+   * **A6 — Tacómetro / Anillo SVG Dinámico:** Medidor circular con `stroke-dashoffset` animado para el porcentaje de disponibilidad de flota.
+   * **A7 — Barras de Distribución por Estado:** Crecimiento progresivo con brillo especular para los 5 estados operativos.
+   * **A8 — Entrada Abanicada de Tarjetas de Vehículos:** Cascada con rotación inicial (`±2.2deg -> 0`) y levitación en hover (`translateY(-5px) scale(1.01)`).
+   * **A9 — Siluetas Automotrices Vectoriales (`VehicleSilhouette`):** Renderizado automático de carrocerías (`SUV`, `Sedán`, `Pickup`, `Coupé`) cuando una unidad no tiene fotografía o mientras carga.
+   * **A10 — Mapeo de los 5 Tonos Metálicos Vitrea a `ESTILOS_ESTADO`:**
+     * `Disponible` → `.tone--green` (Verde Esmeralda Racing)
+     * `En Prueba de Manejo` → `.tone--blue` (Azul Cobalto Telemetría)
+     * `En Taller` → `.tone--orange` (Ámbar Champán Servicio)
+     * `Apartado` → `.tone--teal` (Turquesa Titanio)
+     * `Vendido` → `.tone--coral` / `.tone--ink` (Grafito / Coral Ejecutivo)
+   * **A11 — Interruptor de Faros (Toggle de Tema):** Conmutación suave de variables CSS y encendido/apagado de haces de luz del vehículo de fondo.
+   * **A12 — Switches Elásticos (`LiquidSwitch`):** Pulgar que se estira horizontalmente al presionar (`width: 25px`) para la matriz de permisos por rol (`HU-11`).
+   * **A13 — Revelado de Modales con `clip-path`:** Apertura desde el centro óptico con desenfoque progresivo `.v-glass--thick`.
+   * **A14 — Transición Fluida entre Vistas:** Entrada suave de contenedor principal con deslizamiento vertical y fundido.
+
+### 14.2 Desglose de Ejecución por Fases (Estrategia Segura Cero Errores)
+
+| Fase | Alcance y Archivos Objetivo | Estado | Validación CI (`lint` / `typecheck` / `build`) |
+| :--- | :--- | :---: | :---: |
+| **Fase 1** | **Base Liquid Glass, Tema Showroom y Primitivas UI:**<br>• `src/index.css` (variables `--glass`, `.v-glass`, `.tone--*`, animaciones CSS)<br>• `src/stores/themeStore.ts` (modo Showroom Nocturno / Agencia de Día)<br>• `src/hooks/useShowroomEffects.ts` (`inferirSiluetaVehiculo`, `useGlobalRippleAndSquish`)<br>• `src/components/ShowroomWall.tsx` (Gran Turismo de fondo + siluetas de carrocería)<br>• `src/components/LiquidUI.tsx` (`SplitTitle`, `AnimatedCounter`, `LiquidSegmented`, `SpotlightCard`)<br>• `src/components/AppShell.tsx` (Barra flotante 3 islas + Dock adaptativo)<br>• Registro del plan en `AGENTS.md` | **Completada** | **0 errores / 0 warnings** |
+| **Fase 2** | **Centro de Control (`DashboardPage.tsx`) y Banners Globales:**<br>• Integración de `AppShell` y `ShowroomWall` en `App.tsx` y `DashboardPage.tsx`<br>• Rediseño Bento Grid Liquid Glass con tacómetro SVG de disponibilidad, contadores animados, barras por estado y accesos rápidos magnéticos<br>• Adaptación estética de `OfflineBanner.tsx` e `InstallPrompt.tsx` | **Completada** | **0 errores / 0 warnings** |
+| **Fase 3** | **Catálogo de Flota y Búsqueda/Filtrado (`HU-02`, `HU-04`, `HU-05`):**<br>• `src/config/estadosOperativos.ts` y `src/components/VehiculoCard.tsx` (tonos metálicos Vitrea, silueta vehicular fallback, levitación y foco radial)<br>• `src/components/FiltrosRapidos.tsx` (píldora líquida animada)<br>• `src/components/SearchBar.tsx`, `src/components/FilterPanel.tsx` y `src/pages/CatalogoPage.tsx` | **Completada** | **0 errores / 0 warnings** |
+| **Fase 4** | **Operaciones de Lote: Ficha Técnica, Evidencia, Alta y Modales (`HU-03`, `HU-08`, `HU-09`, `HU-10`, `HU-13`, `HU-14`):**<br>• `src/pages/VehiculoDetallePage.tsx` (cabecera showroom, tarjetas de telemetría/ubicación/odómetro y selector de estado líquido)<br>• `src/pages/EvidenciaVehiculoPage.tsx` y `src/pages/RegistroVehiculoPage.tsx`<br>• `src/components/ModalReubicacion.tsx` y `src/components/ModalEdicionKilometraje.tsx` (`.v-glass--thick`) | **Completada** | **0 errores / 0 warnings** |
+| **Fase 5** | **Seguridad, Autenticación y Administración (`HU-01`, `HU-07`, `HU-11`, `HU-12`, `HU-15`, `HU-16`):**<br>• `src/pages/LoginPage.tsx`, `RecuperarPasswordPage.tsx`, `RestablecerPasswordPage.tsx`, `CambiarPasswordPage.tsx` (tarjeta `.v-glass--thick` sobre el Showroom)<br>• `src/pages/UsuariosPage.tsx`, `NuevoUsuarioPage.tsx`, `ModalDetalleUsuario.tsx`<br>• `src/pages/PermisosPage.tsx` (matriz de permisos con switches estilo Vitrea) | **Completada** | **0 errores / 0 warnings** |

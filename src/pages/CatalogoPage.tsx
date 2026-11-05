@@ -1,8 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Car, Filter, PlusCircle, RefreshCw, SearchX, SlidersHorizontal } from 'lucide-react'
+import {
+  ArrowLeft,
+  Car,
+  Filter,
+  PlusCircle,
+  RefreshCw,
+  SearchX,
+  SlidersHorizontal,
+} from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FilterPanel } from '../components/FilterPanel'
 import { FiltrosRapidos } from '../components/FiltrosRapidos'
+import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { SearchBar } from '../components/SearchBar'
 import { VehiculoCard } from '../components/VehiculoCard'
@@ -10,7 +19,6 @@ import { MENSAJES } from '../config/mensajes'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { useAuthStore } from '../stores/authStore'
 import { FILTROS_VACIOS, hayFiltrosActivos, useCatalogoStore } from '../stores/catalogoStore'
-
 
 export function CatalogoPage() {
   const navigate = useNavigate()
@@ -38,7 +46,12 @@ export function CatalogoPage() {
   const busquedaSinResultados =
     !cargando && !error && terminoBusqueda !== '' && totalUnidades === 0 && vehiculos.length === 0
   const filtrosSinResultados =
-    !cargando && !error && terminoBusqueda === '' && filtrosActivos && totalUnidades === 0 && vehiculos.length === 0
+    !cargando &&
+    !error &&
+    terminoBusqueda === '' &&
+    filtrosActivos &&
+    totalUnidades === 0 &&
+    vehiculos.length === 0
 
   useEffect(() => {
     const { vehiculos: cargados, cargando: enCarga } = useCatalogoStore.getState()
@@ -78,18 +91,24 @@ export function CatalogoPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 pb-10">
-      <div className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8 py-6">
+    <main className="showroom-page">
+      <div className="mx-auto w-full max-w-6xl space-y-6">
         <OfflineBanner visible={!enLinea} />
 
-        <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-md">
+        <SpotlightCard as="header" tone="ink" className="p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
+              <p
+                className="text-xs font-extrabold uppercase tracking-[0.2em]"
+                style={{ color: 'var(--champagne)' }}
+              >
                 AUTOSTOCK PRO
               </p>
-              <h1 className="text-2xl font-black text-slate-900">Catálogo de Inventario</h1>
-              <p className="mt-1 text-sm font-semibold text-slate-500">
+              <SplitTitle
+                text="Catálogo de Inventario"
+                className="text-2xl sm:text-3xl font-black tracking-tight mt-0.5"
+              />
+              <p className="mt-1 text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
                 {terminoBusqueda
                   ? `${totalUnidades} ${totalUnidades === 1 ? 'resultado' : 'resultados'} para “${terminoBusqueda}”`
                   : `${totalUnidades} ${totalUnidades === 1 ? 'unidad en inventario' : 'unidades en inventario'}`}
@@ -99,14 +118,15 @@ export function CatalogoPage() {
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
-              className="flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="v-glass btn-squish flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition hover:border-sky-400/50"
+              style={{ color: 'var(--ink)' }}
             >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <ArrowLeft className="h-4 w-4 text-sky-400" aria-hidden="true" />
               Menú
             </button>
           </div>
 
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-5 flex items-center gap-2.5">
             <div className="min-w-0 flex-1">
               <SearchBar key={versionBusqueda} />
             </div>
@@ -114,38 +134,41 @@ export function CatalogoPage() {
               type="button"
               onClick={() => setPanelFiltrosAbierto(true)}
               aria-label="Abrir filtros"
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
+              className={`btn-squish flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                 filtrosActivos
-                  ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'
-                  : 'border-slate-300 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700'
+                  ? 'border-sky-400 bg-sky-500 text-white shadow-lg'
+                  : 'v-glass border-white/15 hover:border-sky-400/50'
               }`}
+              style={filtrosActivos ? undefined : { color: 'var(--ink)' }}
             >
               <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-4">
             <FiltrosRapidos />
           </div>
-        </header>
+        </SpotlightCard>
 
         {primeraCarga && (
-          <section className="flex flex-col items-center gap-3 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <Car className="h-10 w-10 animate-pulse text-blue-600" aria-hidden="true" />
-            <p className="text-sm font-semibold text-slate-700">Cargando catálogo...</p>
-          </section>
+          <SpotlightCard as="section" className="flex flex-col items-center gap-3 p-8">
+            <Car className="h-10 w-10 animate-pulse text-sky-400" aria-hidden="true" />
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
+              Cargando catálogo...
+            </p>
+          </SpotlightCard>
         )}
 
         {busquedaSinResultados && (
-          <section className="flex flex-col items-center gap-3 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <SearchX className="h-10 w-10 text-slate-400" aria-hidden="true" />
-            <p className="text-center text-sm font-semibold text-slate-700">
+          <SpotlightCard as="section" className="flex flex-col items-center gap-3 p-8">
+            <SearchX className="h-10 w-10 text-sky-400" aria-hidden="true" />
+            <p className="text-center text-sm font-bold" style={{ color: 'var(--ink)' }}>
               {`No se encontraron unidades para ${terminoBusqueda}`}
             </p>
             <button
               type="button"
               onClick={limpiarBusqueda}
-              className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="v-glass btn-squish rounded-xl px-4 py-2 text-sm font-bold text-sky-300"
             >
               Limpiar búsqueda
             </button>
@@ -153,25 +176,25 @@ export function CatalogoPage() {
             {puedeRegistrar && (
               <Link
                 to="/registrar-vehiculo"
-                className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                className="btn-squish flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-sm font-bold text-white shadow-lg"
               >
                 <PlusCircle className="h-4 w-4" aria-hidden="true" />
                 Registrar unidad
               </Link>
             )}
-          </section>
+          </SpotlightCard>
         )}
 
         {filtrosSinResultados && (
-          <section className="flex flex-col items-center gap-3 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <Filter className="h-10 w-10 text-slate-400" aria-hidden="true" />
-            <p className="text-center text-sm font-semibold text-slate-700">
+          <SpotlightCard as="section" className="flex flex-col items-center gap-3 p-8">
+            <Filter className="h-10 w-10 text-amber-400" aria-hidden="true" />
+            <p className="text-center text-sm font-bold" style={{ color: 'var(--ink)' }}>
               No hay unidades con estos filtros
             </p>
             <button
               type="button"
               onClick={limpiarFiltros}
-              className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="v-glass btn-squish rounded-xl px-4 py-2 text-sm font-bold text-sky-300"
             >
               Limpiar filtros
             </button>
@@ -179,40 +202,49 @@ export function CatalogoPage() {
             {puedeRegistrar && (
               <Link
                 to="/registrar-vehiculo"
-                className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                className="btn-squish flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-sm font-bold text-white shadow-lg"
               >
                 <PlusCircle className="h-4 w-4" aria-hidden="true" />
                 Registrar unidad
               </Link>
             )}
-          </section>
+          </SpotlightCard>
         )}
 
         {!cargando && !error && !terminoBusqueda && totalUnidades === 0 && vehiculos.length === 0 && (
-          <section className="flex flex-col items-center gap-3 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <Car className="h-10 w-10 text-slate-400" aria-hidden="true" />
-            <p className="text-center text-sm font-semibold text-slate-700">
+          <SpotlightCard as="section" className="flex flex-col items-center gap-3 p-8">
+            <Car className="h-10 w-10 text-sky-400" aria-hidden="true" />
+            <p className="text-center text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
               {MENSAJES.sinUnidades}
             </p>
-          </section>
+          </SpotlightCard>
         )}
 
         {error && (
-          <section className="flex flex-col items-center gap-3 rounded-3xl border border-red-200 bg-red-50 p-8 shadow-sm">
-            <p className="text-center text-sm font-semibold text-red-700">{error}</p>
+          <SpotlightCard
+            as="section"
+            tone="coral"
+            className="flex flex-col items-center gap-3 p-8"
+          >
+            <p className="text-center text-sm font-bold" style={{ color: 'var(--ink)' }}>
+              {error}
+            </p>
             <button
               type="button"
               onClick={() => void cargarMasVehiculos(true)}
-              className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+              className="btn-squish flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition hover:bg-rose-500"
             >
               <RefreshCw className="h-4 w-4" aria-hidden="true" />
               Reintentar
             </button>
-          </section>
+          </SpotlightCard>
         )}
 
         {vehiculos.length > 0 && (
-          <section aria-label="Vehículos del catálogo" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <section
+            aria-label="Vehículos del catálogo"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+          >
             {vehiculos.map((vehiculo) => (
               <VehiculoCard key={vehiculo.id} vehiculo={vehiculo} />
             ))}
@@ -224,7 +256,8 @@ export function CatalogoPage() {
             type="button"
             onClick={() => void cargarMasVehiculos()}
             disabled={cargando}
-            className="w-full rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-800 transition hover:bg-blue-100 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            className="v-glass tone--blue btn-squish w-full rounded-2xl px-4 py-3.5 text-sm font-extrabold uppercase tracking-wider transition disabled:opacity-60"
+            style={{ color: 'var(--ink)' }}
           >
             {cargando ? 'Cargando...' : 'Cargar más'}
           </button>
@@ -235,7 +268,7 @@ export function CatalogoPage() {
         <footer className="text-center">
           <Link
             to="/dashboard"
-            className="text-sm font-semibold text-blue-700 underline-offset-2 hover:underline"
+            className="text-sm font-bold text-sky-400 underline-offset-2 hover:underline"
           >
             Volver al menú principal
           </Link>

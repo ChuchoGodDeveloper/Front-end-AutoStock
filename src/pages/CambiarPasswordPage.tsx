@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Eye, EyeOff, KeyRound, Loader2, LockKeyhole, LogOut, ShieldCheck } from 'lucide-react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { MENSAJES } from '../config/mensajes'
 import { HttpError } from '../services/httpClient'
 import { useAuthStore } from '../stores/authStore'
@@ -99,22 +100,26 @@ export function CambiarPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8">
+    <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
       <section className="w-full max-w-md">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
+        <SpotlightCard thickness="thick" className="p-6 shadow-2xl sm:p-8">
           <header className="mb-6 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 p-3.5 text-white shadow-md">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-700 p-3.5 text-white shadow-lg ring-2 ring-white/25">
               <KeyRound className="h-7 w-7" aria-hidden="true" />
             </div>
 
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
+            <p
+              className="text-xs font-extrabold uppercase tracking-[0.2em]"
+              style={{ color: 'var(--champagne)' }}
+            >
               PRIMER ACCESO · AUTOSTOCK
             </p>
-            <h1 className="mt-1 text-2xl font-black text-slate-900">
-              Actualiza tu contraseña
-            </h1>
+            <SplitTitle
+              text="Actualiza tu contraseña"
+              className="mt-1 text-2xl font-black"
+            />
 
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm" style={{ color: 'var(--ink-2)' }}>
               {usuario?.nombreCompleto
                 ? `Hola, ${usuario.nombreCompleto}. Por seguridad debes crear una contraseña personal antes de continuar al Menú Principal.`
                 : 'Por seguridad debes reemplazar tu contraseña temporal antes de continuar.'}
@@ -125,16 +130,17 @@ export function CambiarPasswordPage() {
             <div>
               <label
                 htmlFor="password-actual"
-                className="mb-1.5 block text-sm font-semibold text-slate-800"
+                className="mb-1.5 block text-sm font-semibold"
+                style={{ color: 'var(--ink)' }}
               >
                 Contraseña temporal actual{' '}
-                <span className="text-red-600" aria-hidden="true">
+                <span className="text-rose-400" aria-hidden="true">
                   *
                 </span>
               </label>
               <div className="relative">
                 <LockKeyhole
-                  className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-400"
                   aria-hidden="true"
                 />
                 <input
@@ -164,7 +170,8 @@ export function CambiarPasswordPage() {
                   aria-label={
                     verActual ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'
                   }
-                  className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  className="btn-squish absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-lg p-2 hover:bg-white/10"
+                  style={{ color: 'var(--ink-2)' }}
                 >
                   {verActual ? (
                     <EyeOff className="h-5 w-5" aria-hidden="true" />
@@ -177,7 +184,7 @@ export function CambiarPasswordPage() {
                 <p
                   id="password-actual-error"
                   role="alert"
-                  className="mt-1.5 text-sm font-medium text-red-600"
+                  className="mt-1.5 text-sm font-medium text-rose-400"
                 >
                   {erroresCampo.passwordActual}
                 </p>
@@ -187,16 +194,17 @@ export function CambiarPasswordPage() {
             <div>
               <label
                 htmlFor="password-nueva"
-                className="mb-1.5 block text-sm font-semibold text-slate-800"
+                className="mb-1.5 block text-sm font-semibold"
+                style={{ color: 'var(--ink)' }}
               >
                 Nueva contraseña{' '}
-                <span className="text-red-600" aria-hidden="true">
+                <span className="text-rose-400" aria-hidden="true">
                   *
                 </span>
               </label>
               <div className="relative">
                 <LockKeyhole
-                  className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-400"
                   aria-hidden="true"
                 />
                 <input
@@ -224,7 +232,8 @@ export function CambiarPasswordPage() {
                   onClick={() => setVerNueva((valor) => !valor)}
                   aria-pressed={verNueva}
                   aria-label={verNueva ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'}
-                  className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  className="btn-squish absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-lg p-2 hover:bg-white/10"
+                  style={{ color: 'var(--ink-2)' }}
                 >
                   {verNueva ? (
                     <EyeOff className="h-5 w-5" aria-hidden="true" />
@@ -237,12 +246,16 @@ export function CambiarPasswordPage() {
                 <p
                   id="password-nueva-error"
                   role="alert"
-                  className="mt-1.5 text-sm font-medium text-red-600"
+                  className="mt-1.5 text-sm font-medium text-rose-400"
                 >
                   {erroresCampo.passwordNueva}
                 </p>
               ) : (
-                <p id="password-nueva-ayuda" className="mt-1.5 text-xs text-slate-500">
+                <p
+                  id="password-nueva-ayuda"
+                  className="mt-1.5 text-xs"
+                  style={{ color: 'var(--ink-2)' }}
+                >
                   Debe tener al menos 8 caracteres, combinar letras y números y ser distinta de la temporal.
                 </p>
               )}
@@ -251,16 +264,17 @@ export function CambiarPasswordPage() {
             <div>
               <label
                 htmlFor="confirmar-password"
-                className="mb-1.5 block text-sm font-semibold text-slate-800"
+                className="mb-1.5 block text-sm font-semibold"
+                style={{ color: 'var(--ink)' }}
               >
                 Confirmar nueva contraseña{' '}
-                <span className="text-red-600" aria-hidden="true">
+                <span className="text-rose-400" aria-hidden="true">
                   *
                 </span>
               </label>
               <div className="relative">
                 <LockKeyhole
-                  className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-400"
                   aria-hidden="true"
                 />
                 <input
@@ -292,7 +306,8 @@ export function CambiarPasswordPage() {
                       ? 'Ocultar confirmación de contraseña'
                       : 'Mostrar confirmación de contraseña'
                   }
-                  className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  className="btn-squish absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-lg p-2 hover:bg-white/10"
+                  style={{ color: 'var(--ink-2)' }}
                 >
                   {verConfirmar ? (
                     <EyeOff className="h-5 w-5" aria-hidden="true" />
@@ -305,7 +320,7 @@ export function CambiarPasswordPage() {
                 <p
                   id="confirmar-password-error"
                   role="alert"
-                  className="mt-1.5 text-sm font-medium text-red-600"
+                  className="mt-1.5 text-sm font-medium text-rose-400"
                 >
                   {erroresCampo.confirmarPassword}
                 </p>
@@ -315,7 +330,8 @@ export function CambiarPasswordPage() {
             {mensajeError && (
               <div
                 role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+                className="v-glass tone--coral rounded-xl px-4 py-3 text-sm font-semibold"
+                style={{ color: 'var(--ink)' }}
               >
                 {mensajeError}
               </div>
@@ -324,7 +340,7 @@ export function CambiarPasswordPage() {
             <button
               type="submit"
               disabled={guardando}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 text-base font-bold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn-squish flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-3.5 text-base font-extrabold text-white shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {guardando ? (
                 <>
@@ -343,13 +359,14 @@ export function CambiarPasswordPage() {
               type="button"
               onClick={() => void manejarSalir()}
               disabled={guardando}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:opacity-60"
+              className="v-glass btn-squish flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-60"
+              style={{ color: 'var(--ink)' }}
             >
-              <LogOut className="h-4 w-4" aria-hidden="true" />
+              <LogOut className="h-4 w-4 text-rose-400" aria-hidden="true" />
               Cerrar sesión
             </button>
           </form>
-        </div>
+        </SpotlightCard>
       </section>
     </main>
   )

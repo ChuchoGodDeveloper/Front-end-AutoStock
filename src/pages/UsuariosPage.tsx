@@ -16,6 +16,7 @@ import {
   UserX,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { ModalDetalleUsuario } from '../components/ModalDetalleUsuario'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { MENSAJES } from '../config/mensajes'
@@ -111,15 +112,15 @@ export function UsuariosPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50/50 py-6 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-12">
-      <div className="mx-auto w-full max-w-5xl space-y-6">
+    <main className="showroom-page">
+      <div className="mx-auto w-full max-w-6xl space-y-6">
         <OfflineBanner visible={!enLinea} />
 
         {/* Notificación Global de Éxito (CA 2: Usuario actualizado) */}
         {mensajeExitoGlobal && (
           <div
             role="status"
-            className="flex items-center gap-2.5 rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-900 shadow-sm animate-fadeIn"
+            className="v-glass tone--green flex items-center gap-2.5 rounded-2xl px-4 py-3 text-sm font-bold text-emerald-700 animate-fadeIn"
           >
             <Check className="h-5 w-5 text-emerald-600 shrink-0" />
             <span>{mensajeExitoGlobal}</span>
@@ -127,17 +128,21 @@ export function UsuariosPage() {
         )}
 
         {/* Header Responsivo */}
-        <header className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <SpotlightCard
+          as="header"
+          tone="ink"
+          className="rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-500/15 text-blue-600 border border-blue-500/30">
                 <Sparkles className="w-3 h-3" />
                 Seguridad y Accesos
               </span>
             </div>
             <h1 className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
               <Users className="w-7 h-7 text-blue-600" />
-              Directorio de Personal
+              <SplitTitle text="Directorio de Personal" />
             </h1>
             <p className="mt-1 text-sm text-slate-500 font-medium">
               {usuarios.length} colaboradores autorizados en el sistema AutoStock
@@ -148,20 +153,20 @@ export function UsuariosPage() {
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="btn-squish v-glass inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition focus:outline-none focus:ring-2 focus:ring-blue-600"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               Menú Principal
             </button>
             <Link
               to="/usuarios/nuevo"
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+              className="btn-squish inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
             >
               <UserPlus className="h-4 w-4" aria-hidden="true" />
               Nuevo Personal
             </Link>
           </div>
-        </header>
+        </SpotlightCard>
 
         {/* Controles: Búsqueda y Filtro de Estatus (CA 8) */}
         <div className="space-y-3">
@@ -172,7 +177,7 @@ export function UsuariosPage() {
               placeholder="Buscar por nombre, ID de empleado, correo o rol..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-medium shadow-xs focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition"
+              className="campo-base w-full pl-11 pr-4 py-3 text-sm font-medium"
             />
           </div>
 
@@ -183,17 +188,17 @@ export function UsuariosPage() {
               role="tab"
               aria-selected={filtroEstatus === 'todos'}
               onClick={() => setFiltroEstatus('todos')}
-              className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-2xs ${
+              className={`btn-squish inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
                 filtroEstatus === 'todos'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                  : 'v-glass text-slate-700'
               }`}
             >
               <Users className="h-3.5 w-3.5" />
               Todos
               <span
-                className={`ml-1 rounded-full px-2 py-0.5 text-[11px] font-black ${
-                  filtroEstatus === 'todos' ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-700'
+                className={`ml-1 rounded-full px-2 py-0.5 text-[11px] font-black font-mono ${
+                  filtroEstatus === 'todos' ? 'bg-white/25 text-white' : 'bg-slate-500/15 text-slate-700'
                 }`}
               >
                 {conteos.todos}
@@ -205,17 +210,17 @@ export function UsuariosPage() {
               role="tab"
               aria-selected={filtroEstatus === 'activos'}
               onClick={() => setFiltroEstatus('activos')}
-              className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-2xs ${
+              className={`btn-squish inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
                 filtroEstatus === 'activos'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
+                  : 'v-glass text-slate-700'
               }`}
             >
               <UserCheck className="h-3.5 w-3.5" />
               Activos
               <span
-                className={`ml-1 rounded-full px-2 py-0.5 text-[11px] font-black ${
-                  filtroEstatus === 'activos' ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-700'
+                className={`ml-1 rounded-full px-2 py-0.5 text-[11px] font-black font-mono ${
+                  filtroEstatus === 'activos' ? 'bg-white/25 text-white' : 'bg-slate-500/15 text-slate-700'
                 }`}
               >
                 {conteos.activos}
@@ -227,17 +232,17 @@ export function UsuariosPage() {
               role="tab"
               aria-selected={filtroEstatus === 'desactivados'}
               onClick={() => setFiltroEstatus('desactivados')}
-              className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-2xs ${
+              className={`btn-squish inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
                 filtroEstatus === 'desactivados'
-                  ? 'bg-slate-700 text-white shadow-sm'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                  ? 'bg-slate-700 text-white shadow-md'
+                  : 'v-glass text-slate-700'
               }`}
             >
               <UserX className="h-3.5 w-3.5" />
               Desactivados
               <span
-                className={`ml-1 rounded-full px-2 py-0.5 text-[11px] font-black ${
-                  filtroEstatus === 'desactivados' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+                className={`ml-1 rounded-full px-2 py-0.5 text-[11px] font-black font-mono ${
+                  filtroEstatus === 'desactivados' ? 'bg-white/25 text-white' : 'bg-slate-500/15 text-slate-700'
                 }`}
               >
                 {conteos.desactivados}
@@ -247,35 +252,35 @@ export function UsuariosPage() {
         </div>
 
         {cargando && (
-          <section className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-12 shadow-sm">
+          <SpotlightCard as="section" tone="blue" className="flex flex-col items-center justify-center gap-3 rounded-3xl p-12">
             <Users className="h-10 w-10 animate-pulse text-blue-600" aria-hidden="true" />
             <p className="text-sm font-semibold text-slate-700">Cargando directorio de personal...</p>
-          </section>
+          </SpotlightCard>
         )}
 
         {error && !cargando && (
-          <section className="flex flex-col items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-8 shadow-sm">
-            <p className="text-center text-sm font-semibold text-red-700">{error}</p>
+          <SpotlightCard as="section" tone="coral" className="flex flex-col items-center gap-3 rounded-3xl p-8">
+            <p className="text-center text-sm font-semibold text-red-600">{error}</p>
             <button
               type="button"
               onClick={() => void cargarUsuarios()}
-              className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600"
+              className="btn-squish flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600"
             >
               <RefreshCw className="h-4 w-4" aria-hidden="true" />
               Reintentar
             </button>
-          </section>
+          </SpotlightCard>
         )}
 
         {!cargando && !error && usuariosFiltrados.length === 0 && (
-          <section className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-12 shadow-sm">
+          <SpotlightCard as="section" tone="ink" className="flex flex-col items-center justify-center gap-3 rounded-3xl p-12">
             <Users className="h-10 w-10 text-slate-400" aria-hidden="true" />
             <p className="text-center text-sm font-semibold text-slate-700">
               {busqueda
                 ? 'No se encontraron colaboradores que coincidan con la búsqueda'
                 : 'No hay usuarios en este estatus'}
             </p>
-          </section>
+          </SpotlightCard>
         )}
 
         {!cargando && !error && usuariosFiltrados.length > 0 && (
@@ -295,19 +300,21 @@ export function UsuariosPage() {
                     manejarAbrirDetalle(item)
                   }
                 }}
-                className="group rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs hover:border-blue-400 hover:shadow-md transition cursor-pointer flex flex-col justify-between text-left focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className={`v-glass car-card btn-squish group rounded-3xl p-5 cursor-pointer flex flex-col justify-between text-left focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                  item.activo ? 'tone--blue' : 'tone--ink'
+                }`}
               >
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
+                    <span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-blue-600 bg-blue-500/15 border border-blue-500/30 px-2.5 py-0.5 rounded-lg">
                       <IdCard className="w-3.5 h-3.5" />
                       {item.empleadoId}
                     </span>
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
                         item.activo
-                          ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
-                          : 'border border-slate-300 bg-slate-100 text-slate-600'
+                          ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-600'
+                          : 'border border-slate-500/30 bg-slate-500/15 text-slate-500'
                       }`}
                     >
                       {item.activo ? 'Activo' : 'Inactivo'}
@@ -333,8 +340,8 @@ export function UsuariosPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-800 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/60">
+                <div className="mt-4 pt-3 border-t border-slate-500/15 flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20">
                     <Shield className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                     {item.rol}
                   </span>

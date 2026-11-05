@@ -61,19 +61,21 @@ export function FiltrosRapidos() {
             type="button"
             onClick={() => void setFiltros(preset.filtros)}
             aria-pressed={activa}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
+            className={`btn-squish flex shrink-0 items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-extrabold tracking-wide transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
               activa
-                ? 'border-blue-600 bg-blue-600 text-white'
+                ? 'border-sky-400/60 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg scale-[1.02]'
                 : hayFiltrosActivos(filtros) && preset.etiqueta === 'Todos'
-                  ? 'border-slate-300 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700'
-                  : 'border-slate-300 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700'
+                  ? 'v-glass border-white/15 hover:border-sky-400/50'
+                  : 'v-glass border-white/15 hover:border-sky-400/50'
             }`}
+            style={activa ? undefined : { color: 'var(--ink)' }}
           >
             {preset.etiqueta}
             <span
-              className={`rounded-full px-1.5 text-xs font-black ${
-                activa ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
+              className={`rounded-full px-2 py-0.5 text-[11px] font-black ${
+                activa ? 'bg-white/25 text-white' : 'bg-white/10'
               }`}
+              style={activa ? undefined : { color: 'var(--ink-2)' }}
             >
               {preset.conteo(conteos)}
             </span>
