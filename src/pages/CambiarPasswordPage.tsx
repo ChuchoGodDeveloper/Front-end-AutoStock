@@ -138,9 +138,9 @@ export function CambiarPasswordPage() {
                   *
                 </span>
               </label>
-              <div className="relative">
+              <div className="relative flex items-center">
                 <LockKeyhole
-                  className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-400"
+                  className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-sky-400"
                   aria-hidden="true"
                 />
                 <input
@@ -159,7 +159,7 @@ export function CambiarPasswordPage() {
                   aria-describedby={
                     erroresCampo.passwordActual ? 'password-actual-error' : undefined
                   }
-                  className={`campo-base pl-11 pr-12 ${
+                  className={`campo-base pl-10 pr-10 ${
                     erroresCampo.passwordActual ? 'campo-invalido' : 'campo-valido'
                   }`}
                 />
@@ -170,7 +170,7 @@ export function CambiarPasswordPage() {
                   aria-label={
                     verActual ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'
                   }
-                  className="btn-squish absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-lg p-2 hover:bg-white/10"
+                  className="absolute right-3.5 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center rounded-lg p-1 hover:bg-white/10"
                   style={{ color: 'var(--ink-2)' }}
                 >
                   {verActual ? (
@@ -202,9 +202,9 @@ export function CambiarPasswordPage() {
                   *
                 </span>
               </label>
-              <div className="relative">
+              <div className="relative flex items-center">
                 <LockKeyhole
-                  className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-400"
+                  className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-sky-400"
                   aria-hidden="true"
                 />
                 <input
@@ -223,7 +223,7 @@ export function CambiarPasswordPage() {
                   aria-describedby={
                     erroresCampo.passwordNueva ? 'password-nueva-error' : 'password-nueva-ayuda'
                   }
-                  className={`campo-base pl-11 pr-12 ${
+                  className={`campo-base pl-10 pr-10 ${
                     erroresCampo.passwordNueva ? 'campo-invalido' : 'campo-valido'
                   }`}
                 />
@@ -232,7 +232,7 @@ export function CambiarPasswordPage() {
                   onClick={() => setVerNueva((valor) => !valor)}
                   aria-pressed={verNueva}
                   aria-label={verNueva ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'}
-                  className="btn-squish absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-lg p-2 hover:bg-white/10"
+                  className="absolute right-3.5 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center rounded-lg p-1 hover:bg-white/10"
                   style={{ color: 'var(--ink-2)' }}
                 >
                   {verNueva ? (
@@ -272,9 +272,9 @@ export function CambiarPasswordPage() {
                   *
                 </span>
               </label>
-              <div className="relative">
+              <div className="relative flex items-center">
                 <LockKeyhole
-                  className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-400"
+                  className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-sky-400"
                   aria-hidden="true"
                 />
                 <input
@@ -293,7 +293,7 @@ export function CambiarPasswordPage() {
                   aria-describedby={
                     erroresCampo.confirmarPassword ? 'confirmar-password-error' : undefined
                   }
-                  className={`campo-base pl-11 pr-12 ${
+                  className={`campo-base pl-10 pr-10 ${
                     erroresCampo.confirmarPassword ? 'campo-invalido' : 'campo-valido'
                   }`}
                 />
@@ -306,7 +306,7 @@ export function CambiarPasswordPage() {
                       ? 'Ocultar confirmación de contraseña'
                       : 'Mostrar confirmación de contraseña'
                   }
-                  className="btn-squish absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-lg p-2 hover:bg-white/10"
+                  className="absolute right-3.5 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center rounded-lg p-1 hover:bg-white/10"
                   style={{ color: 'var(--ink-2)' }}
                 >
                   {verConfirmar ? (
