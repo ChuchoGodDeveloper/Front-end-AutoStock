@@ -138,9 +138,21 @@ export function VehiculoDetallePage() {
   const [avisoReubicacion, setAvisoReubicacion] = useState<string | null>(null)
   const [modalReubicacionAbierto, setModalReubicacionAbierto] = useState(false)
   const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false)
+  const [modalVentaAbierto, setModalVentaAbierto] = useState(false)
+  const [modalRevertirAbierto, setModalRevertirAbierto] = useState(false)
+  const [fechaVenta, setFechaVenta] = useState(new Date().toISOString().split('T')[0])
+  const asesorVentaId = typeof usuario?.id === 'number' ? usuario.id : 4
+  const [precioFinalVenta, setPrecioFinalVenta] = useState<string>('')
+  const [motivoReversion, setMotivoReversion] = useState('')
+  const [zonaReversion, setZonaReversion] = useState('Zona A')
+  const [cajonReversion, setCajonReversion] = useState('')
+  const [errorVenta, setErrorVenta] = useState<string | null>(null)
+  const [guardandoVenta, setGuardandoVenta] = useState(false)
   const [mensajeModoOffline, setMensajeModoOffline] = useState<string | null>(null)
   const encolar = useSyncStore((s) => s.encolar)
   const puedeReubicar = tienePermiso('asignar_cajon')
+  const esGerenteOAdmin = ROLES_SUPERIORES_RESERVA.includes(rol)
+  const puedeMarcarVendido = tienePermiso('marcar_vendido') || esGerenteOAdmin
 
   const cargarVehiculo = useCallback(async () => {
     if (!id) {
@@ -191,6 +203,79 @@ export function VehiculoDetallePage() {
     if (!vehiculo) return
     setIndiceImagen((actual) => Math.min(actual + 1, vehiculo.imagenes.length - 1))
     setFotoFallida(false)
+  }
+
+  const abrirModalVenta = () => {
+    if (!vehiculo) return
+    setFechaVenta(new Date().toISOString().split('T')[0])
+    setPrecioFinalVenta(String(vehiculo.precio))
+    setErrorVenta(null)
+    setModalVentaAbierto(true)
+  }
+
+  const confirmarVenta = async () => {
+    if (!vehiculo) return
+    const precioNumerico = Number(precioFinalVenta)
+    if (isNaN(precioNumerico) || precioNumerico <= 0) {
+      setErrorVenta('El precio final debe ser mayor a cero')
+      return
+    }
+
+    setGuardandoVenta(true)
+    setErrorVenta(null)
+    try {
+      const actualizado = await vehiculosService.marcarComoVendido(vehiculo.id, {
+        fechaVenta,
+        asesorId: asesorVentaId,
+        precioFinal: precioNumerico,
+      })
+      setVehiculo(actualizado)
+      actualizarVehiculoEnCatalogo(actualizado)
+      void guardarFichaTecnicaLocal(actualizado)
+      setModalVentaAbierto(false)
+    } catch (err) {
+      if (err instanceof HttpError) {
+        setErrorVenta(err.message)
+      } else {
+        setErrorVenta('No fue posible registrar la venta. Intenta de nuevo.')
+      }
+    } finally {
+      setGuardandoVenta(false)
+    }
+  }
+
+  const confirmarReversionVenta = async () => {
+    if (!vehiculo) return
+    if (!motivoReversion.trim() || motivoReversion.trim().length < 5) {
+      setErrorVenta('Debes capturar el motivo de la reversión (mínimo 5 caracteres)')
+      return
+    }
+    if (!cajonReversion.trim()) {
+      setErrorVenta('Debes asignar un cajón libre para la unidad')
+      return
+    }
+
+    setGuardandoVenta(true)
+    setErrorVenta(null)
+    try {
+      const actualizado = await vehiculosService.revertirVenta(vehiculo.id, {
+        motivo: motivoReversion.trim(),
+        zonaLote: zonaReversion,
+        cajonLote: cajonReversion.trim(),
+      })
+      setVehiculo(actualizado)
+      actualizarVehiculoEnCatalogo(actualizado)
+      void guardarFichaTecnicaLocal(actualizado)
+      setModalRevertirAbierto(false)
+    } catch (err) {
+      if (err instanceof HttpError) {
+        setErrorVenta(err.message)
+      } else {
+        setErrorVenta('No fue posible revertir la venta. Intenta de nuevo.')
+      }
+    } finally {
+      setGuardandoVenta(false)
+    }
   }
 
   const abrirModalCambioEstado = () => {
@@ -270,7 +355,6 @@ export function VehiculoDetallePage() {
   // Reglas de negocio HU-10 (CA 7 y CA 8)
   const estaVendido = vehiculo?.estado === EstadoOperativo.Vendido
   const estaReservado = vehiculo?.estado === EstadoOperativo.Reservado
-  const esGerenteOAdmin = ROLES_SUPERIORES_RESERVA.includes(rol)
 
   const tieneDuenoReserva = Boolean(
     vehiculo?.reservadoPorUsuarioId != null || vehiculo?.reservadoPorNombre?.trim(),
@@ -620,6 +704,40 @@ export function VehiculoDetallePage() {
                 >
                   <Pencil className="h-4 w-4 text-amber-400" aria-hidden="true" />
                   Editar Kilometraje / Datos
+                </button>
+              )}
+
+              {puedeMarcarVendido && !estaVendido && (
+                <button
+                  type="button"
+                  disabled={vehiculo.estado !== EstadoOperativo.Disponible && vehiculo.estado !== EstadoOperativo.Reservado}
+                  title={
+                    vehiculo.estado !== EstadoOperativo.Disponible && vehiculo.estado !== EstadoOperativo.Reservado
+                      ? 'La unidad debe estar Disponible o Reservada para poder marcarse como vendida'
+                      : undefined
+                  }
+                  onClick={abrirModalVenta}
+                  className="btn-squish flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 px-4 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg transition hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+                  Marcar como vendida
+                </button>
+              )}
+
+              {puedeMarcarVendido && estaVendido && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMotivoReversion('')
+                    setCajonReversion('')
+                    setErrorVenta(null)
+                    setModalRevertirAbierto(true)
+                  }}
+                  className="v-glass tone--coral btn-squish flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-xs font-extrabold uppercase tracking-wider shadow-lg"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  <RefreshCw className="h-4 w-4 text-rose-400" aria-hidden="true" />
+                  Revertir venta
                 </button>
               )}
             </section>
@@ -1010,6 +1128,168 @@ export function VehiculoDetallePage() {
               actualizarVehiculoEnCatalogo(actualizado)
             }}
           />
+
+          {/* Modal Marcar Como Vendida */}
+          <LiquidModal
+            open={modalVentaAbierto}
+            ariaLabel="Marcar unidad como vendida"
+          >
+            <div className="v-glass v-glass--thick max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-2xl space-y-4">
+              <h3 className="text-lg font-black" style={{ color: 'var(--ink)' }}>
+                Marcar unidad como vendida
+              </h3>
+              <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>
+                Registra la salida del inventario activo para {vehiculo.marca} {vehiculo.modelo} ({vehiculo.numeroStock}).
+              </p>
+
+              {errorVenta && (
+                <div className="v-glass tone--coral flex items-center gap-2 rounded-xl p-3 text-xs font-bold text-rose-400">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{errorVenta}</span>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold block mb-1" style={{ color: 'var(--ink)' }}>
+                    Fecha de venta
+                  </label>
+                  <input
+                    type="date"
+                    value={fechaVenta}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setFechaVenta(e.target.value)}
+                    className="v-glass w-full rounded-xl px-3 py-2 text-xs font-semibold"
+                    style={{ color: 'var(--ink)' }}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold block mb-1" style={{ color: 'var(--ink)' }}>
+                    Precio final (MXN)
+                  </label>
+                  <input
+                    type="number"
+                    value={precioFinalVenta}
+                    onChange={(e) => setPrecioFinalVenta(e.target.value)}
+                    className="v-glass w-full rounded-xl px-3 py-2 text-xs font-semibold"
+                    style={{ color: 'var(--ink)' }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setModalVentaAbierto(false)}
+                  className="v-glass rounded-xl px-4 py-2 text-xs font-bold"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={guardandoVenta}
+                  onClick={() => void confirmarVenta()}
+                  className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 px-5 py-2 text-xs font-bold text-white shadow-lg disabled:opacity-50"
+                >
+                  {guardandoVenta ? 'Guardando...' : 'Confirmar venta'}
+                </button>
+              </div>
+            </div>
+          </LiquidModal>
+
+          {/* Modal Revertir Venta */}
+          <LiquidModal
+            open={modalRevertirAbierto}
+            ariaLabel="Revertir venta de unidad"
+          >
+            <div className="v-glass v-glass--thick max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-2xl space-y-4">
+              <h3 className="text-lg font-black" style={{ color: 'var(--ink)' }}>
+                Revertir venta de unidad
+              </h3>
+              <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>
+                La unidad regresará al catálogo con estado Disponible. Debes asignar una nueva ubicación libre.
+              </p>
+
+              {errorVenta && (
+                <div className="v-glass tone--coral flex items-center gap-2 rounded-xl p-3 text-xs font-bold text-rose-400">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{errorVenta}</span>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold block mb-1" style={{ color: 'var(--ink)' }}>
+                    Motivo de anulación
+                  </label>
+                  <textarea
+                    value={motivoReversion}
+                    onChange={(e) => setMotivoReversion(e.target.value)}
+                    placeholder="Ej. El cliente canceló el financiamiento"
+                    rows={3}
+                    className="v-glass w-full rounded-xl px-3 py-2 text-xs font-semibold"
+                    style={{ color: 'var(--ink)' }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold block mb-1" style={{ color: 'var(--ink)' }}>
+                      Zona del lote
+                    </label>
+                    <select
+                      value={zonaReversion}
+                      onChange={(e) => setZonaReversion(e.target.value)}
+                      className="v-glass w-full rounded-xl px-3 py-2 text-xs font-semibold"
+                      style={{ color: 'var(--ink)' }}
+                    >
+                      <option value="Zona A">Zona A</option>
+                      <option value="Zona B">Zona B</option>
+                      <option value="Zona C">Zona C</option>
+                      <option value="Taller">Taller</option>
+                      <option value="Lavado">Lavado</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold block mb-1" style={{ color: 'var(--ink)' }}>
+                      Cajón libre
+                    </label>
+                    <input
+                      type="text"
+                      value={cajonReversion}
+                      maxLength={6}
+                      onChange={(e) => setCajonReversion(e.target.value.toUpperCase())}
+                      placeholder="Ej. A-01"
+                      className="v-glass w-full rounded-xl px-3 py-2 text-xs font-semibold"
+                      style={{ color: 'var(--ink)' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setModalRevertirAbierto(false)}
+                  className="v-glass rounded-xl px-4 py-2 text-xs font-bold"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={guardandoVenta}
+                  onClick={() => void confirmarReversionVenta()}
+                  className="rounded-xl bg-rose-600 px-5 py-2 text-xs font-bold text-white shadow-lg disabled:opacity-50"
+                >
+                  {guardandoVenta ? 'Revirtiendo...' : 'Confirmar reversión'}
+                </button>
+              </div>
+            </div>
+          </LiquidModal>
         </>
       )}
     </main>
