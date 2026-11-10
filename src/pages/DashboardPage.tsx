@@ -29,12 +29,22 @@ interface ResumenMetricas {
   disponibles: number
   pruebaDeManejo: number
   enTaller: number
+  fechaHoraServidor?: string
+  ultimosMovimientos?: {
+    id: string
+    vehiculoTitulo: string
+    numeroStock: string
+    estadoNuevo: string
+    cambiadoPor: string
+    fechaCambio: string
+  }[]
 }
 
 const RESUMEN_VACIO: ResumenMetricas = {
   disponibles: 0,
   pruebaDeManejo: 0,
   enTaller: 0,
+  ultimosMovimientos: [],
 }
 
 const ROL_ADMINISTRADOR = 'Administrador'
