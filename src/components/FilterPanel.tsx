@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Check, SlidersHorizontal, X } from 'lucide-react'
 import { FILTROS_VACIOS, useCatalogoStore } from '../stores/catalogoStore'
 import { EstadoOperativo, TipoVehiculo } from '../types/vehiculo'
+import { LiquidModal } from './LiquidUI'
 
 const OPCIONES_ESTADO: { valor: EstadoOperativo; etiqueta: string }[] = [
   { valor: EstadoOperativo.Disponible, etiqueta: 'Disponible' },
@@ -97,17 +98,16 @@ export function FilterPanel({ abierto, onCerrar }: { abierto: boolean; onCerrar:
   if (!abierto) return null
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Filtros de inventario"
+    <LiquidModal
+      open={abierto}
+      ariaLabel="Filtros de inventario"
+      alignClass="items-end sm:items-center justify-center p-0 sm:p-4"
     >
       <button
         type="button"
         aria-label="Cerrar filtros"
         onClick={onCerrar}
-        className="absolute inset-0 h-full w-full bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 h-full w-full bg-transparent"
       />
 
       <div className="v-glass v-glass--thick relative z-10 w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl">
@@ -257,6 +257,6 @@ export function FilterPanel({ abierto, onCerrar }: { abierto: boolean; onCerrar:
           </button>
         </div>
       </div>
-    </div>
+    </LiquidModal>
   )
 }

@@ -11,7 +11,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
+import { LiquidModal, SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { HttpError } from '../services/httpClient'
@@ -465,81 +465,83 @@ export function PermisosPage() {
         </SpotlightCard>
 
         {/* Modal de Confirmación para Restablecer Valores Iniciales (Criterio 7) */}
-        {modalConfirmarRestablecer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-md p-4">
-            <div className="v-glass v-glass--thick tone--orange w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4">
-              <div className="flex items-center gap-3 text-amber-600">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20">
-                  <RotateCcw className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-slate-900">
-                  ¿Restablecer valores iniciales?
-                </h3>
+        <LiquidModal
+          open={modalConfirmarRestablecer}
+          ariaLabel="Confirmar restablecer valores iniciales"
+        >
+          <div className="v-glass v-glass--thick tone--orange max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-amber-600">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20">
+                <RotateCcw className="h-5 w-5" />
               </div>
-              <p className="text-sm text-slate-600">
-                Esta acción sobrescribirá las modificaciones actuales y restaurará la matriz base recomendada para
-                Asesor de Ventas, Encargado de Lote y Gerente.
-              </p>
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setModalConfirmarRestablecer(false)}
-                  disabled={restableciendo}
-                  className="btn-squish v-glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void confirmarRestablecer()}
-                  disabled={restableciendo}
-                  className="btn-squish rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700 transition shadow-sm"
-                >
-                  {restableciendo ? 'Restableciendo...' : 'Sí, restablecer'}
-                </button>
-              </div>
+              <h3 className="text-base font-bold text-slate-900">
+                ¿Restablecer valores iniciales?
+              </h3>
+            </div>
+            <p className="text-sm text-slate-600">
+              Esta acción sobrescribirá las modificaciones actuales y restaurará la matriz base recomendada para
+              Asesor de Ventas, Encargado de Lote y Gerente.
+            </p>
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setModalConfirmarRestablecer(false)}
+                disabled={restableciendo}
+                className="btn-squish v-glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmarRestablecer()}
+                disabled={restableciendo}
+                className="btn-squish rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700 transition shadow-sm"
+              >
+                {restableciendo ? 'Restableciendo...' : 'Sí, restablecer'}
+              </button>
             </div>
           </div>
-        )}
+        </LiquidModal>
 
         {/* Modal de Advertencia de Salida con Cambios sin Guardar (Criterio 6) */}
-        {modalDescartarCambios && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-md p-4">
-            <div className="v-glass v-glass--thick tone--coral w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4">
-              <div className="flex items-center gap-3 text-red-600">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/20">
-                  <AlertTriangle className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-slate-900">
-                  Tienes cambios sin guardar
-                </h3>
+        <LiquidModal
+          open={modalDescartarCambios}
+          ariaLabel="Cambios sin guardar"
+        >
+          <div className="v-glass v-glass--thick tone--coral max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/20">
+                <AlertTriangle className="h-5 w-5" />
               </div>
-              <p className="text-sm text-slate-600">
-                Realizaste cambios en la matriz de permisos que aún no han sido guardados. Si sales ahora, se descartarán
-                todas las modificaciones realizadas.
-              </p>
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setModalDescartarCambios(false)}
-                  className="btn-squish v-glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 transition"
-                >
-                  Continuar editando
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setModalDescartarCambios(false)
-                    navigate('/dashboard')
-                  }}
-                  className="btn-squish rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 transition shadow-sm"
-                >
-                  Descartar y salir
-                </button>
-              </div>
+              <h3 className="text-base font-bold text-slate-900">
+                Tienes cambios sin guardar
+              </h3>
+            </div>
+            <p className="text-sm text-slate-600">
+              Realizaste cambios en la matriz de permisos que aún no han sido guardados. Si sales ahora, se descartarán
+              todas las modificaciones realizadas.
+            </p>
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setModalDescartarCambios(false)}
+                className="btn-squish v-glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 transition"
+              >
+                Continuar editando
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setModalDescartarCambios(false)
+                  navigate('/dashboard')
+                }}
+                className="btn-squish rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 transition shadow-sm"
+              >
+                Descartar y salir
+              </button>
             </div>
           </div>
-        )}
+        </LiquidModal>
       </div>
     </main>
   )

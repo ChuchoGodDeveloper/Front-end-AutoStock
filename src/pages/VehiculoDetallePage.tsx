@@ -25,7 +25,7 @@ import {
   X,
 } from 'lucide-react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
+import { LiquidModal, SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { ModalEdicionKilometraje } from '../components/ModalEdicionKilometraje'
 import { ModalReubicacion } from '../components/ModalReubicacion'
 import { VehicleSilhouette } from '../components/ShowroomWall'
@@ -381,7 +381,7 @@ export function VehiculoDetallePage() {
               tone={estiloEstado?.tono ?? 'ink'}
               className="overflow-hidden rounded-3xl"
             >
-              <div className="relative h-64 w-full border-b border-white/10 bg-black/35">
+              <div className="relative h-72 sm:h-80 md:h-96 w-full overflow-hidden border-b border-white/10 bg-black/35">
                 {urlImagen ? (
                   <img
                     src={urlImagen}
@@ -404,13 +404,13 @@ export function VehiculoDetallePage() {
                 )}
 
                 {imagenActual?.tipoToma && (
-                  <span className="absolute bottom-3 left-3 rounded-full bg-black/75 border border-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+                  <span className="absolute bottom-3 left-3 z-10 rounded-full bg-black/75 border border-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
                     {obtenerEtiquetaToma(imagenActual.tipoToma)}
                   </span>
                 )}
 
                 {totalImagenes > 0 && (
-                  <span className="absolute bottom-3 right-3 rounded-full bg-black/75 border border-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+                  <span className="absolute bottom-3 right-3 z-10 rounded-full bg-black/75 border border-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
                     {`${indiceImagen + 1}/${totalImagenes}`}
                   </span>
                 )}
@@ -422,7 +422,7 @@ export function VehiculoDetallePage() {
                       onClick={imagenAnterior}
                       disabled={indiceImagen === 0}
                       aria-label="Imagen anterior"
-                      className="btn-squish absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/70 text-white border border-white/20 shadow-lg transition hover:bg-black/90 disabled:opacity-40"
+                      className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/70 text-white border border-white/20 shadow-lg transition hover:bg-black/90 active:scale-95 disabled:opacity-40"
                     >
                       <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                     </button>
@@ -431,7 +431,7 @@ export function VehiculoDetallePage() {
                       onClick={imagenSiguiente}
                       disabled={indiceImagen === totalImagenes - 1}
                       aria-label="Imagen siguiente"
-                      className="btn-squish absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/70 text-white border border-white/20 shadow-lg transition hover:bg-black/90 disabled:opacity-40"
+                      className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/70 text-white border border-white/20 shadow-lg transition hover:bg-black/90 active:scale-95 disabled:opacity-40"
                     >
                       <ChevronRight className="h-5 w-5" aria-hidden="true" />
                     </button>
@@ -780,15 +780,13 @@ export function VehiculoDetallePage() {
         )}
       </div>
 
-      {/* Modal de Cambio de Estado Operativo (HU-10) */}
-      {modalEstadoAbierto && vehiculo && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="titulo-modal-estado"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-        >
-          <div className="v-glass v-glass--thick max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-2xl">
+      {/* Modal de Cambio de Estado Operativo (HU-10) renderizado en document.body */}
+      <LiquidModal
+        open={modalEstadoAbierto && Boolean(vehiculo)}
+        ariaLabelledBy="titulo-modal-estado"
+      >
+        {vehiculo && (
+          <div className="v-glass v-glass--thick max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-2 pb-3 border-b border-white/10">
               <div>
                 <p
@@ -929,8 +927,8 @@ export function VehiculoDetallePage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </LiquidModal>
 
       {vehiculo && (
         <>

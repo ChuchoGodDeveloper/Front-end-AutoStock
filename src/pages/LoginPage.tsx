@@ -156,9 +156,9 @@ export function LoginPage() {
                   *
                 </span>
               </label>
-              <div className="relative">
+              <div className="relative flex items-center">
                 <UserRound
-                  className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-400"
+                  className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-sky-400"
                   aria-hidden="true"
                 />
                 <input
@@ -177,7 +177,7 @@ export function LoginPage() {
                   disabled={iniciandoSesion}
                   aria-invalid={Boolean(erroresCampo.credencial)}
                   aria-describedby={erroresCampo.credencial ? 'credencial-error' : undefined}
-                  className={`campo-base pl-11 ${
+                  className={`campo-base pl-10 pr-4 ${
                     erroresCampo.credencial ? 'campo-invalido' : 'campo-valido'
                   }`}
                 />
@@ -204,9 +204,9 @@ export function LoginPage() {
                   *
                 </span>
               </label>
-              <div className="relative">
+              <div className="relative flex items-center">
                 <LockKeyhole
-                  className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-400"
+                  className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-sky-400"
                   aria-hidden="true"
                 />
                 <input
@@ -223,7 +223,7 @@ export function LoginPage() {
                   disabled={iniciandoSesion}
                   aria-invalid={Boolean(erroresCampo.password)}
                   aria-describedby={erroresCampo.password ? 'password-error' : undefined}
-                  className={`campo-base pl-11 pr-12 ${
+                  className={`campo-base pl-10 pr-10 ${
                     erroresCampo.password ? 'campo-invalido' : 'campo-valido'
                   }`}
                 />
@@ -232,7 +232,7 @@ export function LoginPage() {
                   onClick={() => setVerPassword((valor) => !valor)}
                   aria-pressed={verPassword}
                   aria-label={verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  className="btn-squish absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-lg p-2 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                  className="absolute right-3.5 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center rounded-lg p-1 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                   style={{ color: 'var(--ink-2)' }}
                 >
                   {verPassword ? (
