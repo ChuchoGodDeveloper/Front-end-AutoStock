@@ -9,7 +9,9 @@ import type {
   PaginaCatalogo,
   ActualizarKilometrajePayload,
   RegistrarVehiculoDto,
+  RegistrarVentaPayload,
   ReubicarVehiculoPayload,
+  RevertirVentaPayload,
   VehiculoDetalle,
 } from '../types/vehiculo'
 
@@ -92,6 +94,18 @@ export const vehiculosService = {
   actualizarKilometrajeYNotas: (vehiculoId: string, datos: ActualizarKilometrajePayload) =>
     apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/kilometraje-notas`, {
       method: 'PUT',
+      body: JSON.stringify(datos),
+    }).then(normalizarVehiculoDetalle),
+
+  marcarComoVendido: (vehiculoId: string, datos: RegistrarVentaPayload) =>
+    apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/marcar-vendido`, {
+      method: 'POST',
+      body: JSON.stringify(datos),
+    }).then(normalizarVehiculoDetalle),
+
+  revertirVenta: (vehiculoId: string, datos: RevertirVentaPayload) =>
+    apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/revertir-venta`, {
+      method: 'POST',
       body: JSON.stringify(datos),
     }).then(normalizarVehiculoDetalle),
 }

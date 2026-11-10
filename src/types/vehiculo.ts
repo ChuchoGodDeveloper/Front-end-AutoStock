@@ -118,6 +118,7 @@ export interface VehiculoDetalle extends Vehiculo {
   imagenes: ImagenVehiculo[]
   historialEstados?: HistorialEstadoVehiculo[]
   historialUbicaciones?: HistorialUbicacionVehiculo[]
+  ultimaVenta?: VentaDetalle | null
 }
 
 export interface RegistrarVehiculoDto {
@@ -198,4 +199,29 @@ export interface ActualizarKilometrajePayload {
   kilometraje: number
   notasInspeccion?: string | null
   motivoCorreccion?: string | null
+}
+
+export interface RegistrarVentaPayload {
+  fechaVenta: string
+  asesorId: number
+  precioFinal: number
+}
+
+export interface RevertirVentaPayload {
+  motivo: string
+  zonaLote: string
+  cajonLote: string
+}
+
+export interface VentaDetalle {
+  id: string
+  vehiculoId: string
+  fechaVenta: string
+  asesorId: number
+  asesorNombre: string
+  precioFinal: number
+  fechaRegistro: string
+  registradoPorNombre: string
+  anulada: boolean
+  motivoAnulacion?: string | null
 }
