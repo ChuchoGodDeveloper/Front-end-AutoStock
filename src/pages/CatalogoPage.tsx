@@ -53,6 +53,22 @@ export function CatalogoPage() {
     totalUnidades === 0 &&
     vehiculos.length === 0
 
+  const [notificacionReconexion, setNotificacionReconexion] = useState(false)
+  const fueOffline = useRef(false)
+
+  useEffect(() => {
+    if (!enLinea) {
+      fueOffline.current = true
+    } else if (fueOffline.current) {
+      fueOffline.current = false
+      setNotificacionReconexion(true)
+      void useCatalogoStore.getState().cargarMasVehiculos(true)
+      void useCatalogoStore.getState().cargarConteosRapidos()
+      const timer = setTimeout(() => setNotificacionReconexion(false), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [enLinea])
+
   useEffect(() => {
     const { vehiculos: cargados, cargando: enCarga } = useCatalogoStore.getState()
 
@@ -61,6 +77,15 @@ export function CatalogoPage() {
     if (cargados.length === 0 && !enCarga) {
       void useCatalogoStore.getState().cargarMasVehiculos(true)
     }
+
+    // Auto-actualización cada 15 minutos si hay conexión
+    const intervalo = setInterval(() => {
+      if (navigator.onLine) {
+        void useCatalogoStore.getState().sincronizarCacheCompleta()
+      }
+    }, 15 * 60 * 1000)
+
+    return () => clearInterval(intervalo)
   }, [])
 
   useEffect(() => {
@@ -93,7 +118,7 @@ export function CatalogoPage() {
   return (
     <main className="showroom-page">
       <div className="mx-auto w-full max-w-6xl space-y-6">
-        <OfflineBanner visible={!enLinea} />
+        <OfflineBanner visible={!enLinea} mensajeReconexion={notificacionReconexion} />
 
         <SpotlightCard as="header" tone="ink" className="p-6">
           <div className="flex items-start justify-between gap-3">

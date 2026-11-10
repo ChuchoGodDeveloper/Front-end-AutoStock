@@ -8,6 +8,7 @@ import {
   guardarSesion,
   leerSesion,
 } from '../services/sessionDb'
+import { limpiarInventarioLocal } from '../services/offlineDb'
 import type { SesionActiva, UsuarioSesion } from '../types/sesion'
 
 export const DURACION_SESION_HORAS = 8
@@ -275,6 +276,7 @@ export const useAuthStore = create<EstadoAuth>()((set, get) => ({
     }
 
     await borrarSesion()
+    await limpiarInventarioLocal()
     setAccessToken(null)
     set({
       token: null,

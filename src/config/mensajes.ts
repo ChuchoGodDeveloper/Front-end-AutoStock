@@ -8,6 +8,10 @@ export const MENSAJES = {
   sinConexionLogin: 'Se requiere conexión para iniciar sesión por primera vez',
   errorInesperado: 'No se pudo iniciar sesión. Intenta de nuevo',
   bannerOffline: 'Modo sin conexión — Los datos mostrados son locales',
+  offlinePrimeraDescarga: 'Conéctate a internet una vez para descargar el inventario',
+  offlineDatosActualizados: 'Datos actualizados',
+  offlineDatosAntiguosAviso:
+    'Los datos tienen más de 24 horas sin actualizarse. Verifica el estado cuando vuelva la señal.',
   accesoRestringido: 'Inicia sesión para continuar',
   sinActividad: 'Sin actividad reciente',
   moduloProximamente: 'Disponible en los siguientes sprints',

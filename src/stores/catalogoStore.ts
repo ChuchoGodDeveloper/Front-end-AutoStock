@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { MENSAJES } from '../config/mensajes'
 import { vehiculosService } from '../services/vehiculosService'
+import {
+  guardarInventarioLocal,
+  leerInventarioLocal,
+  leerMetaInventario,
+  type MetaInventario,
+} from '../services/offlineDb'
 import type { ConteosRapidos, FiltrosCatalogo, Vehiculo, VehiculoDetalle } from '../types/vehiculo'
 
 export const TAMANO_PAGINA_CATALOGO = 20
@@ -31,6 +37,42 @@ function filtrosIguales(a: FiltrosCatalogo, b: FiltrosCatalogo): boolean {
   )
 }
 
+function filtrarVehiculosLocales(
+  vehiculos: Vehiculo[],
+  busqueda: string,
+  filtros: FiltrosCatalogo,
+): Vehiculo[] {
+  let resultado = vehiculos
+
+  if (busqueda && busqueda.trim()) {
+    const q = busqueda.trim().toLowerCase().replace(/[-\s]/g, '')
+    resultado = resultado.filter((v) => {
+      const matchMarca = v.marca.toLowerCase().replace(/[-\s]/g, '').includes(q)
+      const matchModelo = v.modelo.toLowerCase().replace(/[-\s]/g, '').includes(q)
+      const matchPlaca = v.placa?.toLowerCase().replace(/[-\s]/g, '').includes(q) ?? false
+      return matchMarca || matchModelo || matchPlaca
+    })
+  }
+
+  if (filtros.estados.length > 0) {
+    resultado = resultado.filter((v) => filtros.estados.includes(v.estado))
+  }
+
+  if (filtros.tipo != null) {
+    resultado = resultado.filter((v) => v.tipo === filtros.tipo)
+  }
+
+  if (filtros.precioMin != null) {
+    resultado = resultado.filter((v) => v.precio >= (filtros.precioMin ?? 0))
+  }
+
+  if (filtros.precioMax != null) {
+    resultado = resultado.filter((v) => v.precio <= (filtros.precioMax ?? Infinity))
+  }
+
+  return resultado
+}
+
 interface EstadoCatalogo {
   vehiculos: Vehiculo[]
   totalUnidades: number
@@ -41,12 +83,15 @@ interface EstadoCatalogo {
   terminoBusqueda: string
   filtros: FiltrosCatalogo
   conteos: ConteosRapidos
+  metaOffline: MetaInventario | null
+  esModoOffline: boolean
   cargarMasVehiculos: (resetear?: boolean) => Promise<void>
   setTerminoBusqueda: (busqueda: string) => Promise<void>
   setFiltros: (nuevosFiltros: FiltrosCatalogo) => Promise<void>
   cargarConteosRapidos: () => Promise<void>
   invalidarCatalogo: () => void
   actualizarVehiculoEnCatalogo: (actualizado: VehiculoDetalle) => void
+  sincronizarCacheCompleta: () => Promise<void>
 }
 
 export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
@@ -62,6 +107,8 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
     terminoBusqueda: '',
     filtros: FILTROS_VACIOS,
     conteos: { todos: 0, disponibles: 0, seminuevos: 0, nuevos: 0 },
+    metaOffline: null,
+    esModoOffline: false,
 
     cargarMasVehiculos: async (resetear = false) => {
       const { cargando, hayMas, error, paginaActual, vehiculos, terminoBusqueda, filtros } = get()
@@ -103,14 +150,37 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
           paginaActual: paginaResultante,
           hayMas: acumulados.length < totalUnidades,
           cargando: false,
+          esModoOffline: false,
         })
+
+        // Guardar silenciosamente en cache local
+        void guardarInventarioLocal(acumulados)
       } catch {
         if (solicitud !== solicitudActual) return
 
-        set({
-          cargando: false,
-          error: MENSAJES.errorCatalogo,
-        })
+        // Fallback a IndexedDB
+        const cache = await leerInventarioLocal()
+        const meta = await leerMetaInventario()
+
+        if (cache.length > 0) {
+          const filtrados = filtrarVehiculosLocales(cache, terminoBusqueda, filtros)
+          set({
+            vehiculos: filtrados,
+            totalUnidades: filtrados.length,
+            paginaActual: 1,
+            hayMas: false,
+            cargando: false,
+            error: null,
+            esModoOffline: true,
+            metaOffline: meta,
+          })
+        } else {
+          set({
+            cargando: false,
+            esModoOffline: true,
+            error: MENSAJES.offlinePrimeraDescarga,
+          })
+        }
       }
     },
 
@@ -135,7 +205,22 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
         const conteos = await vehiculosService.obtenerConteosRapidos()
         set({ conteos })
       } catch {
-        set({ conteos: { todos: 0, disponibles: 0, seminuevos: 0, nuevos: 0 } })
+        const cache = await leerInventarioLocal()
+        if (cache.length > 0) {
+          const disponibles = cache.filter((v) => v.estado === 'Disponible').length
+          const seminuevos = cache.filter((v) => v.tipo === 2).length
+          const nuevos = cache.filter((v) => v.tipo === 1).length
+          set({
+            conteos: {
+              todos: cache.length,
+              disponibles,
+              seminuevos,
+              nuevos,
+            },
+          })
+        } else {
+          set({ conteos: { todos: 0, disponibles: 0, seminuevos: 0, nuevos: 0 } })
+        }
       }
     },
 
@@ -171,6 +256,19 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
       }
 
       void get().cargarConteosRapidos()
+    },
+
+    sincronizarCacheCompleta: async () => {
+      try {
+        const respuesta = await vehiculosService.obtenerCatalogo(1, 100)
+        if (respuesta.items && respuesta.items.length > 0) {
+          await guardarInventarioLocal(respuesta.items)
+          const meta = await leerMetaInventario()
+          set({ metaOffline: meta })
+        }
+      } catch {
+        // Ignorar si falla en segundo plano
+      }
     },
   }
 })
