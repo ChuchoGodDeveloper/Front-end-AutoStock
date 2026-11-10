@@ -1,0 +1,25 @@
+# Dependencias y compilación Frontend
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+
+# Archivos lock y empaquetados (gastan miles de tokens)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+*.min.js
+*.min.css
+*.map
+
+# Multimedia y variables de entorno
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.ico
+*.webp
+*.mp4
+.env
+.env.*
