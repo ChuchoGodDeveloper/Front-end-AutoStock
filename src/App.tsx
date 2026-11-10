@@ -14,6 +14,7 @@ import { RecuperarPasswordPage } from './pages/RecuperarPasswordPage'
 import { RestablecerPasswordPage } from './pages/RestablecerPasswordPage'
 import { NuevoUsuarioPage } from './pages/NuevoUsuarioPage'
 import { PermisosPage } from './pages/PermisosPage'
+import { MetricasPage } from './pages/MetricasPage'
 import { RegistroVehiculoPage } from './pages/RegistroVehiculoPage'
 import { UsuariosPage } from './pages/UsuariosPage'
 import { VehiculoDetallePage } from './pages/VehiculoDetallePage'
@@ -59,6 +60,14 @@ export default function App() {
             <ProtectedRoute>
               <PendientesPage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/metricas"
+          element={
+            <PermisoRoute codigoPermiso="ver_metricas_lote">
+              <MetricasPage />
+            </PermisoRoute>
           }
         />
         <Route
