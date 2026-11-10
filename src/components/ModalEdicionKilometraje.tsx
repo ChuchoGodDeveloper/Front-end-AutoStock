@@ -11,6 +11,7 @@ import { HttpError } from '../services/httpClient'
 import { vehiculosService } from '../services/vehiculosService'
 import { useAuthStore } from '../stores/authStore'
 import type { VehiculoDetalle } from '../types/vehiculo'
+import { LiquidModal } from './LiquidUI'
 
 interface ModalEdicionKilometrajeProps {
   abierto: boolean
@@ -161,13 +162,8 @@ export function ModalEdicionKilometraje({
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="titulo-modal-edicion-kilometraje"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm"
-    >
-      <div className="v-glass v-glass--thick w-full max-w-lg rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+    <LiquidModal open={abierto} ariaLabelledBy="titulo-modal-edicion-kilometraje">
+      <div className="v-glass v-glass--thick w-full max-w-lg rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[85vh]">
         {/* Cabecera */}
         <div className="flex items-center justify-between pb-3 border-b border-white/10">
           <div className="flex items-center gap-2.5">
@@ -266,7 +262,7 @@ export function ModalEdicionKilometraje({
                 </strong>
               </span>
             </div>
-            <div className="relative">
+            <div className="relative flex items-center">
               <input
                 id="input-kilometraje"
                 type="text"
@@ -276,10 +272,10 @@ export function ModalEdicionKilometraje({
                 value={kilometrajeInput}
                 onChange={(e) => manejarCambioKm(e.target.value)}
                 placeholder="Ej. 45000"
-                className="campo-base campo-valido py-2.5 font-mono text-sm font-bold"
+                className="campo-base campo-valido py-2.5 pr-12 font-mono text-sm font-bold"
               />
               <span
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold"
+                className="pointer-events-none absolute right-3.5 top-1/2 z-10 -translate-y-1/2 text-xs font-bold"
                 style={{ color: 'var(--ink-3)' }}
               >
                 km
@@ -420,55 +416,52 @@ export function ModalEdicionKilometraje({
       </div>
 
       {/* Diálogo de Confirmación de Descarte (CA 7) */}
-      {mostrarConfirmacionDescarte && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="titulo-dialogo-descarte"
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
-        >
-          <div className="v-glass v-glass--thick w-full max-w-sm rounded-2xl p-5 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-400/30 shrink-0">
-                <AlertTriangle className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div>
-                <h4
-                  id="titulo-dialogo-descarte"
-                  className="text-sm font-black"
-                  style={{ color: 'var(--ink)' }}
-                >
-                  ¿Descartar cambios?
-                </h4>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
-                  Tienes modificaciones sin guardar. Si sales ahora, se perderán los cambios realizados.
-                </p>
-              </div>
+      <LiquidModal
+        open={mostrarConfirmacionDescarte}
+        ariaLabelledBy="titulo-dialogo-descarte"
+        zIndexClass="z-[115]"
+      >
+        <div className="v-glass v-glass--thick max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-2xl p-5 shadow-2xl">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-400/30 shrink-0">
+              <AlertTriangle className="h-5 w-5" aria-hidden="true" />
             </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => setMostrarConfirmacionDescarte(false)}
-                className="v-glass btn-squish rounded-xl px-3 py-2 text-xs font-bold"
+            <div>
+              <h4
+                id="titulo-dialogo-descarte"
+                className="text-sm font-black"
                 style={{ color: 'var(--ink)' }}
               >
-                Continuar editando
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMostrarConfirmacionDescarte(false)
-                  onCerrar()
-                }}
-                className="btn-squish rounded-xl bg-rose-600 px-3 py-2 text-xs font-bold text-white hover:bg-rose-500 shadow-md"
-              >
-                Descartar y salir
-              </button>
+                ¿Descartar cambios?
+              </h4>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                Tienes modificaciones sin guardar. Si sales ahora, se perderán los cambios realizados.
+              </p>
             </div>
           </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              onClick={() => setMostrarConfirmacionDescarte(false)}
+              className="v-glass btn-squish rounded-xl px-3 py-2 text-xs font-bold"
+              style={{ color: 'var(--ink)' }}
+            >
+              Continuar editando
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMostrarConfirmacionDescarte(false)
+                onCerrar()
+              }}
+              className="btn-squish rounded-xl bg-rose-600 px-3 py-2 text-xs font-bold text-white hover:bg-rose-500 shadow-md"
+            >
+              Descartar y salir
+            </button>
+          </div>
         </div>
-      )}
-    </div>
+      </LiquidModal>
+    </LiquidModal>
   )
 }
