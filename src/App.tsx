@@ -17,6 +17,7 @@ import { PermisosPage } from './pages/PermisosPage'
 import { RegistroVehiculoPage } from './pages/RegistroVehiculoPage'
 import { UsuariosPage } from './pages/UsuariosPage'
 import { VehiculoDetallePage } from './pages/VehiculoDetallePage'
+import { PendientesPage } from './pages/PendientesPage'
 import { useAuthStore } from './stores/authStore'
 
 export default function App() {
@@ -49,6 +50,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pendientes"
+          element={
+            <ProtectedRoute>
+              <PendientesPage />
             </ProtectedRoute>
           }
         />
