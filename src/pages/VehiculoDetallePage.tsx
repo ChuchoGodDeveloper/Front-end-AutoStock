@@ -35,6 +35,7 @@ import { inferirSiluetaVehiculo } from '../hooks/useShowroomEffects'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { guardarFichaTecnicaLocal, leerFichaTecnicaLocal } from '../services/offlineDb'
+import { useSyncStore } from '../services/syncService'
 import { HttpError } from '../services/httpClient'
 import { vehiculosService } from '../services/vehiculosService'
 import { useAuthStore } from '../stores/authStore'
@@ -137,6 +138,8 @@ export function VehiculoDetallePage() {
   const [avisoReubicacion, setAvisoReubicacion] = useState<string | null>(null)
   const [modalReubicacionAbierto, setModalReubicacionAbierto] = useState(false)
   const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false)
+  const [mensajeModoOffline, setMensajeModoOffline] = useState<string | null>(null)
+  const encolar = useSyncStore((s) => s.encolar)
   const puedeReubicar = tienePermiso('asignar_cajon')
 
   const cargarVehiculo = useCallback(async () => {
@@ -211,12 +214,37 @@ export function VehiculoDetallePage() {
     setGuardandoEstado(true)
     setErrorCambioEstado(null)
 
+    if (!enLinea) {
+      // Registrar cambio sin conexión en cola y en estado local
+      const datosPayload = { nuevoEstado: estadoSeleccionado }
+      await encolar(
+        'CAMBIO_ESTADO',
+        `Cambio de estado: ${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.numeroStock}) a ${estadoSeleccionado}`,
+        datosPayload,
+        vehiculo.id,
+      )
+
+      const vehiculoActualizadoLocal: VehiculoDetalle = {
+        ...vehiculo,
+        estado: estadoSeleccionado,
+      }
+      setVehiculo(vehiculoActualizadoLocal)
+      actualizarVehiculoEnCatalogo(vehiculoActualizadoLocal)
+      void guardarFichaTecnicaLocal(vehiculoActualizadoLocal)
+      setModalEstadoAbierto(false)
+      setGuardandoEstado(false)
+      setMensajeModoOffline('El cambio se guardó en modo sin conexión • Pendiente de sincronizar')
+      setTimeout(() => setMensajeModoOffline(null), 5000)
+      return
+    }
+
     try {
       const actualizado = await vehiculosService.cambiarEstadoOperativo(vehiculo.id, {
         nuevoEstado: estadoSeleccionado,
       })
       setVehiculo(actualizado)
       actualizarVehiculoEnCatalogo(actualizado)
+      void guardarFichaTecnicaLocal(actualizado)
       setModalEstadoAbierto(false)
     } catch (err) {
       if (err instanceof HttpError) {
@@ -270,6 +298,25 @@ export function VehiculoDetallePage() {
     <main className="showroom-page">
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <OfflineBanner visible={!enLinea} />
+        {mensajeModoOffline && (
+          <div
+            role="status"
+            className="v-glass tone--orange flex items-center justify-between gap-3 rounded-2xl p-4 text-xs font-bold shadow-lg"
+            style={{ color: 'var(--ink)' }}
+          >
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-amber-400 shrink-0" />
+              <span>{mensajeModoOffline}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/pendientes')}
+              className="underline text-sky-400 hover:text-sky-300"
+            >
+              Ver pendientes
+            </button>
+          </div>
+        )}
         <SpotlightCard as="header" tone="ink" className="p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
