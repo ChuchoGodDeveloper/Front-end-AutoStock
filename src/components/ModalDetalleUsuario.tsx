@@ -24,6 +24,7 @@ import {
   type UsuarioBackend,
 } from '../services/usuariosService'
 import { useAuthStore } from '../stores/authStore'
+import { LiquidModal } from './LiquidUI'
 
 interface ModalDetalleUsuarioProps {
   abierto: boolean
@@ -219,13 +220,11 @@ export function ModalDetalleUsuario({
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-usuario-titulo"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto"
+    <LiquidModal
+      open={abierto && Boolean(usuario)}
+      ariaLabelledBy="modal-usuario-titulo"
     >
-      <div className="v-glass v-glass--thick tone--blue relative w-full max-w-xl rounded-3xl p-6 shadow-2xl my-8">
+      <div className="v-glass v-glass--thick tone--blue relative max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-3xl p-6 shadow-2xl">
         {/* Cabecera del Modal */}
         <div className="flex items-center justify-between border-b border-slate-500/15 pb-4">
           <div className="flex items-center gap-3">
@@ -673,6 +672,6 @@ export function ModalDetalleUsuario({
           </form>
         )}
       </div>
-    </div>
+    </LiquidModal>
   )
 }

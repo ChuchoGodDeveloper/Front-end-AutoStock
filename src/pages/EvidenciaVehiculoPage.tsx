@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
+import { LiquidModal, SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { MENSAJES } from '../config/mensajes'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
@@ -813,14 +813,12 @@ export function EvidenciaVehiculoPage() {
       />
 
       {/* Modal de Cámara y Previsualización (CA 2, CA 7) */}
-      {tomaActiva && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="titulo-modal-camara"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
-        >
-          <div className="v-glass v-glass--thick w-full max-w-md space-y-4 rounded-3xl p-6 shadow-2xl">
+      <LiquidModal
+        open={Boolean(tomaActiva)}
+        ariaLabelledBy="titulo-modal-camara"
+      >
+        {tomaActiva && (
+          <div className="v-glass v-glass--thick max-h-[85vh] w-full max-w-md space-y-4 overflow-y-auto rounded-3xl p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p
@@ -980,18 +978,16 @@ export function EvidenciaVehiculoPage() {
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </LiquidModal>
 
       {/* Modal de Confirmación para Eliminar Fotografía (CA 5) */}
-      {imagenAEliminar && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="titulo-eliminar-foto"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
-        >
-          <div className="v-glass v-glass--thick w-full max-w-sm space-y-4 rounded-3xl p-6 shadow-2xl">
+      <LiquidModal
+        open={Boolean(imagenAEliminar)}
+        ariaLabelledBy="titulo-eliminar-foto"
+      >
+        {imagenAEliminar && (
+          <div className="v-glass v-glass--thick max-h-[85vh] w-full max-w-sm space-y-4 overflow-y-auto rounded-3xl p-6 shadow-2xl">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-500/20 text-rose-400 border border-rose-400/30">
                 <Trash2 className="h-5 w-5" aria-hidden="true" />
@@ -1037,8 +1033,8 @@ export function EvidenciaVehiculoPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </LiquidModal>
     </main>
   )
 }

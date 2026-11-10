@@ -631,13 +631,13 @@
   z-index: 2;
   max-width: 1320px;
   margin: 0 auto;
-  padding: 86px 22px 110px 84px;
-  animation: showroomPageIn 0.45s var(--spring) both;
+  padding: 112px 22px 110px 84px;
+  animation: showroomPageIn 0.45s var(--spring);
 }
 
 @media (max-width: 960px) {
   .showroom-page {
-    padding: 82px 14px 104px 14px;
+    padding: 104px 14px 104px 14px;
   }
 }
 
@@ -648,7 +648,7 @@
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 

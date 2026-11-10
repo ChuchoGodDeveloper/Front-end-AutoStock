@@ -3,6 +3,7 @@ import { AlertCircle, Loader2, MapPin, X } from 'lucide-react'
 import { HttpError } from '../services/httpClient'
 import { vehiculosService } from '../services/vehiculosService'
 import type { VehiculoDetalle } from '../types/vehiculo'
+import { LiquidModal } from './LiquidUI'
 
 const ZONAS_POR_DEFECTO = ['Zona A', 'Zona B', 'Zona C', 'Taller', 'Lavado']
 
@@ -112,13 +113,8 @@ export function ModalReubicacion({
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="titulo-modal-reubicacion"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm"
-    >
-      <div className="v-glass v-glass--thick w-full max-w-md rounded-3xl p-6 shadow-2xl">
+    <LiquidModal open={abierto} ariaLabelledBy="titulo-modal-reubicacion" zIndexClass="z-[110]">
+      <div className="v-glass v-glass--thick max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-2xl">
         <div className="flex items-center justify-between pb-3 border-b border-white/10">
           <div className="flex items-center gap-2.5">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-400/30">
@@ -278,6 +274,6 @@ export function ModalReubicacion({
           </button>
         </div>
       </div>
-    </div>
+    </LiquidModal>
   )
 }
