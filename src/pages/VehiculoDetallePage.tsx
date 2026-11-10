@@ -32,6 +32,9 @@ import { VehicleSilhouette } from '../components/ShowroomWall'
 import { ESTILOS_ESTADO } from '../config/estadosOperativos'
 import { MENSAJES } from '../config/mensajes'
 import { inferirSiluetaVehiculo } from '../hooks/useShowroomEffects'
+import { useOnlineStatus } from '../hooks/useOnlineStatus'
+import { OfflineBanner } from '../components/OfflineBanner'
+import { guardarFichaTecnicaLocal, leerFichaTecnicaLocal } from '../services/offlineDb'
 import { HttpError } from '../services/httpClient'
 import { vehiculosService } from '../services/vehiculosService'
 import { useAuthStore } from '../stores/authStore'
@@ -108,6 +111,7 @@ export function VehiculoDetallePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
+  const enLinea = useOnlineStatus()
   const estadoNavegacion = (location.state as EstadoNavegacionDetalle | null) ?? null
   const usuario = useAuthStore((estado) => estado.usuario)
   const rol = usuario?.rol ?? ''
@@ -152,11 +156,19 @@ export function VehiculoDetallePage() {
       const detalle = await vehiculosService.obtenerVehiculoPorId(id)
       setVehiculo(detalle)
       setEstadoSeleccionado(detalle.estado)
+      void guardarFichaTecnicaLocal(detalle)
     } catch (err) {
       if (err instanceof HttpError && err.status === 404) {
         setNoEncontrado(true)
       } else {
-        setError(MENSAJES.errorDetalle)
+        const cache = await leerFichaTecnicaLocal(id)
+        if (cache) {
+          setVehiculo(cache)
+          setEstadoSeleccionado(cache.estado)
+          setError(null)
+        } else {
+          setError(MENSAJES.errorDetalle)
+        }
       }
     } finally {
       setCargando(false)
@@ -257,6 +269,7 @@ export function VehiculoDetallePage() {
   return (
     <main className="showroom-page">
       <div className="mx-auto w-full max-w-4xl space-y-6">
+        <OfflineBanner visible={!enLinea} />
         <SpotlightCard as="header" tone="ink" className="p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
