@@ -14,7 +14,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
+import { LiquidModal, SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { MENSAJES } from '../config/mensajes'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
@@ -228,9 +228,9 @@ export function NuevoUsuarioPage() {
                     {nombreCompleto.length}/150
                   </span>
                 </div>
-                <div className="relative">
+                <div className="relative flex items-center">
                   <UserRound
-                    className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                    className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-slate-400"
                     aria-hidden="true"
                   />
                   <input
@@ -264,9 +264,9 @@ export function NuevoUsuarioPage() {
                 >
                   Fecha de nacimiento <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
+                <div className="relative flex items-center">
                   <Calendar
-                    className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                    className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-slate-400"
                     aria-hidden="true"
                   />
                   <input
@@ -307,9 +307,9 @@ export function NuevoUsuarioPage() {
                 >
                   Rol asignado <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
+                <div className="relative flex items-center">
                   <Shield
-                    className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                    className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-slate-400"
                     aria-hidden="true"
                   />
                   <select
@@ -350,9 +350,9 @@ export function NuevoUsuarioPage() {
                     {correo.length}/100
                   </span>
                 </div>
-                <div className="relative">
+                <div className="relative flex items-center">
                   <Mail
-                    className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                    className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-slate-400"
                     aria-hidden="true"
                   />
                   <input
@@ -480,14 +480,12 @@ export function NuevoUsuarioPage() {
       </div>
 
       {/* Modal de Éxito con Contraseña Temporal */}
-      {usuarioCreado && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-usuario-creado-titulo"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md"
-        >
-          <div className="v-glass v-glass--thick tone--green w-full max-w-md rounded-3xl p-6 shadow-2xl">
+      <LiquidModal
+        open={Boolean(usuarioCreado)}
+        ariaLabelledBy="modal-usuario-creado-titulo"
+      >
+        {usuarioCreado && (
+          <div className="v-glass v-glass--thick tone--green max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-2xl">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/30">
               <KeyRound className="h-7 w-7" aria-hidden="true" />
             </div>
@@ -560,8 +558,8 @@ export function NuevoUsuarioPage() {
               Entendido, volver a la lista
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </LiquidModal>
     </main>
   )
 }

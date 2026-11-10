@@ -8,8 +8,51 @@ import {
   useRef,
   useState,
 } from 'react'
+import { createPortal } from 'react-dom'
 
 export type LiquidTone = 'green' | 'blue' | 'orange' | 'teal' | 'coral' | 'ink' | 'none'
+
+interface LiquidModalProps {
+  open: boolean
+  children: ReactNode
+  ariaLabel?: string
+  ariaLabelledBy?: string
+  zIndexClass?: string
+  alignClass?: string
+}
+
+export function LiquidModal({
+  open,
+  children,
+  ariaLabel,
+  ariaLabelledBy,
+  zIndexClass = 'z-[100]',
+  alignClass = 'items-center justify-center p-4',
+}: LiquidModalProps) {
+  useEffect(() => {
+    if (!open || typeof document === 'undefined') return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prevOverflow
+    }
+  }, [open])
+
+  if (!open || typeof document === 'undefined') return null
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
+      className={`fixed inset-0 w-screen h-screen ${zIndexClass} flex ${alignClass} bg-slate-950/75 backdrop-blur-md overflow-y-auto`}
+    >
+      {children}
+    </div>,
+    document.body,
+  )
+}
 
 interface SplitTitleProps {
   text: string
@@ -273,4 +316,3 @@ export function SpotlightCard({
     </Tag>
   )
 }
-

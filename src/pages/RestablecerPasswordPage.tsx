@@ -230,9 +230,9 @@ export function RestablecerPasswordPage() {
                 >
                   Nueva contraseña <span className="text-rose-400">*</span>
                 </label>
-                <div className="relative">
+                <div className="relative flex items-center">
                   <Lock
-                    className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-400"
+                    className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-sky-400"
                     aria-hidden="true"
                   />
                   <input
@@ -246,14 +246,14 @@ export function RestablecerPasswordPage() {
                       setErrorGlobal(null)
                     }}
                     placeholder="Al menos 8 caracteres"
-                    className={`campo-base pl-11 pr-11 py-2.5 text-sm font-semibold ${
+                    className={`campo-base pl-10 pr-10 py-2.5 text-sm font-semibold ${
                       errorPassword ? 'campo-invalido' : 'campo-valido'
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setVerPassword((v) => !v)}
-                    className="btn-squish absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 hover:bg-white/10 focus:outline-none"
+                    className="absolute right-3.5 top-1/2 z-10 -translate-y-1/2 rounded-lg p-1 hover:bg-white/10 focus:outline-none"
                     style={{ color: 'var(--ink-2)' }}
                     aria-label={verPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
                   >
@@ -279,9 +279,9 @@ export function RestablecerPasswordPage() {
                 >
                   Confirmar contraseña <span className="text-rose-400">*</span>
                 </label>
-                <div className="relative">
+                <div className="relative flex items-center">
                   <Lock
-                    className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-400"
+                    className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-sky-400"
                     aria-hidden="true"
                   />
                   <input
@@ -295,14 +295,14 @@ export function RestablecerPasswordPage() {
                       setErrorGlobal(null)
                     }}
                     placeholder="Repite la contraseña"
-                    className={`campo-base pl-11 pr-11 py-2.5 text-sm font-semibold ${
+                    className={`campo-base pl-10 pr-10 py-2.5 text-sm font-semibold ${
                       errorConfirmacion ? 'campo-invalido' : 'campo-valido'
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setVerConfirmarPassword((v) => !v)}
-                    className="btn-squish absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 hover:bg-white/10 focus:outline-none"
+                    className="absolute right-3.5 top-1/2 z-10 -translate-y-1/2 rounded-lg p-1 hover:bg-white/10 focus:outline-none"
                     style={{ color: 'var(--ink-2)' }}
                     aria-label={
                       verConfirmarPassword
