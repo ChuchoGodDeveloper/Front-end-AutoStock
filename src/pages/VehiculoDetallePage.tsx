@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
   ClipboardList,
   Clock,
   Gauge,
@@ -22,12 +23,17 @@ import {
   Ticket,
   ToggleLeft,
   UserCheck,
+  Wrench,
   X,
 } from 'lucide-react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { LiquidModal, SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { ModalEdicionKilometraje } from '../components/ModalEdicionKilometraje'
 import { ModalReubicacion } from '../components/ModalReubicacion'
+import { ModalCrearOrdenServicio } from '../components/ModalCrearOrdenServicio'
+import { ModalCierreOrdenServicio } from '../components/ModalCierreOrdenServicio'
+import { ordenesServicioService } from '../services/ordenesServicioService'
+import type { OrdenServicio, CrearOrdenServicioPayload } from '../types/ordenServicio'
 import { VehicleSilhouette } from '../components/ShowroomWall'
 import { ESTILOS_ESTADO } from '../config/estadosOperativos'
 import { MENSAJES } from '../config/mensajes'
@@ -149,10 +155,22 @@ export function VehiculoDetallePage() {
   const [errorVenta, setErrorVenta] = useState<string | null>(null)
   const [guardandoVenta, setGuardandoVenta] = useState(false)
   const [mensajeModoOffline, setMensajeModoOffline] = useState<string | null>(null)
+
+  // Estado de Órdenes de Servicio (HU-23, HU-24, HU-25)
+  const [ordenAbierta, setOrdenAbierta] = useState<OrdenServicio | null>(null)
+  const [historialMantenimiento, setHistorialMantenimiento] = useState<OrdenServicio[]>([])
+  const [modalCrearOrdenAbierto, setModalCrearOrdenAbierto] = useState(false)
+  const [modalDetalleOrdenAbierto, setModalDetalleOrdenAbierto] = useState(false)
+  const [guardandoCrearOrden, setGuardandoCrearOrden] = useState(false)
+  const [guardandoNotaOrden, setGuardandoNotaOrden] = useState(false)
+  const [guardandoCierreOrden, setGuardandoCierreOrden] = useState(false)
+  const [errorOrdenServicio, setErrorOrdenServicio] = useState<string | null>(null)
+
   const encolar = useSyncStore((s) => s.encolar)
   const puedeReubicar = tienePermiso('asignar_cajon')
   const esGerenteOAdmin = ROLES_SUPERIORES_RESERVA.includes(rol)
   const puedeMarcarVendido = tienePermiso('marcar_vendido') || esGerenteOAdmin
+  const puedeGestionarOrdenes = tienePermiso('gestionar_ordenes_servicio') || esGerenteOAdmin
 
   const cargarVehiculo = useCallback(async () => {
     if (!id) {
@@ -172,6 +190,11 @@ export function VehiculoDetallePage() {
       setVehiculo(detalle)
       setEstadoSeleccionado(detalle.estado)
       void guardarFichaTecnicaLocal(detalle)
+
+      if (navigator.onLine && id) {
+        ordenesServicioService.obtenerOrdenAbierta(id).then(setOrdenAbierta).catch(() => {})
+        ordenesServicioService.obtenerHistorial(id).then(setHistorialMantenimiento).catch(() => {})
+      }
     } catch (err) {
       if (err instanceof HttpError && err.status === 404) {
         setNoEncontrado(true)
@@ -193,6 +216,76 @@ export function VehiculoDetallePage() {
   useEffect(() => {
     void cargarVehiculo()
   }, [cargarVehiculo])
+
+  const manejarCrearOrden = async (payload: CrearOrdenServicioPayload) => {
+    if (!vehiculo) return
+    setGuardandoCrearOrden(true)
+    setErrorOrdenServicio(null)
+    try {
+      const creada = await ordenesServicioService.crearOrden(vehiculo.id, payload)
+      setOrdenAbierta(creada)
+      const vehiculoEnTaller: VehiculoDetalle = { ...vehiculo, estado: EstadoOperativo.EnTaller }
+      setVehiculo(vehiculoEnTaller)
+      actualizarVehiculoEnCatalogo(vehiculoEnTaller)
+      void guardarFichaTecnicaLocal(vehiculoEnTaller)
+      setModalCrearOrdenAbierto(false)
+    } catch (err) {
+      if (err instanceof HttpError) {
+        setErrorOrdenServicio(err.message)
+      } else {
+        setErrorOrdenServicio('No fue posible crear la orden de servicio.')
+      }
+    } finally {
+      setGuardandoCrearOrden(false)
+    }
+  }
+
+  const manejarAgregarNota = async (nota: string) => {
+    if (!ordenAbierta) return
+    setGuardandoNotaOrden(true)
+    setErrorOrdenServicio(null)
+    try {
+      const actualizada = await ordenesServicioService.agregarNota(ordenAbierta.id, { nota })
+      setOrdenAbierta(actualizada)
+    } catch (err) {
+      if (err instanceof HttpError) {
+        setErrorOrdenServicio(err.message)
+      } else {
+        setErrorOrdenServicio('No fue posible registrar la nota de avance.')
+      }
+    } finally {
+      setGuardandoNotaOrden(false)
+    }
+  }
+
+  const manejarCerrarOrden = async (costoFinal: number, estadoSalida: 'Disponible' | 'EnLavado') => {
+    if (!ordenAbierta || !vehiculo) return
+    setGuardandoCierreOrden(true)
+    setErrorOrdenServicio(null)
+    try {
+      const cerrada = await ordenesServicioService.cerrarOrden(ordenAbierta.id, {
+        costoFinal,
+        estadoSalida,
+      })
+      setOrdenAbierta(null)
+      setModalDetalleOrdenAbierto(false)
+      const nuevoEstadoOperativo =
+        estadoSalida === 'EnLavado' ? EstadoOperativo.EnLavado : EstadoOperativo.Disponible
+      const vehiculoActualizado: VehiculoDetalle = { ...vehiculo, estado: nuevoEstadoOperativo }
+      setVehiculo(vehiculoActualizado)
+      actualizarVehiculoEnCatalogo(vehiculoActualizado)
+      void guardarFichaTecnicaLocal(vehiculoActualizado)
+      setHistorialMantenimiento((prev) => [cerrada, ...prev])
+    } catch (err) {
+      if (err instanceof HttpError) {
+        setErrorOrdenServicio(err.message)
+      } else {
+        setErrorOrdenServicio('No fue posible cerrar la orden de servicio.')
+      }
+    } finally {
+      setGuardandoCierreOrden(false)
+    }
+  }
 
   const imagenAnterior = () => {
     setIndiceImagen((actual) => Math.max(actual - 1, 0))
@@ -740,6 +833,32 @@ export function VehiculoDetallePage() {
                   Revertir venta
                 </button>
               )}
+
+              {puedeGestionarOrdenes && (
+                <button
+                  type="button"
+                  disabled={
+                    estaVendido ||
+                    vehiculo.estado === EstadoOperativo.TestDrive ||
+                    Boolean(ordenAbierta)
+                  }
+                  title={
+                    estaVendido
+                      ? 'No se puede crear una orden de servicio para una unidad vendida'
+                      : vehiculo.estado === EstadoOperativo.TestDrive
+                        ? 'La unidad está en prueba de manejo (Test Drive)'
+                        : ordenAbierta
+                          ? `La unidad ya cuenta con la orden abierta ${ordenAbierta.folio}`
+                          : undefined
+                  }
+                  onClick={() => setModalCrearOrdenAbierto(true)}
+                  className="v-glass tone--orange btn-squish flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-xs font-extrabold uppercase tracking-wider shadow-lg transition disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  <Wrench className="h-4 w-4 text-amber-400" aria-hidden="true" />
+                  {ordenAbierta ? `Orden ${ordenAbierta.folio} en curso` : 'Crear orden de servicio'}
+                </button>
+              )}
             </section>
 
             {bloqueadoPorReservaDeOtro && (
@@ -946,6 +1065,130 @@ export function VehiculoDetallePage() {
                 </p>
               </SpotlightCard>
             )}
+
+            {/* Orden de Servicio Abierta / En Curso (HU-23 y HU-24) */}
+            {ordenAbierta && (
+              <SpotlightCard as="section" tone="coral" className="p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/30 text-amber-300 flex items-center justify-center shrink-0 shadow-md">
+                      <Wrench className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-500/30 text-amber-300 border border-amber-400/40">
+                          {ordenAbierta.folio}
+                        </span>
+                        <span className="text-[10px] uppercase font-black tracking-wider text-amber-400">
+                          Orden de Taller en Curso
+                        </span>
+                      </div>
+                      <h4 className="text-base font-black text-white mt-0.5">
+                        {ordenAbierta.tipoTrabajo} · Prioridad {ordenAbierta.prioridad}
+                      </h4>
+                    </div>
+                  </div>
+
+                  {puedeGestionarOrdenes && (
+                    <button
+                      type="button"
+                      onClick={() => setModalDetalleOrdenAbierto(true)}
+                      className="btn-squish rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 text-xs font-black text-white shadow-lg transition hover:brightness-110"
+                    >
+                      Seguimiento & Cierre
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-white/50 block">Trabajo Solicitado</span>
+                    <p className="text-white font-medium mt-0.5">{ordenAbierta.descripcion}</p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/5 text-[11px] text-white/70">
+                    <div>
+                      <span className="text-white/40 block">Responsable:</span>
+                      <span className="font-bold text-white">{ordenAbierta.responsable || 'Taller Interno'}</span>
+                    </div>
+                    <div>
+                      <span className="text-white/40 block">Fecha Apertura:</span>
+                      <span className="font-bold text-white">{formatearFechaHora(ordenAbierta.fechaCreacion)}</span>
+                    </div>
+                    <div>
+                      <span className="text-white/40 block">Fecha Estimada:</span>
+                      <span className="font-bold text-white">
+                        {ordenAbierta.fechaEstimada ? new Date(ordenAbierta.fechaEstimada).toLocaleDateString('es-MX') : 'No fijada'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-white/40 block">Avances:</span>
+                      <span className="font-bold text-sky-400">{ordenAbierta.notasAvance?.length ?? 0} notas</span>
+                    </div>
+                  </div>
+                </div>
+              </SpotlightCard>
+            )}
+
+            {/* Historial de Mantenimiento y Trabajos de Taller (HU-25) */}
+            <SpotlightCard as="section" className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3
+                  className="text-xs font-extrabold uppercase tracking-[0.2em] flex items-center gap-2"
+                  style={{ color: 'var(--ink-2)' }}
+                >
+                  <ClipboardCheck className="h-4 w-4 text-emerald-400" />
+                  Historial de Mantenimiento
+                </h3>
+                <span className="text-xs font-bold text-sky-400">
+                  {historialMantenimiento.length} {historialMantenimiento.length === 1 ? 'servicio' : 'servicios'}
+                </span>
+              </div>
+
+              {historialMantenimiento.length === 0 ? (
+                <p className="text-xs font-medium text-white/50 italic py-2">
+                  Esta unidad no tiene trabajos de mantenimiento registrados.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {historialMantenimiento.map((ord) => (
+                    <div
+                      key={ord.id}
+                      className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[11px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                              {ord.folio}
+                            </span>
+                            <span className="font-bold text-white text-xs">
+                              {ord.tipoTrabajo}
+                            </span>
+                          </div>
+                          <p className="text-xs font-medium text-white/80 mt-1">
+                            {ord.descripcion}
+                          </p>
+                        </div>
+                        {ord.costoFinal != null && (
+                          <div className="text-right shrink-0">
+                            <span className="text-[10px] text-white/40 uppercase block">Costo final</span>
+                            <span className="font-black text-emerald-400 text-sm">
+                              {formateadorMoneda.format(ord.costoFinal)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5 text-[11px] text-white/60">
+                        <span>Apertura: {formatearFechaHora(ord.fechaCreacion)}</span>
+                        <span>Cierre: {ord.fechaCierre ? formatearFechaHora(ord.fechaCierre) : '-'}</span>
+                        {ord.cerradoPorNombre && <span>Por: {ord.cerradoPorNombre}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </SpotlightCard>
 
             <div
               className="flex items-center justify-center gap-2 text-xs font-bold"
@@ -1290,6 +1533,37 @@ export function VehiculoDetallePage() {
               </div>
             </div>
           </LiquidModal>
+
+          {/* Modal Crear Orden de Servicio (HU-23) */}
+          <ModalCrearOrdenServicio
+            open={modalCrearOrdenAbierto}
+            vehiculoTitulo={`${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio}`}
+            numeroStock={vehiculo.numeroStock}
+            onClose={() => {
+              setModalCrearOrdenAbierto(false)
+              setErrorOrdenServicio(null)
+            }}
+            onSubmit={manejarCrearOrden}
+            cargando={guardandoCrearOrden}
+            error={errorOrdenServicio}
+          />
+
+          {/* Modal Seguimiento y Cierre de Orden (HU-24) */}
+          <ModalCierreOrdenServicio
+            open={modalDetalleOrdenAbierto && Boolean(ordenAbierta)}
+            orden={ordenAbierta}
+            vehiculoTitulo={`${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio}`}
+            numeroStock={vehiculo.numeroStock}
+            onClose={() => {
+              setModalDetalleOrdenAbierto(false)
+              setErrorOrdenServicio(null)
+            }}
+            onAgregarNota={manejarAgregarNota}
+            onCerrarOrden={manejarCerrarOrden}
+            cargandoNota={guardandoNotaOrden}
+            cargandoCierre={guardandoCierreOrden}
+            error={errorOrdenServicio}
+          />
         </>
       )}
     </main>
