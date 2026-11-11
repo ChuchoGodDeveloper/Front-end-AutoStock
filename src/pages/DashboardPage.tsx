@@ -11,6 +11,7 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  TrendingUp,
   Users,
   Wrench,
   X,
@@ -162,6 +163,8 @@ export function DashboardPage() {
   const rol = usuario?.rol?.trim() ? usuario.rol.trim() : 'Usuario'
   const esAdministrador = rol === ROL_ADMINISTRADOR
   const puedeRegistrarVehiculo = tienePermiso('registrar_vehiculos')
+  const puedeVerReporteVentas =
+    tienePermiso('ver_reporte_ventas') || esAdministrador || rol === 'Gerente de Ventas'
 
   const totalFlotaActiva =
     resumen.disponibles + resumen.pruebaDeManejo + resumen.enTaller
@@ -447,6 +450,29 @@ export function DashboardPage() {
                       <ArrowUpRight className="h-4 w-4 shrink-0 opacity-60 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     </button>
                   </>
+                )}
+
+                {puedeVerReporteVentas && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/reporte-ventas')}
+                    className="v-glass tone--green car-card btn-squish flex items-center justify-between gap-3.5 p-4 text-left group"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                        <TrendingUp className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-extrabold" style={{ color: 'var(--ink)' }}>
+                          Reporte de Ventas
+                        </h3>
+                        <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                          Auditoría de ventas por período e impresión PDF
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 opacity-60 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </button>
                 )}
               </div>
             </SpotlightCard>

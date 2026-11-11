@@ -10,6 +10,7 @@ import type {
   ActualizarKilometrajePayload,
   RegistrarVehiculoDto,
   RegistrarVentaPayload,
+  ReporteVentas,
   ReubicarVehiculoPayload,
   RevertirVentaPayload,
   VehiculoDetalle,
@@ -108,4 +109,18 @@ export const vehiculosService = {
       method: 'POST',
       body: JSON.stringify(datos),
     }).then(normalizarVehiculoDetalle),
+
+  obtenerReporteVentas: (params?: {
+    periodo?: string
+    fechaInicio?: string
+    fechaFin?: string
+  }) => {
+    const searchParams = new URLSearchParams()
+    if (params?.periodo) searchParams.set('periodo', params.periodo)
+    if (params?.fechaInicio) searchParams.set('fechaInicio', params.fechaInicio)
+    if (params?.fechaFin) searchParams.set('fechaFin', params.fechaFin)
+
+    const query = searchParams.toString()
+    return apiFetch<ReporteVentas>(`/ventas/reporte${query ? `?${query}` : ''}`)
+  },
 }
