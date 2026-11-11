@@ -225,3 +225,28 @@ export interface VentaDetalle {
   anulada: boolean
   motivoAnulacion?: string | null
 }
+
+export interface ElementoReporteVenta {
+  ventaId: string
+  fechaVenta: string
+  vehiculoId: string
+  marca: string
+  modelo: string
+  anio: number
+  numeroStock: string
+  vin: string
+  asesorId: number
+  asesorNombre: string
+  precioFinal: number
+}
+
+export interface ReporteVentas {
+  periodo: string
+  fechaInicio: string
+  fechaFin: string
+  totalUnidades: number
+  montoTotal: number
+  generadoPor: string
+  fechaGeneracion: string
+  ventas: ElementoReporteVenta[]
+}
