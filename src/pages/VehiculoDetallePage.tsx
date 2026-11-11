@@ -1177,14 +1177,14 @@ export function VehiculoDetallePage() {
                             {ord.descripcion}
                           </p>
                         </div>
-                        {ord.costoFinal != null && (
-                          <div className="text-right shrink-0">
-                            <span className="text-[10px] text-white/40 uppercase block">Costo final</span>
-                            <span className="font-black text-emerald-400 text-sm">
-                              {formateadorMoneda.format(ord.costoFinal)}
-                            </span>
-                          </div>
-                        )}
+                        <div className="text-right shrink-0">
+                          <span className="text-[10px] text-white/40 uppercase block">Costo final</span>
+                          <span className="font-black text-emerald-400 text-sm">
+                            {ord.costoFinal != null
+                              ? formateadorMoneda.format(ord.costoFinal)
+                              : 'Confidencial'}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5 text-[11px] text-white/60">
