@@ -159,6 +159,7 @@ export function VehiculoDetallePage() {
   // Estado de Órdenes de Servicio (HU-23, HU-24, HU-25)
   const [ordenAbierta, setOrdenAbierta] = useState<OrdenServicio | null>(null)
   const [historialMantenimiento, setHistorialMantenimiento] = useState<OrdenServicio[]>([])
+  const [ordenVisualizadaModal, setOrdenVisualizadaModal] = useState<OrdenServicio | null>(null)
   const [modalCrearOrdenAbierto, setModalCrearOrdenAbierto] = useState(false)
   const [modalDetalleOrdenAbierto, setModalDetalleOrdenAbierto] = useState(false)
   const [guardandoCrearOrden, setGuardandoCrearOrden] = useState(false)
@@ -1092,7 +1093,10 @@ export function VehiculoDetallePage() {
                   {puedeGestionarOrdenes && (
                     <button
                       type="button"
-                      onClick={() => setModalDetalleOrdenAbierto(true)}
+                      onClick={() => {
+                        setOrdenVisualizadaModal(null)
+                        setModalDetalleOrdenAbierto(true)
+                      }}
                       className="btn-squish rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 text-xs font-black text-white shadow-lg transition hover:brightness-110"
                     >
                       Seguimiento & Cierre
@@ -1153,7 +1157,11 @@ export function VehiculoDetallePage() {
                   {historialMantenimiento.map((ord) => (
                     <div
                       key={ord.id}
-                      className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs"
+                      onClick={() => {
+                        setOrdenVisualizadaModal(ord)
+                        setModalDetalleOrdenAbierto(true)
+                      }}
+                      className="p-3.5 rounded-2xl bg-white/5 border border-white/10 hover:border-sky-400/40 cursor-pointer transition-all space-y-2 text-xs group"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div>
@@ -1161,7 +1169,7 @@ export function VehiculoDetallePage() {
                             <span className="font-mono text-[11px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                               {ord.folio}
                             </span>
-                            <span className="font-bold text-white text-xs">
+                            <span className="font-bold text-white text-xs group-hover:text-sky-300 transition-colors">
                               {ord.tipoTrabajo}
                             </span>
                           </div>
@@ -1548,14 +1556,16 @@ export function VehiculoDetallePage() {
             error={errorOrdenServicio}
           />
 
-          {/* Modal Seguimiento y Cierre de Orden (HU-24) */}
+          {/* Modal Seguimiento y Cierre de Orden (HU-24 y HU-25) */}
           <ModalCierreOrdenServicio
-            open={modalDetalleOrdenAbierto && Boolean(ordenAbierta)}
-            orden={ordenAbierta}
+            open={modalDetalleOrdenAbierto && Boolean(ordenVisualizadaModal || ordenAbierta)}
+            orden={ordenVisualizadaModal || ordenAbierta}
             vehiculoTitulo={`${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio}`}
             numeroStock={vehiculo.numeroStock}
+            esSoloLectura={Boolean(ordenVisualizadaModal)}
             onClose={() => {
               setModalDetalleOrdenAbierto(false)
+              setOrdenVisualizadaModal(null)
               setErrorOrdenServicio(null)
             }}
             onAgregarNota={manejarAgregarNota}
