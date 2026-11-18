@@ -118,6 +118,15 @@ export function useRegistroVehiculoForm(valoresPrecarga?: Partial<CamposVehiculo
     const nuevosErrores: ErroresVehiculoForm = {}
 
     if (paso === 1) {
+      setTocado((prev) => ({
+        ...prev,
+        vin: true,
+        marca: true,
+        modelo: true,
+        anio: true,
+        placa: true,
+      }))
+
       if (!campos.vin.trim()) {
         nuevosErrores.vin = 'El VIN es obligatorio'
       } else if (!REGEX_VIN.test(campos.vin.trim())) {
@@ -149,6 +158,12 @@ export function useRegistroVehiculoForm(valoresPrecarga?: Partial<CamposVehiculo
     }
 
     if (paso === 2) {
+      setTocado((prev) => ({
+        ...prev,
+        kilometraje: true,
+        transmision: true,
+      }))
+
       if (campos.tipo === TipoVehiculo.Seminuevo) {
         const kmNum = parseInt(campos.kilometraje, 10)
         if (campos.kilometraje === '' || Number.isNaN(kmNum)) {
@@ -164,6 +179,13 @@ export function useRegistroVehiculoForm(valoresPrecarga?: Partial<CamposVehiculo
     }
 
     if (paso === 3) {
+      setTocado((prev) => ({
+        ...prev,
+        precio: true,
+        zonaLote: true,
+        cajonLote: true,
+      }))
+
       const precioNum = parseFloat(campos.precio)
       if (!campos.precio.trim() || Number.isNaN(precioNum)) {
         nuevosErrores.precio = 'El precio es obligatorio'

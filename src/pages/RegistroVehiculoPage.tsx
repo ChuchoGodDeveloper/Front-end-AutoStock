@@ -17,13 +17,33 @@ import { useNavigate } from 'react-router-dom'
 import { SplitTitle, SpotlightCard } from '../components/LiquidUI'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { obtenerMarcas } from '../config/marcasModelos'
-import { useEsMovil } from '../hooks/useMediaQuery'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { useRegistroVehiculoForm } from '../hooks/useRegistroVehiculoForm'
 import { useAuthStore } from '../stores/authStore'
 import { EstadoOperativo, TipoVehiculo } from '../types/vehiculo'
 
 const ROLES_CON_ALTA_VEHICULO = ['Encargado de Lote y Recepción', 'Administrador']
+
+const SECCIONES_REGISTRO = [
+  {
+    numero: 1,
+    titulo: 'Identificación y Carrocería',
+    subtitulo: 'Condición, VIN, marca, modelo y placa',
+    icono: Car,
+  },
+  {
+    numero: 2,
+    titulo: 'Tren Motriz y Especificaciones',
+    subtitulo: 'Kilometraje, transmisión, motor y colores',
+    icono: Wrench,
+  },
+  {
+    numero: 3,
+    titulo: 'Estado, Precio y Ubicación',
+    subtitulo: 'Precio, estado, zona/cajón y notas',
+    icono: MapPin,
+  },
+] as const
 
 const ESTADOS_ALTA: { valor: EstadoOperativo; etiqueta: string }[] = [
   { valor: EstadoOperativo.Disponible, etiqueta: 'Disponible' },
@@ -39,7 +59,6 @@ const TRANSMISIONES_SUGERIDAS = ['Automática', 'Manual', 'CVT', 'Doble Embrague
 export function RegistroVehiculoPage() {
   const navigate = useNavigate()
   const rol = useAuthStore((estado) => estado.usuario?.rol ?? '')
-  const esMovil = useEsMovil()
   const enLinea = useOnlineStatus()
 
   const {
@@ -769,124 +788,119 @@ export function RegistroVehiculoPage() {
           </div>
         )}
 
-        {/* Formulario Principal Adaptativo */}
+        {/* Formulario Progresivo de 3 Secciones (Desktop y Móvil) */}
         <form onSubmit={(e: FormEvent) => manejarEnvio(e)} noValidate>
-          {esMovil ? (
-            <SpotlightCard className="overflow-hidden">
-              <div className="p-4 border-b border-white/10">
+          <SpotlightCard className="overflow-hidden">
+            {/* Cabecera de Progreso Interactiva */}
+            <div className="p-5 sm:p-6 border-b border-white/10 space-y-4">
+              <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
                 <div
-                  className="flex items-center justify-between text-xs font-extrabold uppercase tracking-wider mb-2"
-                  style={{ color: 'var(--ink-2)' }}
-                >
-                  <span>Paso {pasoActual} de 3</span>
-                  <span>
-                    {pasoActual === 1 && 'Identificación'}
-                    {pasoActual === 2 && 'Mecánica'}
-                    {pasoActual === 3 && 'Lote y Precio'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {[1, 2, 3].map((paso) => (
+                  className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 transition-all duration-300"
+                  style={{ width: `${(pasoActual / 3) * 100}%` }}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {SECCIONES_REGISTRO.map((seccion) => {
+                  const Icono = seccion.icono
+                  const esActual = seccion.numero === pasoActual
+                  const estaCompletada = seccion.numero < pasoActual
+
+                  return (
                     <button
-                      key={paso}
+                      key={seccion.numero}
                       type="button"
-                      onClick={() => irAlPaso(paso)}
-                      className={`h-2 rounded-full transition-all ${
-                        paso <= pasoActual ? 'bg-sky-400' : 'bg-white/15'
+                      onClick={() => irAlPaso(seccion.numero)}
+                      aria-current={esActual ? 'step' : undefined}
+                      className={`btn-squish flex items-center gap-3 rounded-2xl p-3 text-left transition-all border ${
+                        esActual
+                          ? 'bg-sky-500/20 border-sky-400/70 shadow-md'
+                          : estaCompletada
+                            ? 'bg-emerald-500/15 border-emerald-400/50 hover:bg-emerald-500/20'
+                            : 'bg-white/5 border-white/10 opacity-70 hover:opacity-100 hover:border-white/25'
                       }`}
-                    />
-                  ))}
-                </div>
+                    >
+                      <span
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition-all ${
+                          esActual
+                            ? 'bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-[0_0_16px_rgba(56,189,248,0.55)]'
+                            : estaCompletada
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-white/10 text-white/70'
+                        }`}
+                      >
+                        {estaCompletada ? (
+                          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          seccion.numero
+                        )}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <Icono
+                            className={`h-3.5 w-3.5 shrink-0 ${
+                              esActual
+                                ? 'text-sky-400'
+                                : estaCompletada
+                                  ? 'text-emerald-400'
+                                  : 'opacity-60'
+                            }`}
+                            aria-hidden="true"
+                          />
+                          <p
+                            className="text-xs font-extrabold truncate"
+                            style={{ color: 'var(--ink)' }}
+                          >
+                            {seccion.titulo}
+                          </p>
+                        </div>
+                        <p
+                          className="text-[11px] truncate mt-0.5"
+                          style={{ color: 'var(--ink-2)' }}
+                        >
+                          {seccion.subtitulo}
+                        </p>
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
+            </div>
 
-              <div className="p-5">
-                {pasoActual === 1 && renderPaso1()}
-                {pasoActual === 2 && renderPaso2()}
-                {pasoActual === 3 && renderPaso3()}
-              </div>
-
-              <div className="p-4 border-t border-white/10 flex items-center justify-between gap-3">
-                {pasoActual > 1 ? (
-                  <button
-                    type="button"
-                    onClick={pasoAnterior}
-                    disabled={guardando}
-                    className="v-glass btn-squish px-4 py-2.5 rounded-xl font-bold inline-flex items-center gap-1.5 text-sm"
-                    style={{ color: 'var(--ink)' }}
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Anterior
-                  </button>
-                ) : (
-                  <div />
+            {/* Cuerpo de la Sección Activa */}
+            <div className="p-6">
+              <h2
+                className="text-base font-black mb-5 pb-3 border-b border-white/10 flex items-center gap-2"
+                style={{ color: 'var(--ink)' }}
+              >
+                {pasoActual === 1 && (
+                  <>
+                    <Car className="w-5 h-5 text-sky-400" aria-hidden="true" />
+                    1. Identificación y Carrocería
+                  </>
                 )}
-
-                {pasoActual < 3 ? (
-                  <button
-                    type="button"
-                    onClick={siguientePaso}
-                    className="btn-squish px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold inline-flex items-center gap-1.5 text-sm shadow-lg"
-                  >
-                    Siguiente
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={guardando || !enLinea}
-                    className="btn-squish px-6 py-2.5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-500 transition inline-flex items-center gap-2 text-sm shadow-lg disabled:opacity-50"
-                  >
-                    {guardando ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Registrando...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-4 h-4" />
-                        Guardar Unidad
-                      </>
-                    )}
-                  </button>
+                {pasoActual === 2 && (
+                  <>
+                    <Wrench className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+                    2. Tren Motriz y Especificaciones
+                  </>
                 )}
-              </div>
-            </SpotlightCard>
-          ) : (
-            <div className="space-y-6">
-              <SpotlightCard className="p-6">
-                <h2
-                  className="text-base font-black mb-4 pb-2 border-b border-white/10 flex items-center gap-2"
-                  style={{ color: 'var(--ink)' }}
-                >
-                  <Car className="w-5 h-5 text-sky-400" />
-                  1. Identificación y Carrocería
-                </h2>
-                {renderPaso1()}
-              </SpotlightCard>
+                {pasoActual === 3 && (
+                  <>
+                    <MapPin className="w-5 h-5 text-amber-400" aria-hidden="true" />
+                    3. Estado Operativo, Precio y Ubicación
+                  </>
+                )}
+              </h2>
 
-              <SpotlightCard className="p-6">
-                <h2
-                  className="text-base font-black mb-4 pb-2 border-b border-white/10 flex items-center gap-2"
-                  style={{ color: 'var(--ink)' }}
-                >
-                  <Wrench className="w-5 h-5 text-emerald-400" />
-                  2. Tren Motriz y Especificaciones
-                </h2>
-                {renderPaso2()}
-              </SpotlightCard>
+              {pasoActual === 1 && renderPaso1()}
+              {pasoActual === 2 && renderPaso2()}
+              {pasoActual === 3 && renderPaso3()}
+            </div>
 
-              <SpotlightCard className="p-6">
-                <h2
-                  className="text-base font-black mb-4 pb-2 border-b border-white/10 flex items-center gap-2"
-                  style={{ color: 'var(--ink)' }}
-                >
-                  <MapPin className="w-5 h-5 text-amber-400" />
-                  3. Estado Operativo, Precio y Ubicación
-                </h2>
-                {renderPaso3()}
-              </SpotlightCard>
-
-              <SpotlightCard className="p-4 flex items-center justify-between">
+            {/* Pie de Navegación Progresiva */}
+            <div className="p-5 border-t border-white/10 flex items-center justify-between gap-3">
+              {pasoActual === 1 ? (
                 <button
                   type="button"
                   onClick={() => navigate('/catalogo')}
@@ -896,26 +910,56 @@ export function RegistroVehiculoPage() {
                 >
                   Cancelar
                 </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={pasoAnterior}
+                  disabled={guardando}
+                  className="v-glass btn-squish px-4 py-2.5 rounded-xl font-bold inline-flex items-center gap-1.5 text-sm"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+                  Sección Anterior
+                </button>
+              )}
+
+              <span
+                className="hidden sm:inline text-xs font-extrabold uppercase tracking-wider"
+                style={{ color: 'var(--ink-2)' }}
+              >
+                {`Sección ${pasoActual} de 3`}
+              </span>
+
+              {pasoActual < 3 ? (
+                <button
+                  type="button"
+                  onClick={siguientePaso}
+                  className="btn-squish px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold inline-flex items-center gap-1.5 text-sm shadow-lg transition hover:brightness-110"
+                >
+                  Siguiente Sección
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </button>
+              ) : (
                 <button
                   type="submit"
                   disabled={guardando || !enLinea}
-                  className="btn-squish px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-extrabold inline-flex items-center gap-2 text-sm shadow-lg transition hover:brightness-110 disabled:opacity-50"
+                  className="btn-squish px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-extrabold inline-flex items-center gap-2 text-sm shadow-lg transition hover:brightness-110 disabled:opacity-50"
                 >
                   {guardando ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                       Registrando Unidad...
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                       Completar Registro
                     </>
                   )}
                 </button>
-              </SpotlightCard>
+              )}
             </div>
-          )}
+          </SpotlightCard>
         </form>
       </div>
     </main>
