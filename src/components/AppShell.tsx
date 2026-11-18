@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  BarChart3,
   Car,
   LayoutGrid,
   LogOut,
@@ -8,6 +9,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Sun,
+  TrendingUp,
   Users,
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -16,7 +18,7 @@ import { useGlobalRippleAndSquish } from '../hooks/useShowroomEffects'
 import { useAuthStore } from '../stores/authStore'
 import { useSyncStore } from '../services/syncService'
 import { useThemeStore } from '../stores/themeStore'
-import { LiquidSegmented, type SegmentedOption } from './LiquidUI'
+import { LiquidModal, LiquidSegmented, type SegmentedOption } from './LiquidUI'
 import { ShowroomWall } from './ShowroomWall'
 
 const RUTAS_PUBLICAS = new Set([
@@ -64,12 +66,22 @@ export function AppShell() {
   const rol = usuario?.rol?.trim() || 'Usuario'
   const esAdministrador = rol === 'Administrador'
   const puedeRegistrarVehiculo = tienePermiso('registrar_vehiculos')
+  const puedeVerMetricas =
+    tienePermiso('ver_metricas_lote') || esAdministrador || rol === 'Gerente de Ventas'
+  const puedeVerReporteVentas =
+    tienePermiso('ver_reporte_ventas') || esAdministrador || rol === 'Gerente de Ventas'
 
   const opcionesNav = useMemo<SegmentedOption<string>[]>(() => {
     const lista: SegmentedOption<string>[] = [
       { id: '/dashboard', label: 'Showroom' },
       { id: '/catalogo', label: 'Catálogo' },
     ]
+    if (puedeVerMetricas) {
+      lista.push({ id: '/metricas', label: 'Métricas' })
+    }
+    if (puedeVerReporteVentas) {
+      lista.push({ id: '/reporte-ventas', label: 'Ventas' })
+    }
     if (puedeRegistrarVehiculo) {
       lista.push({ id: '/registrar-vehiculo', label: 'Alta Unidad' })
     }
@@ -78,15 +90,18 @@ export function AppShell() {
       lista.push({ id: '/permisos', label: 'Permisos' })
     }
     return lista
-  }, [puedeRegistrarVehiculo, esAdministrador])
+  }, [puedeRegistrarVehiculo, puedeVerMetricas, puedeVerReporteVentas, esAdministrador])
 
   const rutaActiva = useMemo(() => {
     const p = location.pathname
     if (p === '/' || p.startsWith('/dashboard')) return '/dashboard'
     if (p.startsWith('/catalogo') || p.startsWith('/vehiculo')) return '/catalogo'
+    if (p.startsWith('/metricas')) return '/metricas'
+    if (p.startsWith('/reporte-ventas')) return '/reporte-ventas'
     if (p.startsWith('/registrar-vehiculo')) return '/registrar-vehiculo'
     if (p.startsWith('/usuarios')) return '/usuarios'
     if (p.startsWith('/permisos')) return '/permisos'
+    if (p.startsWith('/pendientes')) return '/pendientes'
     return '/dashboard'
   }, [location.pathname])
 
@@ -246,6 +261,32 @@ export function AppShell() {
               <Car className="h-5 w-5" />
             </button>
 
+            {puedeVerMetricas && (
+              <button
+                type="button"
+                onClick={() => navigate('/metricas')}
+                className={`dock-btn btn-squish ${rutaActiva === '/metricas' ? 'active' : ''}`}
+                title="Métricas del Lote"
+                aria-label="Métricas del Lote"
+              >
+                <BarChart3 className="h-5 w-5" />
+              </button>
+            )}
+
+            {puedeVerReporteVentas && (
+              <button
+                type="button"
+                onClick={() => navigate('/reporte-ventas')}
+                className={`dock-btn btn-squish ${
+                  rutaActiva === '/reporte-ventas' ? 'active' : ''
+                }`}
+                title="Reporte de Ventas"
+                aria-label="Reporte de Ventas"
+              >
+                <TrendingUp className="h-5 w-5" />
+              </button>
+            )}
+
             {puedeRegistrarVehiculo && (
               <button
                 type="button"
@@ -285,47 +326,45 @@ export function AppShell() {
             )}
           </nav>
 
-          {confirmarSalidaPendientes && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-              <div className="v-glass v-glass--thick tone--coral max-w-md w-full rounded-3xl p-6 shadow-2xl space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/30">
-                    <LogOut className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-black" style={{ color: 'var(--ink)' }}>
-                      Cambios pendientes sin guardar
-                    </h3>
-                    <p className="text-xs font-semibold text-rose-400">
-                      Tienes {totalPendientes} {totalPendientes === 1 ? 'cambio' : 'cambios'} sin sincronizar en este dispositivo.
-                    </p>
-                  </div>
+          <LiquidModal open={confirmarSalidaPendientes} ariaLabel="Cambios pendientes sin guardar">
+            <div className="v-glass v-glass--thick tone--coral max-h-[85vh] max-w-md w-full overflow-y-auto rounded-3xl p-6 shadow-2xl space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/30">
+                  <LogOut className="h-5 w-5" />
                 </div>
-
-                <p className="text-xs leading-relaxed font-medium" style={{ color: 'var(--ink-2)' }}>
-                  Al cerrar sesión, la base de datos local se limpiará para proteger la información en dispositivos compartidos y los cambios pendientes se perderán.
-                </p>
-
-                <div className="flex items-center justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setConfirmarSalidaPendientes(false)}
-                    className="v-glass btn-squish rounded-xl px-4 py-2 text-xs font-bold"
-                    style={{ color: 'var(--ink)' }}
-                  >
-                    Permanecer aquí
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void procederCierreConPendientes()}
-                    className="btn-squish rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-lg hover:bg-rose-500 transition"
-                  >
-                    Cerrar sesión de todos modos
-                  </button>
+                <div>
+                  <h3 className="text-base font-black" style={{ color: 'var(--ink)' }}>
+                    Cambios pendientes sin guardar
+                  </h3>
+                  <p className="text-xs font-semibold text-rose-400">
+                    Tienes {totalPendientes} {totalPendientes === 1 ? 'cambio' : 'cambios'} sin sincronizar en este dispositivo.
+                  </p>
                 </div>
               </div>
+
+              <p className="text-xs leading-relaxed font-medium" style={{ color: 'var(--ink-2)' }}>
+                Al cerrar sesión, la base de datos local se limpiará para proteger la información en dispositivos compartidos y los cambios pendientes se perderán.
+              </p>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmarSalidaPendientes(false)}
+                  className="v-glass btn-squish rounded-xl px-4 py-2 text-xs font-bold"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  Permanecer aquí
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void procederCierreConPendientes()}
+                  className="btn-squish rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-lg hover:bg-rose-500 transition"
+                >
+                  Cerrar sesión de todos modos
+                </button>
+              </div>
             </div>
-          )}
+          </LiquidModal>
         </>
       )}
     </>
