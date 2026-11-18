@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
   Car,
+  ChevronLeft,
+  ChevronRight,
   Filter,
   PlusCircle,
   RefreshCw,
@@ -18,7 +20,12 @@ import { VehiculoCard } from '../components/VehiculoCard'
 import { MENSAJES } from '../config/mensajes'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { useAuthStore } from '../stores/authStore'
-import { FILTROS_VACIOS, hayFiltrosActivos, useCatalogoStore } from '../stores/catalogoStore'
+import {
+  FILTROS_VACIOS,
+  TAMANO_PAGINA_CATALOGO,
+  hayFiltrosActivos,
+  useCatalogoStore,
+} from '../stores/catalogoStore'
 
 export function CatalogoPage() {
   const navigate = useNavigate()
@@ -26,11 +33,13 @@ export function CatalogoPage() {
 
   const vehiculos = useCatalogoStore((estado) => estado.vehiculos)
   const totalUnidades = useCatalogoStore((estado) => estado.totalUnidades)
-  const hayMas = useCatalogoStore((estado) => estado.hayMas)
+  const paginaActual = useCatalogoStore((estado) => estado.paginaActual)
+  const totalPaginas = useCatalogoStore((estado) => estado.totalPaginas)
   const cargando = useCatalogoStore((estado) => estado.cargando)
   const error = useCatalogoStore((estado) => estado.error)
   const terminoBusqueda = useCatalogoStore((estado) => estado.terminoBusqueda)
   const filtros = useCatalogoStore((estado) => estado.filtros)
+  const irAPagina = useCatalogoStore((estado) => estado.irAPagina)
   const cargarMasVehiculos = useCatalogoStore((estado) => estado.cargarMasVehiculos)
   const setTerminoBusqueda = useCatalogoStore((estado) => estado.setTerminoBusqueda)
   const setFiltros = useCatalogoStore((estado) => estado.setFiltros)
@@ -38,10 +47,11 @@ export function CatalogoPage() {
   const tienePermiso = useAuthStore((estado) => estado.tienePermiso)
   const puedeRegistrar = tienePermiso('registrar_vehiculos')
 
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
   const [versionBusqueda, setVersionBusqueda] = useState(0)
   const [panelFiltrosAbierto, setPanelFiltrosAbierto] = useState(false)
   const filtrosActivos = hayFiltrosActivos(filtros)
+  const inicioRango = totalUnidades === 0 ? 0 : (paginaActual - 1) * TAMANO_PAGINA_CATALOGO + 1
+  const finRango = Math.min(paginaActual * TAMANO_PAGINA_CATALOGO, totalUnidades)
   const primeraCarga = vehiculos.length === 0 && !cargando && !error && !terminoBusqueda
   const busquedaSinResultados =
     !cargando && !error && terminoBusqueda !== '' && totalUnidades === 0 && vehiculos.length === 0
@@ -88,23 +98,18 @@ export function CatalogoPage() {
     return () => clearInterval(intervalo)
   }, [])
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current
-    if (!sentinel || !hayMas || cargando || Boolean(error)) return
-
-    const observador = new IntersectionObserver(
-      (entradas) => {
-        if (entradas.some((entrada) => entrada.isIntersecting)) {
-          void cargarMasVehiculos()
-        }
-      },
-      { rootMargin: '200px 0px' },
-    )
-
-    observador.observe(sentinel)
-
-    return () => observador.disconnect()
-  }, [hayMas, cargando, error, cargarMasVehiculos])
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (
+      nuevaPagina < 1 ||
+      nuevaPagina > totalPaginas ||
+      nuevaPagina === paginaActual ||
+      cargando
+    ) {
+      return
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    void irAPagina(nuevaPagina)
+  }
 
   const limpiarBusqueda = () => {
     void setTerminoBusqueda('')
@@ -276,19 +281,66 @@ export function CatalogoPage() {
           </section>
         )}
 
-        {hayMas && vehiculos.length > 0 && (
-          <button
-            type="button"
-            onClick={() => void cargarMasVehiculos()}
-            disabled={cargando}
-            className="v-glass tone--blue btn-squish w-full rounded-2xl px-4 py-3.5 text-sm font-extrabold uppercase tracking-wider transition disabled:opacity-60"
-            style={{ color: 'var(--ink)' }}
-          >
-            {cargando ? 'Cargando...' : 'Cargar más'}
-          </button>
-        )}
+        {vehiculos.length > 0 && (
+          <SpotlightCard as="section" className="px-5 py-4">
+            <nav
+              aria-label="Paginación del catálogo"
+              className="flex flex-col sm:flex-row items-center justify-between gap-4"
+            >
+              <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>
+                {`Mostrando ${inicioRango}–${finRango} de ${totalUnidades} unidades · Página ${paginaActual} de ${totalPaginas}`}
+              </p>
 
-        <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => cambiarPagina(paginaActual - 1)}
+                  disabled={paginaActual <= 1 || cargando}
+                  aria-label="Página anterior"
+                  className="v-glass btn-squish flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-bold transition disabled:opacity-40 disabled:pointer-events-none"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                  <span>Anterior</span>
+                </button>
+
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((numeroPagina) => {
+                  const esActual = numeroPagina === paginaActual
+                  return (
+                    <button
+                      key={numeroPagina}
+                      type="button"
+                      onClick={() => cambiarPagina(numeroPagina)}
+                      disabled={cargando}
+                      aria-current={esActual ? 'page' : undefined}
+                      aria-label={`Ir a la página ${numeroPagina}`}
+                      className={`btn-squish min-w-[36px] rounded-xl px-3 py-2 text-xs font-extrabold transition ${
+                        esActual
+                          ? 'v-glass tone--blue border border-sky-400/50 shadow-md'
+                          : 'v-glass hover:border-sky-400/40'
+                      }`}
+                      style={{ color: 'var(--ink)' }}
+                    >
+                      {numeroPagina}
+                    </button>
+                  )
+                })}
+
+                <button
+                  type="button"
+                  onClick={() => cambiarPagina(paginaActual + 1)}
+                  disabled={paginaActual >= totalPaginas || cargando}
+                  aria-label="Página siguiente"
+                  className="v-glass btn-squish flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-bold transition disabled:opacity-40 disabled:pointer-events-none"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  <span>Siguiente</span>
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+            </nav>
+          </SpotlightCard>
+        )}
 
         <footer className="text-center">
           <Link

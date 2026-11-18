@@ -9,7 +9,7 @@ import {
 } from '../services/offlineDb'
 import type { ConteosRapidos, FiltrosCatalogo, Vehiculo, VehiculoDetalle } from '../types/vehiculo'
 
-export const TAMANO_PAGINA_CATALOGO = 20
+export const TAMANO_PAGINA_CATALOGO = 15
 
 export const FILTROS_VACIOS: FiltrosCatalogo = {
   estados: [],
@@ -77,6 +77,7 @@ interface EstadoCatalogo {
   vehiculos: Vehiculo[]
   totalUnidades: number
   paginaActual: number
+  totalPaginas: number
   hayMas: boolean
   cargando: boolean
   error: string | null
@@ -85,6 +86,7 @@ interface EstadoCatalogo {
   conteos: ConteosRapidos
   metaOffline: MetaInventario | null
   esModoOffline: boolean
+  irAPagina: (pagina: number) => Promise<void>
   cargarMasVehiculos: (resetear?: boolean) => Promise<void>
   setTerminoBusqueda: (busqueda: string) => Promise<void>
   setFiltros: (nuevosFiltros: FiltrosCatalogo) => Promise<void>
@@ -100,8 +102,9 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
   return {
     vehiculos: [],
     totalUnidades: 0,
-    paginaActual: 0,
-    hayMas: true,
+    paginaActual: 1,
+    totalPaginas: 1,
+    hayMas: false,
     cargando: false,
     error: null,
     terminoBusqueda: '',
@@ -110,22 +113,16 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
     metaOffline: null,
     esModoOffline: false,
 
-    cargarMasVehiculos: async (resetear = false) => {
-      const { cargando, hayMas, error, paginaActual, vehiculos, terminoBusqueda, filtros } = get()
-
-      if (!resetear && (cargando || !hayMas || error !== null)) return
+    irAPagina: async (pagina: number) => {
+      const paginaSolicitada = Math.max(1, pagina)
+      const { terminoBusqueda, filtros } = get()
 
       solicitudActual += 1
       const solicitud = solicitudActual
 
-      if (resetear) {
-        set({ vehiculos: [], paginaActual: 0, hayMas: true })
-      }
-
       set({ cargando: true, error: null })
 
       try {
-        const paginaSolicitada = resetear ? 1 : paginaActual + 1
         const respuesta = await vehiculosService.obtenerCatalogo(
           paginaSolicitada,
           TAMANO_PAGINA_CATALOGO,
@@ -135,26 +132,23 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
 
         if (solicitud !== solicitudActual) return
 
-        const base = resetear ? [] : vehiculos
-        const idsConocidos = new Set(base.map((vehiculo) => vehiculo.id))
-        const anexados = (respuesta.items ?? []).filter(
-          (vehiculo) => !idsConocidos.has(vehiculo.id),
-        )
-        const acumulados = [...base, ...anexados]
-        const totalUnidades = respuesta.totalCount ?? acumulados.length
+        const itemsPagina = respuesta.items ?? []
+        const totalUnidades = respuesta.totalCount ?? itemsPagina.length
         const paginaResultante = respuesta.page ?? paginaSolicitada
+        const totalPaginas = Math.max(1, Math.ceil(totalUnidades / TAMANO_PAGINA_CATALOGO))
 
         set({
-          vehiculos: acumulados,
+          vehiculos: itemsPagina,
           totalUnidades,
           paginaActual: paginaResultante,
-          hayMas: acumulados.length < totalUnidades,
+          totalPaginas,
+          hayMas: paginaResultante < totalPaginas,
           cargando: false,
           esModoOffline: false,
         })
 
         // Guardar silenciosamente en cache local
-        void guardarInventarioLocal(acumulados)
+        void guardarInventarioLocal(itemsPagina)
       } catch {
         if (solicitud !== solicitudActual) return
 
@@ -164,11 +158,18 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
 
         if (cache.length > 0) {
           const filtrados = filtrarVehiculosLocales(cache, terminoBusqueda, filtros)
+          const totalUnidades = filtrados.length
+          const totalPaginas = Math.max(1, Math.ceil(totalUnidades / TAMANO_PAGINA_CATALOGO))
+          const paginaSegura = Math.min(paginaSolicitada, totalPaginas)
+          const inicio = (paginaSegura - 1) * TAMANO_PAGINA_CATALOGO
+          const paginados = filtrados.slice(inicio, inicio + TAMANO_PAGINA_CATALOGO)
+
           set({
-            vehiculos: filtrados,
-            totalUnidades: filtrados.length,
-            paginaActual: 1,
-            hayMas: false,
+            vehiculos: paginados,
+            totalUnidades,
+            paginaActual: paginaSegura,
+            totalPaginas,
+            hayMas: paginaSegura < totalPaginas,
             cargando: false,
             error: null,
             esModoOffline: true,
@@ -182,6 +183,10 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
           })
         }
       }
+    },
+
+    cargarMasVehiculos: async (resetear = false) => {
+      await get().irAPagina(resetear ? 1 : get().paginaActual || 1)
     },
 
     setTerminoBusqueda: async (busqueda) => {
@@ -226,7 +231,7 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
 
     invalidarCatalogo: () => {
       solicitudActual += 1
-      set({ vehiculos: [], paginaActual: 0, hayMas: true, cargando: false })
+      set({ vehiculos: [], paginaActual: 1, totalPaginas: 1, hayMas: false, cargando: false })
     },
 
     actualizarVehiculoEnCatalogo: (actualizado) => {
