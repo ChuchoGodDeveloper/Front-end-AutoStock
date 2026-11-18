@@ -287,9 +287,12 @@ export function CatalogoPage() {
               aria-label="Paginación del catálogo"
               className="flex flex-col sm:flex-row items-center justify-between gap-4"
             >
-              <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>
-                {`Mostrando ${inicioRango}–${finRango} de ${totalUnidades} unidades · Página ${paginaActual} de ${totalPaginas}`}
-              </p>
+              <div className="flex flex-wrap items-center gap-2.5 text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/20 border border-sky-400/50 px-3 py-1 text-xs font-extrabold text-sky-400">
+                  {`Página ${paginaActual} de ${totalPaginas}`}
+                </span>
+                <span>{`Mostrando ${inicioRango}–${finRango} de ${totalUnidades} unidades`}</span>
+              </div>
 
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <button
@@ -314,12 +317,12 @@ export function CatalogoPage() {
                       disabled={cargando}
                       aria-current={esActual ? 'page' : undefined}
                       aria-label={`Ir a la página ${numeroPagina}`}
-                      className={`btn-squish min-w-[36px] rounded-xl px-3 py-2 text-xs font-extrabold transition ${
+                      className={`btn-squish min-w-[40px] h-9 rounded-full px-3.5 text-xs font-black transition-all ${
                         esActual
-                          ? 'v-glass tone--blue border border-sky-400/50 shadow-md'
-                          : 'v-glass hover:border-sky-400/40'
+                          ? 'bg-gradient-to-r from-sky-400 to-blue-600 text-white border-2 border-white/80 shadow-[0_0_20px_rgba(56,189,248,0.65)] scale-105'
+                          : 'v-glass hover:border-sky-400/50 opacity-75 hover:opacity-100'
                       }`}
-                      style={{ color: 'var(--ink)' }}
+                      style={esActual ? { color: '#ffffff' } : { color: 'var(--ink)' }}
                     >
                       {numeroPagina}
                     </button>
