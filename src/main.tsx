@@ -4,6 +4,18 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import './index.css'
 
+if ('serviceWorker' in navigator) {
+  const teniaControlador = Boolean(navigator.serviceWorker.controller)
+  let recargandoPorActualizacion = false
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (teniaControlador && !recargandoPorActualizacion) {
+      recargandoPorActualizacion = true
+      window.location.reload()
+    }
+  })
+}
+
 registerSW({ immediate: true })
 
 const contenedor = document.getElementById('root')
