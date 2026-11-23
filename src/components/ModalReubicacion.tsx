@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { AlertCircle, Loader2, MapPin, X } from 'lucide-react'
 import { HttpError } from '../services/httpClient'
+import { guardarFichaTecnicaLocal } from '../services/offlineDb'
+import { useSyncStore } from '../services/syncService'
 import { vehiculosService } from '../services/vehiculosService'
 import type { VehiculoDetalle } from '../types/vehiculo'
 import { LiquidModal } from './LiquidUI'
@@ -9,13 +11,7 @@ const ZONAS_POR_DEFECTO = ['Zona A', 'Zona B', 'Zona C', 'Taller', 'Lavado']
 
 interface ModalReubicacionProps {
   abierto: boolean
-  vehiculo: {
-    id: string
-    marca: string
-    modelo: string
-    zonaLote: string
-    cajonLote: string
-  }
+  vehiculo: VehiculoDetalle
   onCerrar: () => void
   onReubicacionExitosa: (vehiculoActualizado: VehiculoDetalle) => void
 }
@@ -92,11 +88,35 @@ export function ModalReubicacion({
 
     setGuardando(true)
 
+    const payload = {
+      zona: zonaSeleccionada.trim(),
+      cajon: cajonNormalizado,
+    }
+
+    if (!navigator.onLine) {
+      await useSyncStore
+        .getState()
+        .encolar(
+          'REUBICACION',
+          `Reubicación: ${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.numeroStock}) a ${payload.zona} · Cajón ${payload.cajon}`,
+          payload,
+          vehiculo.id,
+        )
+
+      const actualizadoLocal: VehiculoDetalle = {
+        ...vehiculo,
+        zonaLote: payload.zona,
+        cajonLote: payload.cajon,
+      }
+      void guardarFichaTecnicaLocal(actualizadoLocal)
+      onReubicacionExitosa(actualizadoLocal)
+      setGuardando(false)
+      onCerrar()
+      return
+    }
+
     try {
-      const actualizado = await vehiculosService.reubicarVehiculo(vehiculo.id, {
-        zona: zonaSeleccionada.trim(),
-        cajon: cajonNormalizado,
-      })
+      const actualizado = await vehiculosService.reubicarVehiculo(vehiculo.id, payload)
       onReubicacionExitosa(actualizado)
       onCerrar()
     } catch (err) {

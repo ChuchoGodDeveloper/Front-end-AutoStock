@@ -20,6 +20,8 @@ import { OfflineBanner } from '../components/OfflineBanner'
 import { MENSAJES } from '../config/mensajes'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { HttpError } from '../services/httpClient'
+import { guardarFichaTecnicaLocal, leerFichaTecnicaLocal } from '../services/offlineDb'
+import { useSyncStore } from '../services/syncService'
 import { vehiculosService } from '../services/vehiculosService'
 import { useAuthStore } from '../stores/authStore'
 import { useCatalogoStore } from '../stores/catalogoStore'
@@ -207,7 +209,12 @@ export function EvidenciaVehiculoPage() {
       if (err instanceof HttpError && err.status === 404) {
         setNoEncontrado(true)
       } else {
-        setErrorCarga(MENSAJES.errorDetalle)
+        const cache = await leerFichaTecnicaLocal(id)
+        if (cache) {
+          setVehiculo(cache)
+        } else {
+          setErrorCarga(MENSAJES.errorDetalle)
+        }
       }
     } finally {
       setCargando(false)
@@ -308,12 +315,61 @@ export function EvidenciaVehiculoPage() {
     setGuardandoFoto(true)
     setAlertaGeneral(null)
 
+    if (!navigator.onLine) {
+      const payloadFoto = {
+        tipoToma: tomaActiva.clave,
+        imagenBase64: previsualizacionBase64,
+      }
+
+      await useSyncStore
+        .getState()
+        .encolar(
+          'SUBIR_FOTO',
+          `Fotografía (${tomaActiva.etiqueta}): ${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.numeroStock})`,
+          payloadFoto,
+          vehiculo.id,
+        )
+
+      const nuevaImagenLocal: ImagenVehiculo = {
+        id: `offline-img-${Date.now()}`,
+        url: previsualizacionBase64,
+        esPrincipal: tomaActiva.clave === 'Frontal' || vehiculo.imagenes.length === 0,
+        orden: vehiculo.imagenes.length,
+        tipoToma: tomaActiva.clave,
+        fechaCaptura: new Date().toISOString(),
+      }
+
+      const actualizadoLocal: VehiculoDetalle = {
+        ...vehiculo,
+        fotoPrincipalUrl:
+          tomaActiva.clave === 'Frontal' || !vehiculo.fotoPrincipalUrl
+            ? previsualizacionBase64
+            : vehiculo.fotoPrincipalUrl,
+        imagenes: [
+          ...vehiculo.imagenes.filter((img) => img.tipoToma !== tomaActiva.clave),
+          nuevaImagenLocal,
+        ],
+      }
+
+      setVehiculo(actualizadoLocal)
+      void guardarFichaTecnicaLocal(actualizadoLocal)
+      detenerStreamCamara()
+      setTomaActiva(null)
+      setPrevisualizacionBase64(null)
+      setGuardandoFoto(false)
+      setAlertaGeneral(
+        'Fotografía guardada sin conexión • Se subirá automáticamente al volver el internet',
+      )
+      return
+    }
+
     try {
       const actualizado = await vehiculosService.guardarFotografia(vehiculo.id, {
         tipoToma: tomaActiva.clave,
         imagenBase64: previsualizacionBase64,
       })
       setVehiculo(actualizado)
+      void guardarFichaTecnicaLocal(actualizado)
       invalidarCatalogo()
       detenerStreamCamara()
       setTomaActiva(null)

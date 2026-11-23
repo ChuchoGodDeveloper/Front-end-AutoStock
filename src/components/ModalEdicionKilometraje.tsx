@@ -8,6 +8,8 @@ import {
   X,
 } from 'lucide-react'
 import { HttpError } from '../services/httpClient'
+import { guardarFichaTecnicaLocal } from '../services/offlineDb'
+import { useSyncStore } from '../services/syncService'
 import { vehiculosService } from '../services/vehiculosService'
 import { useAuthStore } from '../stores/authStore'
 import type { VehiculoDetalle } from '../types/vehiculo'
@@ -134,13 +136,35 @@ export function ModalEdicionKilometraje({
 
     setGuardando(true)
 
-    try {
-      const payload = {
-        kilometraje: kmNumero,
-        notasInspeccion: notas.trim() ? notas.trim() : null,
-        motivoCorreccion: esMenorAlActual ? motivoCorreccion.trim() : null,
-      }
+    const payload = {
+      kilometraje: kmNumero,
+      notasInspeccion: notas.trim() ? notas.trim() : null,
+      motivoCorreccion: esMenorAlActual ? motivoCorreccion.trim() : null,
+    }
 
+    if (!navigator.onLine) {
+      await useSyncStore
+        .getState()
+        .encolar(
+          'ACTUALIZAR_KM_NOTAS',
+          `Actualización de kilometraje/notas: ${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.numeroStock}) a ${formateadorKilometraje.format(kmNumero)} km`,
+          payload,
+          vehiculo.id,
+        )
+
+      const actualizadoLocal: VehiculoDetalle = {
+        ...vehiculo,
+        kilometraje: kmNumero,
+        notasInspeccion: payload.notasInspeccion,
+      }
+      void guardarFichaTecnicaLocal(actualizadoLocal)
+      onGuardadoExitoso(actualizadoLocal)
+      setGuardando(false)
+      onCerrar()
+      return
+    }
+
+    try {
       const vehiculoActualizado = await vehiculosService.actualizarKilometrajeYNotas(
         vehiculo.id,
         payload,
