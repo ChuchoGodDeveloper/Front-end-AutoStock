@@ -93,7 +93,15 @@ export function DashboardPage() {
   const actualizarUsuario = useAuthStore((estado) => estado.actualizarUsuario)
   const enLinea = useOnlineStatus()
 
-  const [resumen, setResumen] = useState<ResumenMetricas>(RESUMEN_VACIO)
+  const [resumen, setResumen] = useState<ResumenMetricas>(() => {
+    try {
+      const guardado = localStorage.getItem('autostock-resumen-cache')
+      if (guardado) return JSON.parse(guardado) as ResumenMetricas
+    } catch {
+      // Ignorar si localStorage no está disponible
+    }
+    return RESUMEN_VACIO
+  })
 
   useEffect(() => {
     if (!enLinea) return
@@ -133,15 +141,30 @@ export function DashboardPage() {
 
         if (!vigente) return
 
-        setResumen({
+        const nuevoResumen: ResumenMetricas = {
           disponibles: aNumero(datos.disponibles ?? datos.autosDisponibles),
           pruebaDeManejo: aNumero(
             datos.pruebaDeManejo ?? datos.enPruebaDeManejo ?? datos.testDrive,
           ),
           enTaller: aNumero(datos.enTaller ?? datos.taller),
-        })
+        }
+        setResumen(nuevoResumen)
+        try {
+          localStorage.setItem('autostock-resumen-cache', JSON.stringify(nuevoResumen))
+        } catch {
+          // Ignorar errores de cuota
+        }
       } catch {
         if (vigente) {
+          try {
+            const guardado = localStorage.getItem('autostock-resumen-cache')
+            if (guardado) {
+              setResumen(JSON.parse(guardado) as ResumenMetricas)
+              return
+            }
+          } catch {
+            // Ignorar
+          }
           setResumen(RESUMEN_VACIO)
         }
       }
@@ -152,7 +175,7 @@ export function DashboardPage() {
     return () => {
       vigente = false
     }
-  }, [])
+  }, [enLinea])
 
   const manejarCerrarSesion = async () => {
     await cerrarSesion()
@@ -230,7 +253,7 @@ export function DashboardPage() {
                 </div>
                 <SplitTitle
                   text={`${obtenerSaludo()}, ${nombreCompleto}`}
-                  className="truncate text-xl sm:text-3xl font-black tracking-tight"
+                  className="break-words text-xl sm:text-3xl font-black tracking-tight leading-tight"
                 />
               </div>
             </div>
