@@ -16,6 +16,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { useGlobalRippleAndSquish } from '../hooks/useShowroomEffects'
 import { useAuthStore } from '../stores/authStore'
+import { useCatalogoStore } from '../stores/catalogoStore'
 import { useSyncStore } from '../services/syncService'
 import { useThemeStore } from '../stores/themeStore'
 import { LiquidModal, LiquidSegmented, type SegmentedOption } from './LiquidUI'
@@ -47,18 +48,28 @@ export function AppShell() {
   const alternarTema = useThemeStore((s) => s.alternarTema)
   const totalPendientes = useSyncStore((s) => s.totalPendientes)
   const sincronizando = useSyncStore((s) => s.sincronizando)
+  const ultimoResultado = useSyncStore((s) => s.ultimoResultado)
   const sincronizarTodo = useSyncStore((s) => s.sincronizarTodo)
   const cargarCola = useSyncStore((s) => s.cargarCola)
+  const [avisoSync, setAvisoSync] = useState<string | null>(null)
 
   useEffect(() => {
     void cargarCola()
   }, [cargarCola])
 
   useEffect(() => {
-    if (enLinea) {
+    if (enLinea && usuario) {
       void sincronizarTodo()
+      void useCatalogoStore.getState().sincronizarCacheCompleta()
     }
-  }, [enLinea, sincronizarTodo])
+  }, [enLinea, usuario, sincronizarTodo])
+
+  useEffect(() => {
+    if (!ultimoResultado) return
+    setAvisoSync(ultimoResultado)
+    const timer = setTimeout(() => setAvisoSync(null), 5000)
+    return () => clearTimeout(timer)
+  }, [ultimoResultado])
 
   const esRutaPublica = RUTAS_PUBLICAS.has(location.pathname)
   const mostrarChrome = Boolean(usuario) && !esRutaPublica
@@ -213,7 +224,7 @@ export function AppShell() {
               </button>
 
               <div
-                className="v-glass v-glass--chrome status-pill hidden sm:inline-flex"
+                className="v-glass v-glass--chrome status-pill hidden lg:inline-flex"
                 title={`${usuario?.nombreCompleto ?? 'Usuario'} (${rol})`}
               >
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-sky-500/20 text-[11px] font-extrabold text-sky-400 border border-sky-400/30">
@@ -325,6 +336,17 @@ export function AppShell() {
               </>
             )}
           </nav>
+
+          {avisoSync && location.pathname !== '/pendientes' && (
+            <div
+              role="status"
+              className="fixed bottom-20 md:bottom-6 right-4 z-50 v-glass v-glass--thick tone--green rounded-2xl px-4 py-3 text-xs font-extrabold shadow-2xl flex items-center gap-2.5 max-w-[calc(100vw-32px)]"
+              style={{ color: 'var(--ink)' }}
+            >
+              <RefreshCw className="h-4 w-4 text-emerald-400 shrink-0" />
+              <span>{avisoSync}</span>
+            </div>
+          )}
 
           <LiquidModal open={confirmarSalidaPendientes} ariaLabel="Cambios pendientes sin guardar">
             <div className="v-glass v-glass--thick tone--coral max-h-[85vh] max-w-md w-full overflow-y-auto rounded-3xl p-6 shadow-2xl space-y-4">

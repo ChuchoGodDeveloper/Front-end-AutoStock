@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { obtenerModelosPorMarca } from '../config/marcasModelos'
 import { HttpError } from '../services/httpClient'
+import { useSyncStore } from '../services/syncService'
 import { vehiculosService } from '../services/vehiculosService'
 import { useCatalogoStore } from '../stores/catalogoStore'
 import { EstadoOperativo, type RegistrarVehiculoDto, TipoVehiculo } from '../types/vehiculo'
@@ -269,6 +270,19 @@ export function useRegistroVehiculoForm(valoresPrecarga?: Partial<CamposVehiculo
         cajonLote: campos.cajonLote.trim(),
         equipamiento: campos.equipamiento.trim() || undefined,
         notasInspeccion: campos.notasInspeccion.trim() || undefined,
+      }
+
+      if (!navigator.onLine) {
+        await useSyncStore
+          .getState()
+          .encolar(
+            'REGISTRAR_VEHICULO',
+            `Alta de vehículo: ${dto.marca} ${dto.modelo} ${dto.anio} (VIN ${dto.vin})`,
+            dto,
+          )
+
+        navigate('/pendientes')
+        return
       }
 
       const creado = await vehiculosService.registrarVehiculo(dto)

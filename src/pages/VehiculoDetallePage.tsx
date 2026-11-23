@@ -40,7 +40,11 @@ import { MENSAJES } from '../config/mensajes'
 import { inferirSiluetaVehiculo } from '../hooks/useShowroomEffects'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { OfflineBanner } from '../components/OfflineBanner'
-import { guardarFichaTecnicaLocal, leerFichaTecnicaLocal } from '../services/offlineDb'
+import {
+  guardarFichaTecnicaLocal,
+  leerFichaTecnicaLocal,
+  leerInventarioLocal,
+} from '../services/offlineDb'
 import { useSyncStore } from '../services/syncService'
 import { HttpError } from '../services/httpClient'
 import { vehiculosService } from '../services/vehiculosService'
@@ -206,7 +210,55 @@ export function VehiculoDetallePage() {
           setEstadoSeleccionado(cache.estado)
           setError(null)
         } else {
-          setError(MENSAJES.errorDetalle)
+          const inventarioCache = await leerInventarioLocal()
+          const encontrado = inventarioCache.find((v) => v.id === id)
+          if (encontrado) {
+            const detalleBase: VehiculoDetalle = {
+              id: encontrado.id,
+              marca: encontrado.marca,
+              modelo: encontrado.modelo,
+              anio: encontrado.anio,
+              version: null,
+              precio: encontrado.precio,
+              kilometraje: encontrado.kilometraje,
+              placa: encontrado.placa,
+              zonaLote: encontrado.zonaLote,
+              cajonLote: encontrado.cajonLote,
+              fotoPrincipalUrl: encontrado.fotoPrincipalUrl,
+              estado: encontrado.estado,
+              tipo: encontrado.tipo,
+              fechaRegistro: encontrado.fechaRegistro,
+              registradoPor: null,
+              vin: '',
+              numeroStock: '',
+              motor: null,
+              potencia: null,
+              transmision: null,
+              colorExterior: null,
+              colorInterior: null,
+              equipamiento: null,
+              notasInspeccion: null,
+              tomasObligatoriasCompletadas: encontrado.fotoPrincipalUrl ? 1 : 0,
+              porcentajeEvidencia: encontrado.fotoPrincipalUrl ? 25 : 0,
+              inspeccionCompleta: false,
+              imagenes: encontrado.fotoPrincipalUrl
+                ? [
+                    {
+                      id: `local-${encontrado.id}`,
+                      url: encontrado.fotoPrincipalUrl,
+                      esPrincipal: true,
+                      orden: 0,
+                      tipoToma: 'Frontal',
+                    },
+                  ]
+                : [],
+            }
+            setVehiculo(detalleBase)
+            setEstadoSeleccionado(detalleBase.estado)
+            setError(null)
+          } else {
+            setError(MENSAJES.errorDetalle)
+          }
         }
       }
     } finally {
@@ -1368,6 +1420,13 @@ export function VehiculoDetallePage() {
             onReubicacionExitosa={(actualizado) => {
               setVehiculo(actualizado)
               actualizarVehiculoEnCatalogo(actualizado)
+              void guardarFichaTecnicaLocal(actualizado)
+              if (!enLinea) {
+                setMensajeModoOffline(
+                  'El cambio se guardó en modo sin conexión • Pendiente de sincronizar',
+                )
+                setTimeout(() => setMensajeModoOffline(null), 5000)
+              }
             }}
           />
           <ModalEdicionKilometraje
@@ -1377,6 +1436,13 @@ export function VehiculoDetallePage() {
             onGuardadoExitoso={(actualizado) => {
               setVehiculo(actualizado)
               actualizarVehiculoEnCatalogo(actualizado)
+              void guardarFichaTecnicaLocal(actualizado)
+              if (!enLinea) {
+                setMensajeModoOffline(
+                  'El cambio se guardó en modo sin conexión • Pendiente de sincronizar',
+                )
+                setTimeout(() => setMensajeModoOffline(null), 5000)
+              }
             }}
           />
 

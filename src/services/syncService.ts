@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { HttpError } from './httpClient'
 import {
   actualizarOperacionOffline,
   contarOperacionesPendientes,
@@ -9,6 +10,7 @@ import {
   type TipoOperacionOffline,
 } from './offlineDb'
 import { vehiculosService } from './vehiculosService'
+import { useCatalogoStore } from '../stores/catalogoStore'
 import type {
   ActualizarKilometrajePayload,
   CambiarEstadoOperativoDto,
@@ -108,27 +110,39 @@ export const useSyncStore = create<EstadoSync>()((set, get) => ({
         await eliminarOperacionOffline(op.id)
         exito += 1
       } catch (err: unknown) {
-        fallidos += 1
-        const mensajeError =
-          err instanceof Error
-            ? err.message
-            : typeof err === 'object' && err !== null && 'mensaje' in err
-              ? String((err as { mensaje: unknown }).mensaje)
-              : 'Error al enviar solicitud'
+        if (!(err instanceof HttpError)) {
+          // Corte de red temporal: dejar lista para reintento automático al estabilizarse la conexión
+          op.estado = 'Esperando conexión'
+          op.error = 'Conexión interrumpida; se reintentará automáticamente.'
+          await actualizarOperacionOffline(op)
+          fallidos += 1
+          continue
+        }
 
+        fallidos += 1
         op.estado = 'No se pudo sincronizar'
-        op.error = mensajeError
+        op.error = err.message || 'Conflicto o error de validación en el servidor'
         await actualizarOperacionOffline(op)
       }
     }
 
     await get().cargarCola()
+
+    if (exito > 0) {
+      const catalogo = useCatalogoStore.getState()
+      void catalogo.cargarMasVehiculos(true)
+      void catalogo.cargarConteosRapidos()
+      void catalogo.sincronizarCacheCompleta()
+    }
+
     set({
       sincronizando: false,
       ultimoResultado:
-        fallidos === 0
-          ? 'Cambios sincronizados'
-          : `Se sincronizaron ${exito} cambios. ${fallidos} requirieron revisión.`,
+        exito === 0 && fallidos === 0
+          ? null
+          : fallidos === 0
+            ? `Se sincronizaron ${exito} ${exito === 1 ? 'cambio' : 'cambios'} automáticamente`
+            : `Se sincronizaron ${exito} cambios. ${fallidos} requirieron revisión.`,
     })
 
     return { exito, fallidos }

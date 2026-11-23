@@ -88,6 +88,10 @@ export function CatalogoPage() {
       void useCatalogoStore.getState().cargarMasVehiculos(true)
     }
 
+    if (navigator.onLine) {
+      void useCatalogoStore.getState().sincronizarCacheCompleta()
+    }
+
     // Auto-actualización cada 15 minutos si hay conexión
     const intervalo = setInterval(() => {
       if (navigator.onLine) {
