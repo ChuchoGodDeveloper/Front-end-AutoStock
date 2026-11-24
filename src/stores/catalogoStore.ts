@@ -7,7 +7,13 @@ import {
   leerMetaInventario,
   type MetaInventario,
 } from '../services/offlineDb'
-import type { ConteosRapidos, FiltrosCatalogo, Vehiculo, VehiculoDetalle } from '../types/vehiculo'
+import type {
+  ConteosRapidos,
+  FiltrosCatalogo,
+  PaginaCatalogo,
+  Vehiculo,
+  VehiculoDetalle,
+} from '../types/vehiculo'
 
 export const TAMANO_PAGINA_CATALOGO = 15
 
@@ -98,6 +104,34 @@ interface EstadoCatalogo {
 
 export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
   let solicitudActual = 0
+  const cachePaginas = new Map<string, PaginaCatalogo>()
+
+  const llaveCache = (pagina: number, busqueda: string, filtros: FiltrosCatalogo) =>
+    `${pagina}|${busqueda}|${filtros.estados.join(',')}|${filtros.tipo ?? ''}|${filtros.precioMin ?? ''}|${filtros.precioMax ?? ''}`
+
+  const preCargarSiguiente = (
+    paginaActual: number,
+    totalPaginas: number,
+    busqueda: string,
+    filtros: FiltrosCatalogo,
+  ) => {
+    const siguiente = paginaActual + 1
+    if (siguiente > totalPaginas || !navigator.onLine) return
+    const clave = llaveCache(siguiente, busqueda, filtros)
+    if (cachePaginas.has(clave)) return
+
+    void vehiculosService
+      .obtenerCatalogo(siguiente, TAMANO_PAGINA_CATALOGO, busqueda || undefined, filtros)
+      .then((res) => {
+        cachePaginas.set(clave, res)
+        if (res.items?.length) {
+          void guardarInventarioLocal(res.items)
+        }
+      })
+      .catch(() => {
+        // Ignorar fallo en precarga silenciosa
+      })
+  }
 
   return {
     vehiculos: [],
@@ -116,9 +150,29 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
     irAPagina: async (pagina: number) => {
       const paginaSolicitada = Math.max(1, pagina)
       const { terminoBusqueda, filtros } = get()
+      const clave = llaveCache(paginaSolicitada, terminoBusqueda, filtros)
 
       solicitudActual += 1
       const solicitud = solicitudActual
+
+      const enCacheMemoria = cachePaginas.get(clave)
+      if (enCacheMemoria) {
+        const itemsPagina = enCacheMemoria.items ?? []
+        const totalUnidades = enCacheMemoria.totalCount ?? itemsPagina.length
+        const totalPaginas = Math.max(1, Math.ceil(totalUnidades / TAMANO_PAGINA_CATALOGO))
+        set({
+          vehiculos: itemsPagina,
+          totalUnidades,
+          paginaActual: paginaSolicitada,
+          totalPaginas,
+          hayMas: paginaSolicitada < totalPaginas,
+          cargando: false,
+          error: null,
+          esModoOffline: false,
+        })
+        preCargarSiguiente(paginaSolicitada, totalPaginas, terminoBusqueda, filtros)
+        return
+      }
 
       set({ cargando: true, error: null })
 
@@ -131,6 +185,8 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
         )
 
         if (solicitud !== solicitudActual) return
+
+        cachePaginas.set(clave, respuesta)
 
         const itemsPagina = respuesta.items ?? []
         const totalUnidades = respuesta.totalCount ?? itemsPagina.length
@@ -147,8 +203,9 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
           esModoOffline: false,
         })
 
-        // Guardar silenciosamente en cache local
+        // Guardar silenciosamente en cache local y precargar página siguiente
         void guardarInventarioLocal(itemsPagina)
+        preCargarSiguiente(paginaResultante, totalPaginas, terminoBusqueda, filtros)
       } catch {
         if (solicitud !== solicitudActual) return
 
@@ -231,6 +288,7 @@ export const useCatalogoStore = create<EstadoCatalogo>()((set, get) => {
 
     invalidarCatalogo: () => {
       solicitudActual += 1
+      cachePaginas.clear()
       set({ vehiculos: [], paginaActual: 1, totalPaginas: 1, hayMas: false, cargando: false })
     },
 
