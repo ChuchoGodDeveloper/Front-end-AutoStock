@@ -50,6 +50,7 @@ import { HttpError } from '../services/httpClient'
 import { vehiculosService } from '../services/vehiculosService'
 import { useAuthStore } from '../stores/authStore'
 import { useCatalogoStore } from '../stores/catalogoStore'
+import { useToastStore } from '../stores/toastStore'
 import {
   EstadoOperativo,
   obtenerEtiquetaToma,
@@ -282,6 +283,9 @@ export function VehiculoDetallePage() {
       actualizarVehiculoEnCatalogo(vehiculoEnTaller)
       void guardarFichaTecnicaLocal(vehiculoEnTaller)
       setModalCrearOrdenAbierto(false)
+      useToastStore
+        .getState()
+        .mostrarAlerta(`Orden de servicio ${creada.folio} creada (unidad En Taller).`, 'exito', 'Orden creada')
     } catch (err) {
       if (err instanceof HttpError) {
         setErrorOrdenServicio(err.message)
@@ -300,6 +304,9 @@ export function VehiculoDetallePage() {
     try {
       const actualizada = await ordenesServicioService.agregarNota(ordenAbierta.id, { nota })
       setOrdenAbierta(actualizada)
+      useToastStore
+        .getState()
+        .mostrarAlerta(`Nota de avance agregada a la orden ${ordenAbierta.folio}.`, 'exito', 'Avance registrado')
     } catch (err) {
       if (err instanceof HttpError) {
         setErrorOrdenServicio(err.message)
@@ -329,6 +336,13 @@ export function VehiculoDetallePage() {
       actualizarVehiculoEnCatalogo(vehiculoActualizado)
       void guardarFichaTecnicaLocal(vehiculoActualizado)
       setHistorialMantenimiento((prev) => [cerrada, ...prev])
+      useToastStore
+        .getState()
+        .mostrarAlerta(
+          `Orden ${cerrada.folio} cerrada. Unidad pasó a ${estadoSalida === 'EnLavado' ? 'En Lavado' : 'Disponible'}.`,
+          'exito',
+          'Orden cerrada',
+        )
     } catch (err) {
       if (err instanceof HttpError) {
         setErrorOrdenServicio(err.message)
@@ -379,6 +393,13 @@ export function VehiculoDetallePage() {
       actualizarVehiculoEnCatalogo(actualizado)
       void guardarFichaTecnicaLocal(actualizado)
       setModalVentaAbierto(false)
+      useToastStore
+        .getState()
+        .mostrarAlerta(
+          `${actualizado.marca} ${actualizado.modelo} marcada como vendida.`,
+          'exito',
+          'Venta registrada',
+        )
     } catch (err) {
       if (err instanceof HttpError) {
         setErrorVenta(err.message)
@@ -413,6 +434,13 @@ export function VehiculoDetallePage() {
       actualizarVehiculoEnCatalogo(actualizado)
       void guardarFichaTecnicaLocal(actualizado)
       setModalRevertirAbierto(false)
+      useToastStore
+        .getState()
+        .mostrarAlerta(
+          `Venta revertida. Unidad asignada a ${zonaReversion} · Cajón ${cajonReversion.trim()}.`,
+          'advertencia',
+          'Venta revertida',
+        )
     } catch (err) {
       if (err instanceof HttpError) {
         setErrorVenta(err.message)
@@ -466,6 +494,13 @@ export function VehiculoDetallePage() {
       setGuardandoEstado(false)
       setMensajeModoOffline('El cambio se guardó en modo sin conexión • Pendiente de sincronizar')
       setTimeout(() => setMensajeModoOffline(null), 5000)
+      useToastStore
+        .getState()
+        .mostrarAlerta(
+          `Estado cambiado a ${estadoSeleccionado} sin conexión. Se subirá al reconectar.`,
+          'info',
+          'Guardado offline',
+        )
       return
     }
 
@@ -477,6 +512,13 @@ export function VehiculoDetallePage() {
       actualizarVehiculoEnCatalogo(actualizado)
       void guardarFichaTecnicaLocal(actualizado)
       setModalEstadoAbierto(false)
+      useToastStore
+        .getState()
+        .mostrarAlerta(
+          `Estado actualizado a ${actualizado.estado}.`,
+          'exito',
+          'Estado operativo actualizado',
+        )
     } catch (err) {
       if (err instanceof HttpError) {
         setErrorCambioEstado(err.message)
@@ -1426,6 +1468,21 @@ export function VehiculoDetallePage() {
                   'El cambio se guardó en modo sin conexión • Pendiente de sincronizar',
                 )
                 setTimeout(() => setMensajeModoOffline(null), 5000)
+                useToastStore
+                  .getState()
+                  .mostrarAlerta(
+                    `Reubicado a ${actualizado.zonaLote} · Cajón ${actualizado.cajonLote} sin conexión.`,
+                    'info',
+                    'Reubicación guardada offline',
+                  )
+              } else {
+                useToastStore
+                  .getState()
+                  .mostrarAlerta(
+                    `Unidad reubicada a ${actualizado.zonaLote} · Cajón ${actualizado.cajonLote}.`,
+                    'exito',
+                    'Ubicación actualizada',
+                  )
               }
             }}
           />
@@ -1442,6 +1499,21 @@ export function VehiculoDetallePage() {
                   'El cambio se guardó en modo sin conexión • Pendiente de sincronizar',
                 )
                 setTimeout(() => setMensajeModoOffline(null), 5000)
+                useToastStore
+                  .getState()
+                  .mostrarAlerta(
+                    `Kilometraje (${actualizado.kilometraje.toLocaleString('es-MX')} km) guardado sin conexión.`,
+                    'info',
+                    'Odómetro guardado offline',
+                  )
+              } else {
+                useToastStore
+                  .getState()
+                  .mostrarAlerta(
+                    `Kilometraje actualizado a ${actualizado.kilometraje.toLocaleString('es-MX')} km y notas guardadas.`,
+                    'exito',
+                    'Kilometraje y notas actualizados',
+                  )
               }
             }}
           />
@@ -1615,6 +1687,9 @@ export function VehiculoDetallePage() {
             numeroStock={vehiculo.numeroStock}
             onClose={() => {
               setModalCrearOrdenAbierto(false)
+      useToastStore
+        .getState()
+        .mostrarAlerta(`Orden de servicio ${creada.folio} creada (unidad En Taller).`, 'exito', 'Orden creada')
               setErrorOrdenServicio(null)
             }}
             onSubmit={manejarCrearOrden}

@@ -113,7 +113,7 @@ export const useSyncStore = create<EstadoSync>()((set, get) => ({
         if (!(err instanceof HttpError)) {
           // Corte de red temporal: dejar lista para reintento automático al estabilizarse la conexión
           op.estado = 'Esperando conexión'
-          op.error = 'Conexión interrumpida; se reintentará automáticamente.'
+          op.error = 'Sin conexión a internet o conexión interrumpida; se reintentará automáticamente.'
           await actualizarOperacionOffline(op)
           fallidos += 1
           continue
@@ -121,7 +121,13 @@ export const useSyncStore = create<EstadoSync>()((set, get) => ({
 
         fallidos += 1
         op.estado = 'No se pudo sincronizar'
-        op.error = err.message || 'Conflicto o error de validación en el servidor'
+        if (err.status === 401 || err.status === 403) {
+          op.error = `Sesión expirada o sin permisos suficientes (${err.status}): ${err.message}`
+        } else if (err.status >= 500) {
+          op.error = `Error temporal del servidor (${err.status}): ${err.message}`
+        } else {
+          op.error = err.message || 'Conflicto o error de validación en el servidor'
+        }
         await actualizarOperacionOffline(op)
       }
     }
