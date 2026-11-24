@@ -170,12 +170,17 @@ export function PendientesPage() {
                       {op.descripcion}
                     </p>
 
-                    {op.error && (
+                    {op.error ? (
                       <p className="flex items-center gap-1 text-xs font-semibold text-rose-400">
                         <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                         <span>Motivo: {op.error}</span>
                       </p>
-                    )}
+                    ) : !enLinea && op.estado === 'Esperando conexión' ? (
+                      <p className="flex items-center gap-1 text-xs font-semibold text-amber-400">
+                        <WifiOff className="h-3.5 w-3.5 shrink-0" />
+                        <span>Motivo: Sin conexión a internet — se subirá automáticamente al reconectar.</span>
+                      </p>
+                    ) : null}
                   </div>
 
                   <button
