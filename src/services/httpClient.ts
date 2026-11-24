@@ -38,9 +38,23 @@ function extraerMensaje(body: unknown): string {
 
   const candidatos = body as Record<string, unknown>
 
-  for (const llave of ['mensaje', 'message', 'title'] as const) {
+  for (const llave of ['mensaje', 'message'] as const) {
     const valor = candidatos[llave]
     if (typeof valor === 'string' && valor.trim()) return valor
+  }
+
+  if (candidatos.errors && typeof candidatos.errors === 'object') {
+    const detalles = Object.values(candidatos.errors as Record<string, unknown>)
+      .flatMap((v) => (Array.isArray(v) ? v : [v]))
+      .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+
+    if (detalles.length > 0) {
+      return detalles.join(' ')
+    }
+  }
+
+  if (typeof candidatos.title === 'string' && candidatos.title.trim()) {
+    return candidatos.title
   }
 
   return 'Error en la solicitud'

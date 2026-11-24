@@ -163,6 +163,9 @@ export function useRegistroVehiculoForm(valoresPrecarga?: Partial<CamposVehiculo
         ...prev,
         kilometraje: true,
         transmision: true,
+        motor: true,
+        colorExterior: true,
+        colorInterior: true,
       }))
 
       if (campos.tipo === TipoVehiculo.Seminuevo) {
@@ -176,6 +179,18 @@ export function useRegistroVehiculoForm(valoresPrecarga?: Partial<CamposVehiculo
 
       if (!campos.transmision.trim()) {
         nuevosErrores.transmision = 'La transmisión es obligatoria'
+      }
+
+      if (!campos.motor.trim()) {
+        nuevosErrores.motor = 'El motor es obligatorio'
+      }
+
+      if (!campos.colorExterior.trim()) {
+        nuevosErrores.colorExterior = 'El color exterior es obligatorio'
+      }
+
+      if (!campos.colorInterior.trim()) {
+        nuevosErrores.colorInterior = 'El color interior es obligatorio'
       }
     }
 

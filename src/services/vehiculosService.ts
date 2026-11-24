@@ -1,5 +1,6 @@
 import { normalizarPaginaCatalogo, normalizarVehiculoDetalle } from '../utils/imagenVehiculo'
 import { apiFetch } from './httpClient'
+import { EstadoOperativo } from '../types/vehiculo'
 import type {
   CambiarEstadoOperativoDto,
   ConteosRapidos,
@@ -15,6 +16,20 @@ import type {
   RevertirVentaPayload,
   VehiculoDetalle,
 } from '../types/vehiculo'
+
+const ESTADO_A_CODIGO: Record<EstadoOperativo, number> = {
+  [EstadoOperativo.Disponible]: 1,
+  [EstadoOperativo.TestDrive]: 2,
+  [EstadoOperativo.EnTaller]: 3,
+  [EstadoOperativo.EnLavado]: 4,
+  [EstadoOperativo.Reservado]: 5,
+  [EstadoOperativo.Vendido]: 6,
+}
+
+function normalizarEstadoPayload(estado: EstadoOperativo | number): number | EstadoOperativo {
+  if (typeof estado === 'number') return estado
+  return ESTADO_A_CODIGO[estado] ?? estado
+}
 
 export const vehiculosService = {
   obtenerCatalogo: (
@@ -56,7 +71,10 @@ export const vehiculosService = {
   registrarVehiculo: (datos: RegistrarVehiculoDto) =>
     apiFetch<VehiculoDetalle>('/vehiculos', {
       method: 'POST',
-      body: JSON.stringify(datos),
+      body: JSON.stringify({
+        ...datos,
+        estado: normalizarEstadoPayload(datos.estado),
+      }),
     }).then(normalizarVehiculoDetalle),
 
   guardarFotografia: (vehiculoId: string, datos: GuardarFotografiaDto) =>
@@ -73,7 +91,10 @@ export const vehiculosService = {
   cambiarEstadoOperativo: (vehiculoId: string, datos: CambiarEstadoOperativoDto) =>
     apiFetch<VehiculoDetalle>(`/vehiculos/${vehiculoId}/estado`, {
       method: 'PATCH',
-      body: JSON.stringify(datos),
+      body: JSON.stringify({
+        ...datos,
+        nuevoEstado: normalizarEstadoPayload(datos.nuevoEstado),
+      }),
     }).then(normalizarVehiculoDetalle),
 
   reubicarVehiculo: (vehiculoId: string, datos: ReubicarVehiculoPayload) =>

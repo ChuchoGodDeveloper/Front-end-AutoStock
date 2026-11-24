@@ -450,7 +450,7 @@ export function RegistroVehiculoPage() {
               className="block text-xs font-extrabold uppercase tracking-wider"
               style={{ color: 'var(--ink-2)' }}
             >
-              Motor
+              Motor <span className="text-rose-400">*</span>
             </label>
             <span className="text-xs" style={{ color: 'var(--ink-3)' }}>
               {campos.motor.length}/100
@@ -463,8 +463,16 @@ export function RegistroVehiculoPage() {
             placeholder="Ej. 2.0L 4 Cilindros Turbo"
             value={campos.motor}
             onChange={(e) => cambiarCampo('motor', e.target.value)}
-            className="campo-base campo-valido text-sm py-2.5"
+            className={`campo-base text-sm py-2.5 ${
+              errores.motor && tocado.motor ? 'campo-invalido' : 'campo-valido'
+            }`}
           />
+          {errores.motor && tocado.motor && (
+            <p className="mt-1 text-xs text-rose-400 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.motor}
+            </p>
+          )}
         </div>
 
         <div>
@@ -498,7 +506,7 @@ export function RegistroVehiculoPage() {
               className="block text-xs font-extrabold uppercase tracking-wider"
               style={{ color: 'var(--ink-2)' }}
             >
-              Color Exterior
+              Color Exterior <span className="text-rose-400">*</span>
             </label>
             <span className="text-xs" style={{ color: 'var(--ink-3)' }}>
               {campos.colorExterior.length}/50
@@ -511,8 +519,16 @@ export function RegistroVehiculoPage() {
             placeholder="Ej. Blanco Perla"
             value={campos.colorExterior}
             onChange={(e) => cambiarCampo('colorExterior', e.target.value)}
-            className="campo-base campo-valido text-sm py-2.5"
+            className={`campo-base text-sm py-2.5 ${
+              errores.colorExterior && tocado.colorExterior ? 'campo-invalido' : 'campo-valido'
+            }`}
           />
+          {errores.colorExterior && tocado.colorExterior && (
+            <p className="mt-1 text-xs text-rose-400 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.colorExterior}
+            </p>
+          )}
         </div>
 
         <div>
@@ -522,7 +538,7 @@ export function RegistroVehiculoPage() {
               className="block text-xs font-extrabold uppercase tracking-wider"
               style={{ color: 'var(--ink-2)' }}
             >
-              Color Interior
+              Color Interior <span className="text-rose-400">*</span>
             </label>
             <span className="text-xs" style={{ color: 'var(--ink-3)' }}>
               {campos.colorInterior.length}/50
@@ -535,8 +551,16 @@ export function RegistroVehiculoPage() {
             placeholder="Ej. Piel Negra"
             value={campos.colorInterior}
             onChange={(e) => cambiarCampo('colorInterior', e.target.value)}
-            className="campo-base campo-valido text-sm py-2.5"
+            className={`campo-base text-sm py-2.5 ${
+              errores.colorInterior && tocado.colorInterior ? 'campo-invalido' : 'campo-valido'
+            }`}
           />
+          {errores.colorInterior && tocado.colorInterior && (
+            <p className="mt-1 text-xs text-rose-400 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {errores.colorInterior}
+            </p>
+          )}
         </div>
       </div>
     </div>
