@@ -1687,9 +1687,6 @@ export function VehiculoDetallePage() {
             numeroStock={vehiculo.numeroStock}
             onClose={() => {
               setModalCrearOrdenAbierto(false)
-      useToastStore
-        .getState()
-        .mostrarAlerta(`Orden de servicio ${creada.folio} creada (unidad En Taller).`, 'exito', 'Orden creada')
               setErrorOrdenServicio(null)
             }}
             onSubmit={manejarCrearOrden}
