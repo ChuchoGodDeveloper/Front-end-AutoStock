@@ -27,6 +27,36 @@ import {
   useCatalogoStore,
 } from '../stores/catalogoStore'
 
+const VENTANA_PAGINACION = 1
+
+function obtenerPaginasVisibles(
+  paginaActual: number,
+  totalPaginas: number,
+): (number | 'ellipsis-izq' | 'ellipsis-der')[] {
+  if (totalPaginas <= 7) {
+    return Array.from({ length: totalPaginas }, (_, i) => i + 1)
+  }
+
+  const paginas: (number | 'ellipsis-izq' | 'ellipsis-der')[] = [1]
+  const inicio = Math.max(2, paginaActual - VENTANA_PAGINACION)
+  const fin = Math.min(totalPaginas - 1, paginaActual + VENTANA_PAGINACION)
+
+  if (inicio > 2) {
+    paginas.push('ellipsis-izq')
+  }
+
+  for (let p = inicio; p <= fin; p += 1) {
+    paginas.push(p)
+  }
+
+  if (fin < totalPaginas - 1) {
+    paginas.push('ellipsis-der')
+  }
+
+  paginas.push(totalPaginas)
+  return paginas
+}
+
 export function CatalogoPage() {
   const navigate = useNavigate()
   const enLinea = useOnlineStatus()
@@ -311,16 +341,29 @@ export function CatalogoPage() {
                   <span>Anterior</span>
                 </button>
 
-                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((numeroPagina) => {
-                  const esActual = numeroPagina === paginaActual
+                {obtenerPaginasVisibles(paginaActual, totalPaginas).map((elemento) => {
+                  if (elemento === 'ellipsis-izq' || elemento === 'ellipsis-der') {
+                    return (
+                      <span
+                        key={elemento}
+                        className="px-1.5 text-xs font-extrabold select-none"
+                        style={{ color: 'var(--ink-3)' }}
+                        aria-hidden="true"
+                      >
+                        …
+                      </span>
+                    )
+                  }
+
+                  const esActual = elemento === paginaActual
                   return (
                     <button
-                      key={numeroPagina}
+                      key={elemento}
                       type="button"
-                      onClick={() => cambiarPagina(numeroPagina)}
+                      onClick={() => cambiarPagina(elemento)}
                       disabled={cargando}
                       aria-current={esActual ? 'page' : undefined}
-                      aria-label={`Ir a la página ${numeroPagina}`}
+                      aria-label={`Ir a la página ${elemento}`}
                       className={`btn-squish min-w-[40px] h-9 rounded-full px-3.5 text-xs font-black transition-all ${
                         esActual
                           ? 'bg-gradient-to-r from-sky-400 to-blue-600 text-white border-2 border-white/80 shadow-[0_0_20px_rgba(56,189,248,0.65)] scale-105'
@@ -328,7 +371,7 @@ export function CatalogoPage() {
                       }`}
                       style={esActual ? { color: '#ffffff' } : { color: 'var(--ink)' }}
                     >
-                      {numeroPagina}
+                      {elemento}
                     </button>
                   )
                 })}
