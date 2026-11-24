@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  AlertCircle,
+  AlertTriangle,
   BarChart3,
   Car,
+  CheckCircle2,
+  Info,
   LayoutGrid,
   LogOut,
   Moon,
@@ -11,14 +15,16 @@ import {
   Sun,
   TrendingUp,
   Users,
+  X,
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { useGlobalRippleAndSquish } from '../hooks/useShowroomEffects'
 import { useAuthStore } from '../stores/authStore'
 import { useCatalogoStore } from '../stores/catalogoStore'
-import { useSyncStore } from '../services/syncService'
 import { useThemeStore } from '../stores/themeStore'
+import { useToastStore, type TipoToast } from '../stores/toastStore'
+import { useSyncStore } from '../services/syncService'
 import { LiquidModal, LiquidSegmented, type SegmentedOption } from './LiquidUI'
 import { ShowroomWall } from './ShowroomWall'
 
@@ -51,7 +57,9 @@ export function AppShell() {
   const ultimoResultado = useSyncStore((s) => s.ultimoResultado)
   const sincronizarTodo = useSyncStore((s) => s.sincronizarTodo)
   const cargarCola = useSyncStore((s) => s.cargarCola)
-  const [avisoSync, setAvisoSync] = useState<string | null>(null)
+  const toasts = useToastStore((s) => s.toasts)
+  const mostrarAlerta = useToastStore((s) => s.mostrarAlerta)
+  const cerrarAlerta = useToastStore((s) => s.cerrarAlerta)
 
   useEffect(() => {
     void cargarCola()
@@ -66,10 +74,13 @@ export function AppShell() {
 
   useEffect(() => {
     if (!ultimoResultado) return
-    setAvisoSync(ultimoResultado)
-    const timer = setTimeout(() => setAvisoSync(null), 5000)
-    return () => clearTimeout(timer)
-  }, [ultimoResultado])
+    const tieneRevision = ultimoResultado.includes('requirieron revisión')
+    mostrarAlerta(
+      ultimoResultado,
+      tieneRevision ? 'advertencia' : 'exito',
+      tieneRevision ? 'Sincronización parcial' : 'Sincronización completada',
+    )
+  }, [ultimoResultado, mostrarAlerta])
 
   const esRutaPublica = RUTAS_PUBLICAS.has(location.pathname)
   const mostrarChrome = Boolean(usuario) && !esRutaPublica
@@ -337,14 +348,50 @@ export function AppShell() {
             )}
           </nav>
 
-          {avisoSync && location.pathname !== '/pendientes' && (
+          {toasts.length > 0 && (
             <div
-              role="status"
-              className="fixed bottom-20 md:bottom-6 right-4 z-50 v-glass v-glass--thick tone--green rounded-2xl px-4 py-3 text-xs font-extrabold shadow-2xl flex items-center gap-2.5 max-w-[calc(100vw-32px)]"
-              style={{ color: 'var(--ink)' }}
+              aria-live="polite"
+              className="fixed bottom-20 md:bottom-6 right-4 z-[120] flex flex-col gap-2.5 max-w-sm w-[calc(100vw-32px)] pointer-events-none"
             >
-              <RefreshCw className="h-4 w-4 text-emerald-400 shrink-0" />
-              <span>{avisoSync}</span>
+              {toasts.map((toast) => {
+                const tonoPorTipo: Record<TipoToast, string> = {
+                  exito: 'tone--green',
+                  info: 'tone--blue',
+                  advertencia: 'tone--orange',
+                  error: 'tone--coral',
+                }
+                const iconoPorTipo: Record<TipoToast, JSX.Element> = {
+                  exito: <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />,
+                  info: <Info className="h-4 w-4 text-sky-400 shrink-0 mt-0.5" />,
+                  advertencia: <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />,
+                  error: <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />,
+                }
+
+                return (
+                  <div
+                    key={toast.id}
+                    role="status"
+                    className={`pointer-events-auto v-glass v-glass--thick ${tonoPorTipo[toast.tipo]} rounded-2xl px-4 py-3 shadow-2xl flex items-start gap-2.5`}
+                    style={{ color: 'var(--ink)' }}
+                  >
+                    {iconoPorTipo[toast.tipo]}
+                    <div className="min-w-0 flex-1 text-xs">
+                      {toast.titulo && (
+                        <p className="font-black tracking-tight">{toast.titulo}</p>
+                      )}
+                      <p className="font-semibold opacity-90">{toast.mensaje}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => cerrarAlerta(toast.id)}
+                      aria-label="Cerrar notificación"
+                      className="rounded-lg p-1 opacity-60 hover:opacity-100 transition"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           )}
 

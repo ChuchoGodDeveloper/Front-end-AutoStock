@@ -25,6 +25,7 @@ import { useSyncStore } from '../services/syncService'
 import { vehiculosService } from '../services/vehiculosService'
 import { useAuthStore } from '../stores/authStore'
 import { useCatalogoStore } from '../stores/catalogoStore'
+import { useToastStore } from '../stores/toastStore'
 import {
   type ImagenVehiculo,
   obtenerEtiquetaToma,
@@ -360,6 +361,13 @@ export function EvidenciaVehiculoPage() {
       setAlertaGeneral(
         'Fotografía guardada sin conexión • Se subirá automáticamente al volver el internet',
       )
+      useToastStore
+        .getState()
+        .mostrarAlerta(
+          `Toma "${tomaActiva.etiqueta}" guardada sin conexión. Se subirá al reconectar.`,
+          'info',
+          'Evidencia guardada offline',
+        )
       return
     }
 
@@ -374,6 +382,13 @@ export function EvidenciaVehiculoPage() {
       detenerStreamCamara()
       setTomaActiva(null)
       setPrevisualizacionBase64(null)
+      useToastStore
+        .getState()
+        .mostrarAlerta(
+          `Toma "${tomaActiva.etiqueta}" guardada correctamente.`,
+          'exito',
+          'Evidencia actualizada',
+        )
     } catch (err) {
       if (err instanceof HttpError) {
         setAlertaGeneral(err.message)
@@ -399,6 +414,9 @@ export function EvidenciaVehiculoPage() {
       setVehiculo(actualizado)
       invalidarCatalogo()
       setImagenAEliminar(null)
+      useToastStore
+        .getState()
+        .mostrarAlerta('Fotografía eliminada de la unidad.', 'info', 'Evidencia actualizada')
     } catch (err) {
       if (err instanceof HttpError) {
         setAlertaGeneral(err.message)

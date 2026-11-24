@@ -5,6 +5,7 @@ import { HttpError } from '../services/httpClient'
 import { useSyncStore } from '../services/syncService'
 import { vehiculosService } from '../services/vehiculosService'
 import { useCatalogoStore } from '../stores/catalogoStore'
+import { useToastStore } from '../stores/toastStore'
 import { EstadoOperativo, type RegistrarVehiculoDto, TipoVehiculo } from '../types/vehiculo'
 
 export const REGEX_VIN = /^[A-HJ-NPR-Z0-9]{17}$/
@@ -296,6 +297,13 @@ export function useRegistroVehiculoForm(valoresPrecarga?: Partial<CamposVehiculo
             dto,
           )
 
+        useToastStore
+          .getState()
+          .mostrarAlerta(
+            `${dto.marca} ${dto.modelo} guardado sin conexión. Se subirá automáticamente al volver el internet.`,
+            'info',
+            'Registro guardado offline',
+          )
         navigate('/pendientes')
         return
       }
@@ -304,6 +312,13 @@ export function useRegistroVehiculoForm(valoresPrecarga?: Partial<CamposVehiculo
 
       invalidarCatalogo()
       cargarConteosRapidos()
+      useToastStore
+        .getState()
+        .mostrarAlerta(
+          `Unidad ${creado.marca} ${creado.modelo} registrada (${creado.numeroStock}).`,
+          'exito',
+          'Unidad registrada',
+        )
 
       navigate(`/vehiculo/${creado.id}`, {
         state: { mensajeExito: `Unidad registrada con éxito. Número de stock asignado: ${creado.numeroStock}` },
